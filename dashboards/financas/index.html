@@ -748,7 +748,6 @@ async function initApp(){
   if(db) renderDashboard();
 }
 
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
 let currentPage="dashboard";
 let currentMonth=new Date().getMonth();
@@ -920,11 +919,13 @@ function openEditTrans(id){
 }
 function salvarEditTrans(id){
   const db=getDB();const idx=db.transacoes.findIndex(x=>x.id===id);if(idx<0)return;
-  db.transacoes[idx]={...db.transacoes[idx],data:document.getElementById("t-data").value,tipo:document.getElementById("t-tipo").value,descricao:document.getElementById("t-desc").value,valor:parseFloat(document.getElementById("t-valor").value)||0,categoria:document.getElementById("t-cat").value,obs:document.getElementById("t-obs").value};
-  saveDB(db);closeModal("modal-transacao");
+  const t={...db.transacoes[idx],data:document.getElementById("t-data").value,tipo:document.getElementById("t-tipo").value,descricao:document.getElementById("t-desc").value,valor:parseFloat(document.getElementById("t-valor").value)||0,categoria:document.getElementById("t-cat").value,obs:document.getElementById("t-obs").value};
+  db.transacoes[idx]=t;
+  closeModal("modal-transacao");
   document.querySelector("#modal-transacao .modal-title").childNodes[0].textContent="Nova Transação ";
   document.querySelector("#modal-transacao .btn-primary").onclick=salvarTransacao;
-  showToast("✓ Transação atualizada!");renderTransacoes();
+  setLoading(true,"Salvando...");
+  saveRecord("transacoes",t).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderTransacoes();}});
 }
 
 function openEditFixa(id){
@@ -940,11 +941,13 @@ function openEditFixa(id){
 }
 function salvarEditFixa(id){
   const db=getDB();const idx=db.fixas.findIndex(x=>x.id===id);if(idx<0)return;
-  db.fixas[idx]={...db.fixas[idx],nome:document.getElementById("f-nome").value,valor:parseFloat(document.getElementById("f-valor").value)||0,dia:document.getElementById("f-dia").value,categoria:document.getElementById("f-cat").value,status:document.getElementById("f-status").value};
-  saveDB(db);closeModal("modal-fixa");
+  const f={...db.fixas[idx],nome:document.getElementById("f-nome").value,valor:parseFloat(document.getElementById("f-valor").value)||0,dia:document.getElementById("f-dia").value,categoria:document.getElementById("f-cat").value,status:document.getElementById("f-status").value};
+  db.fixas[idx]=f;
+  closeModal("modal-fixa");
   document.querySelector("#modal-fixa .modal-title").childNodes[0].textContent="Nova Conta Fixa ";
   document.querySelector("#modal-fixa .btn-primary").onclick=salvarFixa;
-  showToast("✓ Conta atualizada!");renderFixas();
+  setLoading(true,"Salvando...");
+  saveRecord("fixas",f).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderFixas();}});
 }
 
 function openEditDiv(id){
@@ -961,11 +964,13 @@ function openEditDiv(id){
 }
 function salvarEditDiv(id){
   const db=getDB();const idx=db.dividas.findIndex(x=>x.id===id);if(idx<0)return;
-  db.dividas[idx]={...db.dividas[idx],nome:document.getElementById("d-nome").value,credor:document.getElementById("d-credor").value,saldo:parseFloat(document.getElementById("d-saldo").value)||0,parcela:parseFloat(document.getElementById("d-parcela").value)||0,juros:document.getElementById("d-juros").value,vencimento:document.getElementById("d-venc").value};
-  saveDB(db);closeModal("modal-divida");
+  const d2={...db.dividas[idx],nome:document.getElementById("d-nome").value,credor:document.getElementById("d-credor").value,saldo:parseFloat(document.getElementById("d-saldo").value)||0,parcela:parseFloat(document.getElementById("d-parcela").value)||0,juros:document.getElementById("d-juros").value,vencimento:document.getElementById("d-venc").value};
+  if(Array.isArray(d2.historico))d2.historico=JSON.stringify(d2.historico);
+  closeModal("modal-divida");
   document.querySelector("#modal-divida .modal-title").childNodes[0].textContent="Nova Dívida ";
   document.querySelector("#modal-divida .btn-primary").onclick=salvarDivida;
-  showToast("✓ Dívida atualizada!");renderDividas();
+  setLoading(true,"Salvando...");
+  saveRecord("dividas",d2).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderDividas();}});
 }
 
 function renderFixas(){
