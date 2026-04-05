@@ -415,6 +415,25 @@
   </div>
 </div>
 
+<!-- MODAL CONFIG SHEETS URL -->
+<div class="modal-overlay open" id="modal-config">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">🔗 Conectar ao Google Sheets</div>
+    <div style="background:rgba(91,143,255,.07);border:1px solid rgba(91,143,255,.18);border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--blue);line-height:1.6">
+      Cole aqui a URL do seu Apps Script publicado.<br>
+      Ela começa com <code style="font-size:11px;background:rgba(91,143,255,.15);padding:1px 5px;border-radius:3px">https://script.google.com/macros/s/...</code>
+    </div>
+    <div class="form-group">
+      <label>URL do Web App (Apps Script)</label>
+      <input type="text" id="config-url" placeholder="https://script.google.com/macros/s/SEU_ID/exec" style="font-size:12px">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="saveConfigURL()">Conectar e carregar dados</button>
+    <div style="margin-top:12px;font-size:12px;color:var(--text3);text-align:center">
+      Ainda não tem a URL? Siga o passo a passo no arquivo <code>apps-script.js</code>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- PAGE: TERCEIROS -->
@@ -594,56 +613,141 @@ const CATS=[
   {id:"assinaturas",label:"Assinaturas",icon:"📱",color:"blue"},
   {id:"educacao",label:"Educação",icon:"📚",color:"teal"},
   {id:"vestuario",label:"Vestuário",icon:"👔",color:"purple"},
+  {id:"pets",label:"Pets",icon:"🐾",color:"teal"},
+  {id:"estetica",label:"Estética",icon:"💅",color:"purple"},
+  {id:"dividas",label:"Dívidas",icon:"💳",color:"red"},
   {id:"receita",label:"Receita",icon:"💰",color:"green"},
   {id:"outros",label:"Outros",icon:"📦",color:"amber"},
-  {id:"pets",label:"Pets",icon:"🐾",color:"teal"},
 ];
 
-function getDB(){
-  const d=localStorage.getItem("financas_brenda_v2");
-  const db = d ? JSON.parse(d) : JSON.parse(JSON.stringify(INITIAL_DB));
-  if(!d){
-    db.reservas=[
-      {id:"r001",nome:"Rotina - Banhos do Mike",valor:120,data:"2025-10-31"},
-      {id:"r002",nome:"Elaine - Sobrancelha",valor:180,data:"2025-10-31"},
-      {id:"r003",nome:"Contas - Dezembro",valor:6300,data:"2025-10-31"},
-      {id:"r004",nome:"Reserva geral",valor:6000,data:"2025-11-03"},
-    ];
-    saveDB(db);
+// ============================================================
+// GOOGLE SHEETS DATA LAYER
+// Cole sua URL do Apps Script aqui depois de publicar:
+// ============================================================
+let SHEETS_URL = localStorage.getItem("brenda_sheets_url") || "";
+
+// Cache local (evita requests repetidos na mesma sessão)
+let _db = null;
+let _loading = false;
+let _loadCallbacks = [];
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+
+// Mostra/esconde loading overlay
+function setLoading(on, msg="Carregando..."){
+  let el=document.getElementById("global-loading");
+  if(!el){
+    el=document.createElement("div");
+    el.id="global-loading";
+    el.style.cssText="position:fixed;inset:0;background:rgba(12,12,14,.85);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:14px;color:var(--text2)";
+    el.innerHTML=`<div id="gl-spinner" style="width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite"></div><div id="gl-msg">${msg}</div>`;
+    document.body.appendChild(el);
   }
-  if(!db.terceiros) {
-    db.terceiros=[
-      {id:"tc01",pessoa:"Carlos",desc:"Financiamento Carro",valor:500.98,freq:"mensal",cat:"transporte",origem:"debito",obs:"Passou pro Carlos a partir de abr/2026",pagamentos:[],ativo:true},
-      {id:"tc02",pessoa:"Emerson (padrasto)",desc:"GymPass Emerson",valor:66.90,freq:"mensal",cat:"saude",origem:"bmg",obs:"Wellhub - padrasto",pagamentos:[],ativo:true},
-      {id:"tc03",pessoa:"Ryan (primo)",desc:"GymPass Ryan",valor:66.90,freq:"mensal",cat:"saude",origem:"bmg",obs:"Wellhub Ryan Fernando",pagamentos:[],ativo:true},
-    ];
-    saveDB(db);
-  }
-  if(!db.assinaturas) {
-    db.assinaturas=[
-      {id:"as01",nome:"Spotify",valor:31.90,dia:14,dono:"brenda",status:"ativa",obs:""},
-      {id:"as02",nome:"Apple (iCloud/TV+)",valor:66.90,dia:24,dono:"brenda",status:"ativa",obs:""},
-      {id:"as03",nome:"GymPass Brenda",valor:36.70,dia:5,dono:"brenda",status:"ativa",obs:"Wellhub - plano individual"},
-      {id:"as04",nome:"GymPass Carlos",valor:91.70,dia:5,dono:"casal",status:"ativa",obs:"Eu pago, casal"},
-      {id:"as05",nome:"TotalPass",valor:119.90,dia:2,dono:"casal",status:"ativa",obs:""},
-      {id:"as06",nome:"Cinemark",valor:40.90,dia:26,dono:"brenda",status:"ativa",obs:""},
-      {id:"as07",nome:"Claude IA",valor:109.90,dia:4,dono:"brenda",status:"ativa",obs:"Anthropic — aparece como APPLECOMBILL"},
-      {id:"as08",nome:"GymPass Emerson",valor:66.90,dia:5,dono:"emerson",status:"ativa",obs:"Padrasto — me paga"},
-      {id:"as09",nome:"GymPass Ryan",valor:66.90,dia:30,dono:"ryan",status:"ativa",obs:"Primo — me paga"},
-    ];
-    saveDB(db);
-  }
-  if(!db.cobasiPedidos) {
-    db.cobasiPedidos=[
-      {id:"cb01",tipo:"racao_cachorro",data:"2026-03-01",valor:209.61,parcelas:2,obs:"Premier 7,5kg Frango - Pug"},
-      {id:"cb02",tipo:"racao_pig",data:"2026-03-01",valor:86.31,parcelas:1,obs:"Nutrópica Porquinho-da-Índia Super Premium"},
-      {id:"cb03",tipo:"petisco",data:"2026-02-05",valor:124.05,parcelas:1,obs:"Petiscos + ração porquinho-da-índia"},
-    ];
-    saveDB(db);
-  }
-  return db;
+  el.style.display=on?"flex":"none";
+  document.getElementById("gl-msg").textContent=msg;
 }
-function saveDB(db){localStorage.setItem("financas_brenda_v2",JSON.stringify(db));}
+
+// Checa se URL está configurada
+function hasURL(){ return SHEETS_URL && SHEETS_URL.startsWith("https://script.google.com"); }
+
+// Carrega todos os dados do Sheets (com cache)
+async function loadDB(force=false){
+  if(_db && !force) return _db;
+  if(!hasURL()){
+    showConfigModal();
+    return null;
+  }
+  if(_loading){
+    return new Promise(res=>_loadCallbacks.push(res));
+  }
+  _loading=true;
+  setLoading(true,"Carregando dados da planilha...");
+  try{
+    const resp=await fetch(SHEETS_URL+"?action=getAll");
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error);
+    _db=data;
+    // garantir arrays existam
+    ["transacoes","fixas","cartoes","lancCartao","dividas","terceiros","assinaturas","cobasiPedidos"].forEach(k=>{if(!_db[k])_db[k]=[];});
+    _loadCallbacks.forEach(cb=>cb(_db));
+    _loadCallbacks=[];
+    return _db;
+  } catch(err){
+    showToast("Erro ao carregar: "+err.message);
+    return _db||{transacoes:[],fixas:[],cartoes:[],lancCartao:[],dividas:[],terceiros:[],assinaturas:[],cobasiPedidos:[]};
+  } finally{
+    _loading=false;
+    setLoading(false);
+  }
+}
+
+// Salva um registro no Sheets
+async function saveRecord(table, record){
+  if(!hasURL()){showToast("Configure a URL primeiro");return false;}
+  try{
+    const resp=await fetch(SHEETS_URL,{
+      method:"POST",
+      body:JSON.stringify({action:"save",table,record})
+    });
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error);
+    // Atualiza cache local
+    if(_db){
+      const arr=_db[table];
+      const idx=arr.findIndex(r=>r.id===record.id);
+      if(idx>=0) arr[idx]=record; else arr.push(record);
+    }
+    return true;
+  } catch(err){
+    showToast("Erro ao salvar: "+err.message);
+    return false;
+  }
+}
+
+// Deleta um registro no Sheets
+async function deleteRecord(table, id){
+  if(!hasURL()){showToast("Configure a URL primeiro");return false;}
+  try{
+    const resp=await fetch(SHEETS_URL,{
+      method:"POST",
+      body:JSON.stringify({action:"delete",table,id})
+    });
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error);
+    if(_db) _db[table]=_db[table].filter(r=>r.id!==id);
+    return true;
+  } catch(err){
+    showToast("Erro ao deletar: "+err.message);
+    return false;
+  }
+}
+
+// Compatibilidade: getDB() agora retorna o cache (síncrono após loadDB)
+function getDB(){ return _db || {transacoes:[],fixas:[],cartoes:[],lancCartao:[],dividas:[],terceiros:[],assinaturas:[],cobasiPedidos:[]}; }
+
+// Modal de configuração da URL
+function showConfigModal(){
+  document.getElementById("modal-config").classList.add("open");
+}
+function saveConfigURL(){
+  const url=document.getElementById("config-url").value.trim();
+  if(!url.startsWith("https://script.google.com")){
+    showToast("URL inválida — precisa começar com https://script.google.com");
+    return;
+  }
+  SHEETS_URL=url;
+  localStorage.setItem("brenda_sheets_url",url);
+  closeModal("modal-config");
+  _db=null;
+  initApp();
+}
+
+// Inicializa o app
+async function initApp(){
+  const db=await loadDB();
+  if(db) renderDashboard();
+}
+
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
 let currentPage="dashboard";
@@ -793,8 +897,75 @@ function renderTransacoes(){
   const tbody=document.querySelector("#trans-table tbody");
   tbody.innerHTML=trans.length?trans.map(t=>{
     const c=cat(t.categoria);
-    return`<tr><td style="color:var(--text2)">${fmtDate(t.data)}</td><td>${t.descricao}</td><td><span class="badge badge-${c.color}">${c.label}</span></td><td><span class="badge ${t.tipo==="receita"?"badge-green":"badge-red"}">${t.tipo}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:${t.tipo==="receita"?"var(--green)":"var(--red)"}">${R(t.valor)}</td><td><button class="btn btn-danger btn-sm btn-icon" onclick="delTrans('${t.id}')">✕</button></td></tr>`;
+    return`<tr><td style="color:var(--text2)">${fmtDate(t.data)}</td><td>${t.descricao}</td><td><span class="badge badge-${c.color}">${c.label}</span></td><td><span class="badge ${t.tipo==="receita"?"badge-green":"badge-red"}">${t.tipo}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:${t.tipo==="receita"?"var(--green)":"var(--red)"}">${R(t.valor)}</td>
+    <td><div style="display:flex;gap:5px">
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditTrans('${t.id}')" title="Editar">✏️</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="delTrans('${t.id}')">✕</button>
+    </div></td></tr>`;
   }).join(""):"<tr><td colspan='6' class='empty-state'><p>Nenhuma transação</p></td></tr>";
+}
+
+// ---- EDIT FUNCTIONS ----
+function openEditTrans(id){
+  const db=getDB();const t=db.transacoes.find(x=>x.id===id);if(!t)return;
+  openModal("modal-transacao");
+  document.getElementById("t-data").value=t.data;
+  document.getElementById("t-tipo").value=t.tipo;
+  document.getElementById("t-desc").value=t.descricao;
+  document.getElementById("t-valor").value=t.valor;
+  document.getElementById("t-cat").value=t.categoria;
+  document.getElementById("t-obs").value=t.obs||"";
+  document.querySelector("#modal-transacao .modal-title").childNodes[0].textContent="Editar Transação ";
+  document.querySelector("#modal-transacao .btn-primary").onclick=()=>salvarEditTrans(id);
+}
+function salvarEditTrans(id){
+  const db=getDB();const idx=db.transacoes.findIndex(x=>x.id===id);if(idx<0)return;
+  db.transacoes[idx]={...db.transacoes[idx],data:document.getElementById("t-data").value,tipo:document.getElementById("t-tipo").value,descricao:document.getElementById("t-desc").value,valor:parseFloat(document.getElementById("t-valor").value)||0,categoria:document.getElementById("t-cat").value,obs:document.getElementById("t-obs").value};
+  saveDB(db);closeModal("modal-transacao");
+  document.querySelector("#modal-transacao .modal-title").childNodes[0].textContent="Nova Transação ";
+  document.querySelector("#modal-transacao .btn-primary").onclick=salvarTransacao;
+  showToast("✓ Transação atualizada!");renderTransacoes();
+}
+
+function openEditFixa(id){
+  const db=getDB();const f=db.fixas.find(x=>x.id===id);if(!f)return;
+  openModal("modal-fixa");
+  document.getElementById("f-nome").value=f.nome;
+  document.getElementById("f-valor").value=f.valor;
+  document.getElementById("f-dia").value=f.dia||"";
+  document.getElementById("f-cat").value=f.categoria;
+  document.getElementById("f-status").value=f.status;
+  document.querySelector("#modal-fixa .modal-title").childNodes[0].textContent="Editar Conta Fixa ";
+  document.querySelector("#modal-fixa .btn-primary").onclick=()=>salvarEditFixa(id);
+}
+function salvarEditFixa(id){
+  const db=getDB();const idx=db.fixas.findIndex(x=>x.id===id);if(idx<0)return;
+  db.fixas[idx]={...db.fixas[idx],nome:document.getElementById("f-nome").value,valor:parseFloat(document.getElementById("f-valor").value)||0,dia:document.getElementById("f-dia").value,categoria:document.getElementById("f-cat").value,status:document.getElementById("f-status").value};
+  saveDB(db);closeModal("modal-fixa");
+  document.querySelector("#modal-fixa .modal-title").childNodes[0].textContent="Nova Conta Fixa ";
+  document.querySelector("#modal-fixa .btn-primary").onclick=salvarFixa;
+  showToast("✓ Conta atualizada!");renderFixas();
+}
+
+function openEditDiv(id){
+  const db=getDB();const d=db.dividas.find(x=>x.id===id);if(!d)return;
+  openModal("modal-divida");
+  document.getElementById("d-nome").value=d.nome;
+  document.getElementById("d-credor").value=d.credor||"";
+  document.getElementById("d-saldo").value=d.saldo;
+  document.getElementById("d-parcela").value=d.parcela||"";
+  document.getElementById("d-juros").value=d.juros||"";
+  document.getElementById("d-venc").value=d.vencimento||"";
+  document.querySelector("#modal-divida .modal-title").childNodes[0].textContent="Editar Dívida ";
+  document.querySelector("#modal-divida .btn-primary").onclick=()=>salvarEditDiv(id);
+}
+function salvarEditDiv(id){
+  const db=getDB();const idx=db.dividas.findIndex(x=>x.id===id);if(idx<0)return;
+  db.dividas[idx]={...db.dividas[idx],nome:document.getElementById("d-nome").value,credor:document.getElementById("d-credor").value,saldo:parseFloat(document.getElementById("d-saldo").value)||0,parcela:parseFloat(document.getElementById("d-parcela").value)||0,juros:document.getElementById("d-juros").value,vencimento:document.getElementById("d-venc").value};
+  saveDB(db);closeModal("modal-divida");
+  document.querySelector("#modal-divida .modal-title").childNodes[0].textContent="Nova Dívida ";
+  document.querySelector("#modal-divida .btn-primary").onclick=salvarDivida;
+  showToast("✓ Dívida atualizada!");renderDividas();
 }
 
 function renderFixas(){
@@ -814,11 +985,15 @@ function renderFixas(){
       return`<tr>
         <td><div style="display:flex;align-items:center;gap:8px"><div class="cat-icon" style="background:var(--${c.color}-dim)">${c.icon}</div><span style="font-weight:500">${f.nome}</span></div></td>
         <td><span class="badge badge-${c.color}">${c.label}</span></td>
-        <td style="color:var(--text2)">Dia ${f.dia||"—"}</td>
+        <td style="color:var(--text2)">${f.dia?`Dia ${f.dia}`:"—"}</td>
         <td style="font-size:12px;color:var(--text2)">${pct}%</td>
         <td><span class="badge ${f.status==="ativa"?"badge-green":"badge-amber"}">${f.status}</span></td>
         <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:500">${R(f.valor)}</td>
-        <td><div style="display:flex;gap:5px"><button class="btn btn-ghost btn-sm" onclick="toggleFixa('${f.id}')">${f.status==="ativa"?"Pausar":"Ativar"}</button><button class="btn btn-danger btn-sm btn-icon" onclick="delFixa('${f.id}')">✕</button></div></td>
+        <td><div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditFixa('${f.id}')" title="Editar">✏️</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleFixa('${f.id}')">${f.status==="ativa"?"Pausar":"Ativar"}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="delFixa('${f.id}')">✕</button>
+        </div></td>
       </tr>`;
     }).join("")}</tbody>
   </table></div></div>`;
@@ -877,6 +1052,8 @@ function renderLancCartao(){
 
 function renderDividas(){
   const db=getDB();
+  const divComuns=db.dividas.filter(d=>!d.consignado);
+  const divConsig=db.dividas.filter(d=>d.consignado);
   const total=db.dividas.reduce((a,d)=>a+parseFloat(d.saldo||0),0);
   const parcelas=db.dividas.reduce((a,d)=>a+parseFloat(d.parcela||0),0);
   document.getElementById("total-div-val").textContent=R(total);
@@ -884,19 +1061,28 @@ function renderDividas(){
   document.getElementById("parc-mensais").textContent=R(parcelas);
   const list=document.getElementById("dividas-list");
   if(!db.dividas.length){list.innerHTML="<div class='empty-state'><div class='icon'>✅</div><p>Sem dívidas! 🎉</p></div>";return;}
-  list.innerHTML=db.dividas.map(d=>{
+
+  const renderCard=(d)=>{
     const hist=(d.historico||[]);
-    return`<div class="divida-card">
+    return`<div class="divida-card" style="${d.consignado?"border-color:rgba(91,143,255,.25)":""}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-        <div><div style="font-weight:600;font-size:15px">${d.nome}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${d.credor||"—"}</div></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="font-weight:600;font-size:15px">${d.nome}</div>
+            ${d.consignado?`<span class="badge badge-blue" style="font-size:10px">consignado</span>`:""}
+          </div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${d.credor||"—"}</div>
+        </div>
         <div style="display:flex;gap:7px">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditDiv('${d.id}')" title="Editar">✏️</button>
           <button class="btn btn-warning btn-sm" onclick="openUpdateDiv('${d.id}')">Atualizar</button>
           <button class="btn btn-danger btn-sm btn-icon" onclick="delDiv('${d.id}')">✕</button>
         </div>
       </div>
+      ${d.consignado?`<div style="background:rgba(91,143,255,.07);border:1px solid rgba(91,143,255,.15);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--blue)">💡 Já descontado do salário bruto — seu salário líquido de R$7.800 já considera essa parcela.</div>`:""}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;margin-bottom:${hist.length?"12px":"0"}">
         <div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Saldo devedor</div><div style="font-family:'DM Mono',monospace;font-weight:600;font-size:17px;color:var(--red)">${R(d.saldo)}</div></div>
-        ${d.parcela?`<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Parcela mensal</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--amber)">${R(d.parcela)}</div></div>`:""}
+        ${d.parcela?`<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Parcela mensal</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:${d.consignado?"var(--blue)":"var(--amber)"};">${R(d.parcela)}</div></div>`:""}
         ${d.juros?`<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Juros a.m.</div><div style="font-weight:500">${d.juros}%</div></div>`:""}
       </div>
       ${hist.length?`<div style="border-top:1px solid var(--border);padding-top:10px">
@@ -904,7 +1090,16 @@ function renderDividas(){
         ${hist.slice(-3).reverse().map(h=>`<div style="font-size:12px;color:var(--text2);margin-bottom:3px">${fmtDate(h.data)} — <span style="color:var(--text);font-family:'DM Mono',monospace">${R(h.saldo)}</span>${h.obs?" · "+h.obs:""}</div>`).join("")}
       </div>`:""}
     </div>`;
-  }).join("");
+  };
+
+  let html="";
+  if(divConsig.length){
+    html+=`<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Consignado (já descontado do salário)</div>`;
+    html+=divConsig.map(renderCard).join("");
+    html+=`<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px">Dívidas externas</div>`;
+  }
+  html+=divComuns.map(renderCard).join("");
+  list.innerHTML=html;
 }
 
 function renderReserva(){
@@ -941,53 +1136,84 @@ document.addEventListener("click",e=>{if(e.target.classList.contains("modal-over
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
 
 function salvarTransacao(){
-  const db=getDB();
   const t={id:uid(),data:document.getElementById("t-data").value,tipo:document.getElementById("t-tipo").value,descricao:document.getElementById("t-desc").value,valor:parseFloat(document.getElementById("t-valor").value)||0,categoria:document.getElementById("t-cat").value,obs:document.getElementById("t-obs").value};
   if(!t.data||!t.descricao||!t.valor){showToast("Preencha os campos obrigatórios");return;}
-  db.transacoes.push(t);saveDB(db);closeModal("modal-transacao");
-  document.getElementById("t-desc").value="";document.getElementById("t-valor").value="";document.getElementById("t-obs").value="";
-  showToast("✓ Transação salva!");renderPage(currentPage);
+  closeModal("modal-transacao");
+  ["t-desc","t-valor","t-obs"].forEach(i=>document.getElementById(i).value="");
+  setLoading(true,"Salvando...");
+  saveRecord("transacoes",t).then(ok=>{setLoading(false);if(ok){showToast("✓ Transação salva!");renderPage(currentPage);}});
 }
-function delTrans(id){const db=getDB();db.transacoes=db.transacoes.filter(t=>t.id!==id);saveDB(db);renderTransacoes();showToast("Removida");}
-
+function delTrans(id){
+  if(!confirm("Remover esta transação?"))return;
+  setLoading(true,"Removendo...");
+  deleteRecord("transacoes",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderTransacoes();}});
+}
+function salvarEditTrans(id){
+  const db=getDB();const idx=db.transacoes.findIndex(x=>x.id===id);if(idx<0)return;
+  const t={...db.transacoes[idx],data:document.getElementById("t-data").value,tipo:document.getElementById("t-tipo").value,descricao:document.getElementById("t-desc").value,valor:parseFloat(document.getElementById("t-valor").value)||0,categoria:document.getElementById("t-cat").value,obs:document.getElementById("t-obs").value};
+  closeModal("modal-transacao");
+  document.querySelector("#modal-transacao .modal-title").childNodes[0].textContent="Nova Transação ";
+  document.querySelector("#modal-transacao .btn-primary").onclick=salvarTransacao;
+  setLoading(true,"Salvando...");
+  saveRecord("transacoes",t).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderTransacoes();}});
+}
 function salvarFixa(){
-  const db=getDB();
   const f={id:uid(),nome:document.getElementById("f-nome").value,valor:parseFloat(document.getElementById("f-valor").value)||0,dia:document.getElementById("f-dia").value,categoria:document.getElementById("f-cat").value,status:document.getElementById("f-status").value};
   if(!f.nome||!f.valor){showToast("Preencha nome e valor");return;}
-  db.fixas.push(f);saveDB(db);closeModal("modal-fixa");
-  document.getElementById("f-nome").value="";document.getElementById("f-valor").value="";
-  showToast("✓ Conta fixa salva!");renderFixas();
+  closeModal("modal-fixa");
+  ["f-nome","f-valor"].forEach(i=>document.getElementById(i).value="");
+  setLoading(true,"Salvando...");
+  saveRecord("fixas",f).then(ok=>{setLoading(false);if(ok){showToast("✓ Conta fixa salva!");renderFixas();}});
 }
-function toggleFixa(id){const db=getDB();const f=db.fixas.find(x=>x.id===id);if(f){f.status=f.status==="ativa"?"pausada":"ativa";saveDB(db);renderFixas();}}
-function delFixa(id){const db=getDB();db.fixas=db.fixas.filter(f=>f.id!==id);saveDB(db);renderFixas();showToast("Removida");}
-
+function toggleFixa(id){
+  const db=getDB();const f=db.fixas.find(x=>x.id===id);if(!f)return;
+  const updated={...f,status:f.status==="ativa"?"pausada":"ativa"};
+  setLoading(true,"Salvando...");
+  saveRecord("fixas",updated).then(ok=>{setLoading(false);if(ok)renderFixas();});
+}
+function delFixa(id){
+  if(!confirm("Remover esta conta fixa?"))return;
+  setLoading(true,"Removendo...");
+  deleteRecord("fixas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderFixas();}});
+}
+function salvarEditFixa(id){
+  const db=getDB();const idx=db.fixas.findIndex(x=>x.id===id);if(idx<0)return;
+  const f={...db.fixas[idx],nome:document.getElementById("f-nome").value,valor:parseFloat(document.getElementById("f-valor").value)||0,dia:document.getElementById("f-dia").value,categoria:document.getElementById("f-cat").value,status:document.getElementById("f-status").value};
+  closeModal("modal-fixa");
+  document.querySelector("#modal-fixa .modal-title").childNodes[0].textContent="Nova Conta Fixa ";
+  document.querySelector("#modal-fixa .btn-primary").onclick=salvarFixa;
+  setLoading(true,"Salvando...");
+  saveRecord("fixas",f).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderFixas();}});
+}
 function salvarCartao(){
-  const db=getDB();
   const c={id:uid(),nome:document.getElementById("c-nome").value,limite:parseFloat(document.getElementById("c-limite").value)||0,fechamento:document.getElementById("c-fech").value,vencimento:document.getElementById("c-venc").value};
   if(!c.nome){showToast("Preencha o nome");return;}
-  db.cartoes.push(c);saveDB(db);closeModal("modal-cartao");
-  document.getElementById("c-nome").value="";document.getElementById("c-limite").value="";
-  showToast("✓ Cartão salvo!");renderCartoes();
+  closeModal("modal-cartao");
+  ["c-nome","c-limite"].forEach(i=>document.getElementById(i).value="");
+  setLoading(true,"Salvando...");
+  saveRecord("cartoes",c).then(ok=>{setLoading(false);if(ok){showToast("✓ Cartão salvo!");renderCartoes();}});
 }
-
 function salvarLancCartao(){
-  const db=getDB();
   const l={id:uid(),data:document.getElementById("lc-data").value,cartaoId:document.getElementById("lc-cartao").value,descricao:document.getElementById("lc-desc").value,valor:parseFloat(document.getElementById("lc-valor").value)||0,parcelas:parseInt(document.getElementById("lc-parcelas").value)||1,parcela:1,categoria:document.getElementById("lc-cat").value};
   if(!l.data||!l.descricao||!l.valor){showToast("Preencha todos os campos");return;}
-  db.lancCartao.push(l);saveDB(db);closeModal("modal-lanc-cartao");
-  document.getElementById("lc-desc").value="";document.getElementById("lc-valor").value="";document.getElementById("lc-parcelas").value="1";
-  showToast("✓ Lançamento salvo!");renderLancCartao();
+  closeModal("modal-lanc-cartao");
+  ["lc-desc","lc-valor"].forEach(i=>document.getElementById(i).value="");
+  document.getElementById("lc-parcelas").value="1";
+  setLoading(true,"Salvando...");
+  saveRecord("lancCartao",l).then(ok=>{setLoading(false);if(ok){showToast("✓ Lançamento salvo!");renderLancCartao();}});
 }
-function delLanc(id){const db=getDB();db.lancCartao=db.lancCartao.filter(l=>l.id!==id);saveDB(db);renderLancCartao();showToast("Removido");}
-
+function delLanc(id){
+  if(!confirm("Remover este lançamento?"))return;
+  setLoading(true,"Removendo...");
+  deleteRecord("lancCartao",id).then(ok=>{setLoading(false);if(ok){showToast("Removido");renderLancCartao();}});
+}
 function salvarDivida(){
-  const db=getDB();
-  const d={id:uid(),nome:document.getElementById("d-nome").value,credor:document.getElementById("d-credor").value,saldo:parseFloat(document.getElementById("d-saldo").value)||0,parcela:parseFloat(document.getElementById("d-parcela").value)||0,juros:document.getElementById("d-juros").value,vencimento:document.getElementById("d-venc").value,historico:[]};
+  const d={id:uid(),nome:document.getElementById("d-nome").value,credor:document.getElementById("d-credor").value,saldo:parseFloat(document.getElementById("d-saldo").value)||0,parcela:parseFloat(document.getElementById("d-parcela").value)||0,juros:document.getElementById("d-juros").value,vencimento:document.getElementById("d-venc").value,consignado:"false",historico:JSON.stringify([{data:new Date().toISOString().slice(0,10),saldo:parseFloat(document.getElementById("d-saldo").value)||0,obs:"Cadastro inicial"}])};
   if(!d.nome||!d.saldo){showToast("Preencha nome e saldo");return;}
-  d.historico.push({data:new Date().toISOString().slice(0,10),saldo:d.saldo,obs:"Cadastro inicial"});
-  db.dividas.push(d);saveDB(db);closeModal("modal-divida");
+  closeModal("modal-divida");
   ["d-nome","d-credor","d-saldo","d-parcela","d-juros","d-venc"].forEach(i=>document.getElementById(i).value="");
-  showToast("✓ Dívida cadastrada!");renderDividas();
+  setLoading(true,"Salvando...");
+  saveRecord("dividas",d).then(ok=>{setLoading(false);if(ok){showToast("✓ Dívida cadastrada!");renderDividas();}});
 }
 function openUpdateDiv(id){
   const db=getDB();const d=db.dividas.find(x=>x.id===id);if(!d)return;
@@ -996,397 +1222,109 @@ function openUpdateDiv(id){
 }
 function atualizarDivida(){
   const db=getDB();const id=document.getElementById("ud-id").value;const d=db.dividas.find(x=>x.id===id);if(!d)return;
-  d.saldo=parseFloat(document.getElementById("ud-saldo").value)||d.saldo;
-  d.parcela=parseFloat(document.getElementById("ud-parcela").value)||d.parcela;
-  d.historico=d.historico||[];
-  d.historico.push({data:new Date().toISOString().slice(0,10),saldo:d.saldo,obs:document.getElementById("ud-obs").value});
-  saveDB(db);closeModal("modal-update-divida");showToast("✓ Saldo atualizado!");renderDividas();
+  const hist=Array.isArray(d.historico)?d.historico:(typeof d.historico==="string"&&d.historico?JSON.parse(d.historico):[]);
+  const newSaldo=parseFloat(document.getElementById("ud-saldo").value)||d.saldo;
+  const newParcela=parseFloat(document.getElementById("ud-parcela").value)||d.parcela;
+  hist.push({data:new Date().toISOString().slice(0,10),saldo:newSaldo,obs:document.getElementById("ud-obs").value});
+  const updated={...d,saldo:newSaldo,parcela:newParcela,historico:JSON.stringify(hist)};
+  closeModal("modal-update-divida");
+  setLoading(true,"Salvando...");
+  saveRecord("dividas",updated).then(ok=>{setLoading(false);if(ok){showToast("✓ Saldo atualizado!");renderDividas();}});
 }
-function delDiv(id){const db=getDB();db.dividas=db.dividas.filter(d=>d.id!==id);saveDB(db);renderDividas();showToast("Removida");}
-
+function openEditDiv(id){
+  const db=getDB();const d=db.dividas.find(x=>x.id===id);if(!d)return;
+  openModal("modal-divida");
+  document.getElementById("d-nome").value=d.nome;document.getElementById("d-credor").value=d.credor||"";
+  document.getElementById("d-saldo").value=d.saldo;document.getElementById("d-parcela").value=d.parcela||"";
+  document.getElementById("d-juros").value=d.juros||"";document.getElementById("d-venc").value=d.vencimento||"";
+  document.querySelector("#modal-divida .modal-title").childNodes[0].textContent="Editar Dívida ";
+  document.querySelector("#modal-divida .btn-primary").onclick=()=>salvarEditDiv(id);
+}
+function salvarEditDiv(id){
+  const db=getDB();const idx=db.dividas.findIndex(x=>x.id===id);if(idx<0)return;
+  const d={...db.dividas[idx],nome:document.getElementById("d-nome").value,credor:document.getElementById("d-credor").value,saldo:parseFloat(document.getElementById("d-saldo").value)||0,parcela:parseFloat(document.getElementById("d-parcela").value)||0,juros:document.getElementById("d-juros").value,vencimento:document.getElementById("d-venc").value};
+  if(Array.isArray(d.historico))d.historico=JSON.stringify(d.historico);
+  closeModal("modal-divida");
+  document.querySelector("#modal-divida .modal-title").childNodes[0].textContent="Nova Dívida ";
+  document.querySelector("#modal-divida .btn-primary").onclick=salvarDivida;
+  setLoading(true,"Salvando...");
+  saveRecord("dividas",d).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderDividas();}});
+}
+function delDiv(id){
+  if(!confirm("Remover esta dívida?"))return;
+  setLoading(true,"Removendo...");
+  deleteRecord("dividas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderDividas();}});
+}
 function salvarReserva(){
   const db=getDB();if(!db.reservas)db.reservas=[];
   const r={id:uid(),nome:document.getElementById("r-nome").value,valor:parseFloat(document.getElementById("r-valor").value)||0,data:document.getElementById("r-data").value};
   if(!r.nome||!r.valor){showToast("Preencha nome e valor");return;}
-  db.reservas.push(r);saveDB(db);closeModal("modal-reserva");
-  document.getElementById("r-nome").value="";document.getElementById("r-valor").value="";
+  closeModal("modal-reserva");
+  ["r-nome","r-valor"].forEach(i=>document.getElementById(i).value="");
+  db.reservas.push(r);localStorage.setItem("brenda_reservas",JSON.stringify(db.reservas));
   showToast("✓ Reserva salva!");renderReserva();
 }
-function delReserva(id){const db=getDB();db.reservas=db.reservas.filter(r=>r.id!==id);saveDB(db);renderReserva();showToast("Removida");}
-
-// CSV
-let csvData=[];
-// ---- AI IMPORT ----
-let faturaFileData=null;
-let faturaFileType=null;
-let extractedItems=[];
-
-function populateImportCartao(){
-  const db=getDB();
-  const sel=document.getElementById("import-cartao");
-  if(sel)sel.innerHTML=db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
-}
-
-function handleDrop(e){
-  e.preventDefault();
-  document.getElementById("drop-zone").style.borderColor="";
-  const file=e.dataTransfer.files[0];
-  if(file)processFile(file);
-}
-
-function handleFaturaFile(e){
-  const file=e.target.files[0];
-  if(file)processFile(file);
-}
-
-function processFile(file){
-  const allowed=["image/png","image/jpeg","image/jpg","image/webp","application/pdf"];
-  if(!allowed.includes(file.type)){showToast("Formato não suportado. Use PNG, JPG ou PDF.");return;}
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    faturaFileData=ev.target.result.split(",")[1];
-    faturaFileType=file.type;
-    document.getElementById("upload-name").style.display="block";
-    document.getElementById("upload-name").textContent="📎 "+file.name;
-    document.getElementById("upload-idle").style.display="none";
-    document.getElementById("upload-preview").style.display="block";
-    if(file.type.startsWith("image/")){
-      const img=document.getElementById("img-preview");
-      img.src=ev.target.result;img.style.display="block";
-      document.getElementById("pdf-icon").style.display="none";
-    } else {
-      document.getElementById("pdf-icon").style.display="block";
-      document.getElementById("img-preview").style.display="none";
-    }
-    const btn=document.getElementById("btn-extrair");
-    btn.disabled=false;btn.style.opacity="1";
-  };
-  reader.readAsDataURL(file);
-}
-
-async function extrairComIA(){
-  if(!faturaFileData){showToast("Selecione um arquivo primeiro");return;}
-  const btn=document.getElementById("btn-extrair");
-  btn.disabled=true;btn.style.opacity=".5";
-  document.getElementById("ia-status").style.display="block";
-  document.getElementById("ia-msg").textContent="Analisando fatura com IA...";
-  document.getElementById("extract-empty").style.display="none";
-  document.getElementById("extract-result").style.display="none";
-
-  const mediaType=faturaFileType==="application/pdf"?"application/pdf":faturaFileType;
-  const contentType=faturaFileType==="application/pdf"?"document":"image";
-
-  const prompt=`Você é um extrator de dados financeiros. Analise esta fatura de cartão de crédito e extraia TODOS os lançamentos de compra (ignore pagamentos de fatura, créditos e antecipações).
-
-Responda APENAS com JSON válido, sem markdown, neste formato exato:
-{
-  "lancamentos": [
-    {"data": "YYYY-MM-DD", "descricao": "Nome limpo do estabelecimento", "valor": 99.90, "categoria": "alimentacao"},
-    ...
-  ]
-}
-
-Categorias disponíveis: moradia, transporte, alimentacao, saude, lazer, assinaturas, educacao, vestuario, pets, outros
-
-Regras:
-- data no formato YYYY-MM-DD (se o ano não estiver, use 2026)
-- valor como número positivo (sem R$)
-- descricao limpa, sem sufixos como SA, LTDA, BRA
-- categorize corretamente: Cobasi/Petz=pets, Uber=transporte, Spotify/Netflix/Apple=assinaturas, Wellhub/Gympass/TotalPass=saude, restaurantes/iFood/supermercado=alimentacao, cinema=lazer`;
-
-  const msgContent=contentType==="document"
-    ?[{type:"document",source:{type:"base64",media_type:mediaType,data:faturaFileData}},{type:"text",text:prompt}]
-    :[{type:"image",source:{type:"base64",media_type:mediaType,data:faturaFileData}},{type:"text",text:prompt}];
-
-  try{
-    document.getElementById("ia-msg").textContent="Processando lançamentos...";
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:2000,
-        messages:[{role:"user",content:msgContent}]
-      })
-    });
-    const data=await resp.json();
-    const text=data.content.filter(b=>b.type==="text").map(b=>b.text).join("");
-    let parsed;
-    try{
-      const clean=text.replace(/```json|```/g,"").trim();
-      parsed=JSON.parse(clean);
-    } catch(e){
-      throw new Error("A IA retornou um formato inesperado. Tente novamente.");
-    }
-    extractedItems=(parsed.lancamentos||[]).map((l,i)=>({...l,_id:"ex_"+i,_selected:true}));
-    renderExtracted();
-  } catch(err){
-    showToast("Erro: "+err.message);
-    document.getElementById("extract-empty").style.display="flex";
-  } finally {
-    document.getElementById("ia-status").style.display="none";
-    btn.disabled=false;btn.style.opacity="1";
-  }
-}
-
-const CAT_LABELS={moradia:"Moradia",transporte:"Transporte",alimentacao:"Alimentação",saude:"Saúde",lazer:"Lazer",assinaturas:"Assinaturas",educacao:"Educação",vestuario:"Vestuário",pets:"Pets",outros:"Outros",receita:"Receita"};
-
-function renderExtracted(){
-  if(!extractedItems.length){showToast("Nenhum lançamento encontrado.");return;}
-  document.getElementById("extract-result").style.display="flex";
-  document.getElementById("extract-result").style.flexDirection="column";
-  updateExtractCounts();
-  const list=document.getElementById("extract-list");
-  list.innerHTML=extractedItems.map((item,i)=>`
-    <div class="extract-item ${item._selected?"selected":""}" onclick="toggleExtracted(${i})" id="ei_${i}">
-      <input type="checkbox" ${item._selected?"checked":""} onclick="event.stopPropagation();toggleExtracted(${i})">
-      <div style="flex:1;min-width:0">
-        <div class="ei-desc">${item.descricao}</div>
-        <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
-          <span class="ei-date">${item.data}</span>
-          <select onclick="event.stopPropagation()" onchange="extractedItems[${i}].categoria=this.value" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;padding:2px 4px">
-            ${Object.entries(CAT_LABELS).filter(([k])=>k!=="receita").map(([k,v])=>`<option value="${k}" ${item.categoria===k?"selected":""}>${v}</option>`).join("")}
-          </select>
-        </div>
-      </div>
-      <div class="ei-val">R$ ${Number(item.valor).toFixed(2).replace(".",",")}</div>
-    </div>`).join("");
-}
-
-function toggleExtracted(i){
-  extractedItems[i]._selected=!extractedItems[i]._selected;
-  const el=document.getElementById("ei_"+i);
-  el.classList.toggle("selected",extractedItems[i]._selected);
-  el.querySelector("input").checked=extractedItems[i]._selected;
-  updateExtractCounts();
-}
-
-function selectAllExtracted(v){
-  extractedItems.forEach((it,i)=>{it._selected=v;});
-  renderExtracted();
-}
-
-function updateExtractCounts(){
-  const sel=extractedItems.filter(i=>i._selected);
-  const total=sel.reduce((a,i)=>a+parseFloat(i.valor||0),0);
-  document.getElementById("extract-count").textContent=`${sel.length} de ${extractedItems.length} selecionados`;
-  document.getElementById("extract-total").textContent=`Total: R$ ${total.toFixed(2).replace(".",",")}`;
-}
-
-function confirmarImport(){
-  const db=getDB();
-  const cartaoId=document.getElementById("import-cartao").value;
-  const selecionados=extractedItems.filter(i=>i._selected);
-  if(!selecionados.length){showToast("Nenhum item selecionado");return;}
-  selecionados.forEach(item=>{
-    db.lancCartao.push({id:uid(),data:item.data,cartaoId,descricao:item.descricao,valor:parseFloat(item.valor)||0,parcelas:1,parcela:1,categoria:item.categoria});
-  });
-  saveDB(db);
-  showToast(`✓ ${selecionados.length} lançamentos importados!`);
-  extractedItems=[];faturaFileData=null;faturaFileType=null;
-  document.getElementById("upload-idle").style.display="block";
-  document.getElementById("upload-preview").style.display="none";
-  document.getElementById("upload-name").style.display="none";
-  document.getElementById("extract-result").style.display="none";
-  document.getElementById("extract-empty").style.display="flex";
-  document.getElementById("fatura-file").value="";
-  const btn=document.getElementById("btn-extrair");
-  btn.disabled=true;btn.style.opacity=".5";
-}
-
-// ---- TERCEIROS ----
-const DONO_LABELS={brenda:"Só eu",casal:"Casal (eu pago)",carlos:"Carlos (me paga)",emerson:"Emerson (me paga)",ryan:"Ryan (me paga)"};
-const DONO_COLORS={brenda:"green",casal:"blue",carlos:"amber",emerson:"purple",ryan:"teal"};
-
-function renderTerceiros(){
-  const db=getDB();
-  const terc=db.terceiros||[];
-  const totalMensal=terc.filter(t=>t.ativo&&t.freq==="mensal").reduce((a,t)=>a+parseFloat(t.valor||0),0);
-  const totalDevendo=terc.reduce((a,t)=>{
-    const pago=((t.pagamentos||[]).reduce((s,p)=>s+parseFloat(p.valor||0),0));
-    return a+(parseFloat(t.valor||0)-pago>0?parseFloat(t.valor||0)-pago:0);
-  },0);
-  document.getElementById("terc-stats").innerHTML=`
-    <div class="stat-card"><div class="stat-label">Total mensal de terceiros</div><div class="stat-value amber">${R(totalMensal)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">sai do seu bolso</div></div>
-    <div class="stat-card"><div class="stat-label">Total a receber acumulado</div><div class="stat-value blue">${R(totalDevendo)}</div></div>
-    <div class="stat-card"><div class="stat-label">Pessoas</div><div class="stat-value purple">${[...new Set(terc.map(t=>t.pessoa))].length}</div></div>
-  `;
-  const pessoas=[...new Set(terc.map(t=>t.pessoa))];
-  document.getElementById("terc-pessoas").innerHTML=pessoas.map(pessoa=>{
-    const itens=terc.filter(t=>t.pessoa===pessoa);
-    const totalP=itens.reduce((a,t)=>a+parseFloat(t.valor||0),0);
-    const recebidoP=itens.reduce((a,t)=>(t.pagamentos||[]).reduce((s,p)=>s+parseFloat(p.valor||0),0)+a,0);
-    const devendoP=Math.max(0,totalP*1-recebidoP);
-    return`<div class="card" style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--purple-dim);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:var(--purple)">${pessoa.charAt(0)}</div>
-          <div><div style="font-weight:600;font-size:15px">${pessoa}</div><div style="font-size:12px;color:var(--text2)">${itens.length} cobrança${itens.length>1?"s":""}</div></div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:${devendoP>0?"var(--amber)":"var(--green)"}">${R(devendoP)}</div>
-          <div style="font-size:11px;color:var(--text3)">${devendoP>0?"a receber":"em dia"}</div>
-        </div>
-      </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Descrição</th><th>Frequência</th><th>Pago</th><th style="text-align:right">Valor</th><th></th></tr></thead>
-        <tbody>${itens.map(t=>{
-          const pago=(t.pagamentos||[]).reduce((s,p)=>s+parseFloat(p.valor||0),0);
-          const saldoItem=Math.max(0,parseFloat(t.valor)-pago);
-          return`<tr>
-            <td><div style="font-weight:500">${t.desc}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${t.obs||""}</div></td>
-            <td><span class="badge ${t.freq==="mensal"?"badge-blue":t.freq==="unica"?"badge-amber":"badge-purple"}">${t.freq}</span></td>
-            <td style="font-size:12px;color:${saldoItem>0?"var(--amber)":"var(--green)"}">${saldoItem>0?"Deve "+R(saldoItem):"✓ Pago"}</td>
-            <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--amber)">${R(t.valor)}</td>
-            <td><div style="display:flex;gap:5px">
-              <button class="btn btn-ghost btn-sm" onclick="openPagTerc('${t.id}')">Receber</button>
-              <button class="btn btn-danger btn-sm btn-icon" onclick="delTerceiro('${t.id}')">✕</button>
-            </div></td>
-          </tr>`;
-        }).join("")}</tbody>
-      </table></div>
-      ${itens.some(t=>(t.pagamentos||[]).length>0)?`
-      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:7px">Histórico de recebimentos</div>
-        ${itens.flatMap(t=>(t.pagamentos||[]).map(p=>({...p,desc:t.desc}))).sort((a,b)=>b.data.localeCompare(a.data)).slice(0,5).map(p=>`
-          <div style="font-size:12px;color:var(--text2);margin-bottom:3px">${fmtDate(p.data)} · ${p.desc} · <span style="color:var(--green);font-family:'DM Mono',monospace">${R(p.valor)}</span>${p.obs?" · "+p.obs:""}</div>
-        `).join("")}
-      </div>`:""} 
-    </div>`;
-  }).join("")||"<div class='empty-state'><div class='icon'>🤝</div><p>Nenhuma cobrança de terceiro</p></div>";
-}
-
-function openPagTerc(id){
-  document.getElementById("tp-id").value=id;
-  const today=new Date().toISOString().slice(0,10);
-  document.getElementById("tp-data").value=today;
-  document.getElementById("tp-valor").value="";
-  document.getElementById("tp-obs").value="";
-  openModal("modal-terc-pag");
-}
-function registrarPagTerc(){
-  const db=getDB();const id=document.getElementById("tp-id").value;
-  const t=db.terceiros.find(x=>x.id===id);if(!t)return;
-  t.pagamentos=t.pagamentos||[];
-  t.pagamentos.push({data:document.getElementById("tp-data").value,valor:parseFloat(document.getElementById("tp-valor").value)||0,obs:document.getElementById("tp-obs").value});
-  saveDB(db);closeModal("modal-terc-pag");showToast("✓ Pagamento registrado!");renderTerceiros();
+function delReserva(id){
+  const db=getDB();db.reservas=(db.reservas||[]).filter(r=>r.id!==id);
+  localStorage.setItem("brenda_reservas",JSON.stringify(db.reservas));
+  showToast("Removida");renderReserva();
 }
 function salvarTerceiro(){
-  const db=getDB();if(!db.terceiros)db.terceiros=[];
-  const t={id:uid(),pessoa:document.getElementById("tc-pessoa").value,desc:document.getElementById("tc-desc").value,valor:parseFloat(document.getElementById("tc-valor").value)||0,freq:document.getElementById("tc-freq").value,cat:document.getElementById("tc-cat").value,origem:document.getElementById("tc-origem").value,obs:document.getElementById("tc-obs").value,pagamentos:[],ativo:true};
+  const t={id:uid(),pessoa:document.getElementById("tc-pessoa").value,desc:document.getElementById("tc-desc").value,valor:parseFloat(document.getElementById("tc-valor").value)||0,freq:document.getElementById("tc-freq").value,cat:document.getElementById("tc-cat").value,origem:document.getElementById("tc-origem").value,obs:document.getElementById("tc-obs").value,pagamentos:JSON.stringify([]),ativo:"true"};
   if(!t.pessoa||!t.desc){showToast("Preencha pessoa e descrição");return;}
-  db.terceiros.push(t);saveDB(db);closeModal("modal-terceiro");
+  closeModal("modal-terceiro");
   ["tc-pessoa","tc-desc","tc-valor","tc-obs"].forEach(i=>document.getElementById(i).value="");
-  showToast("✓ Cobrança salva!");renderTerceiros();
+  setLoading(true,"Salvando...");
+  saveRecord("terceiros",t).then(ok=>{setLoading(false);if(ok){showToast("✓ Cobrança salva!");renderTerceiros();}});
 }
-function delTerceiro(id){const db=getDB();db.terceiros=db.terceiros.filter(t=>t.id!==id);saveDB(db);renderTerceiros();showToast("Removida");}
-
-// ---- ASSINATURAS ----
-function renderAssinaturas(){
-  const db=getDB();
-  const ass=db.assinaturas||[];
-  const minhas=ass.filter(a=>a.status==="ativa"&&(a.dono==="brenda"||a.dono==="casal")).reduce((s,a)=>s+parseFloat(a.valor||0),0);
-  const tercAss=ass.filter(a=>a.status==="ativa"&&!["brenda","casal"].includes(a.dono)).reduce((s,a)=>s+parseFloat(a.valor||0),0);
-  document.getElementById("assin-stats").innerHTML=`
-    <div class="stat-card"><div class="stat-label">Total assinaturas (minhas)</div><div class="stat-value blue">${R(minhas)}</div></div>
-    <div class="stat-card"><div class="stat-label">Pago por terceiros (a receber)</div><div class="stat-value amber">${R(tercAss)}</div></div>
-    <div class="stat-card"><div class="stat-label">Total no cartão</div><div class="stat-value red">${R(minhas+tercAss)}</div></div>
-  `;
-  const list=document.getElementById("assin-list");
-  list.innerHTML=`<div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>Serviço</th><th>Responsável</th><th>Dia cobrança</th><th>Status</th><th style="text-align:right">Valor</th><th></th></tr></thead>
-    <tbody>${ass.map(a=>{
-      const donoLabel=DONO_LABELS[a.dono]||a.dono;
-      const donoColor=DONO_COLORS[a.dono]||"amber";
-      return`<tr>
-        <td><div style="font-weight:500">${a.nome}</div>${a.obs?`<div style="font-size:11px;color:var(--text3)">${a.obs}</div>`:""}}</td>
-        <td><span class="badge badge-${donoColor}">${donoLabel}</span></td>
-        <td style="color:var(--text2)">Dia ${a.dia||"—"}</td>
-        <td><span class="badge ${a.status==="ativa"?"badge-green":"badge-amber"}">${a.status}</span></td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:500;color:${["brenda","casal"].includes(a.dono)?"var(--text)":"var(--amber)"}">${R(a.valor)}</td>
-        <td><div style="display:flex;gap:5px">
-          <button class="btn btn-ghost btn-sm" onclick="toggleAssinatura('${a.id}')">${a.status==="ativa"?"Pausar":"Ativar"}</button>
-          <button class="btn btn-danger btn-sm btn-icon" onclick="delAssinatura('${a.id}')">✕</button>
-        </div></td>
-      </tr>`;
-    }).join("")}</tbody>
-  </table></div></div>`;
+function delTerceiro(id){
+  if(!confirm("Remover?"))return;
+  setLoading(true,"Removendo...");
+  deleteRecord("terceiros",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderTerceiros();}});
+}
+function registrarPagTerc(){
+  const db=getDB();const id=document.getElementById("tp-id").value;const t=db.terceiros.find(x=>x.id===id);if(!t)return;
+  const pags=Array.isArray(t.pagamentos)?t.pagamentos:(typeof t.pagamentos==="string"&&t.pagamentos?JSON.parse(t.pagamentos):[]);
+  pags.push({data:document.getElementById("tp-data").value,valor:parseFloat(document.getElementById("tp-valor").value)||0,obs:document.getElementById("tp-obs").value});
+  const updated={...t,pagamentos:JSON.stringify(pags)};
+  closeModal("modal-terc-pag");
+  setLoading(true,"Salvando...");
+  saveRecord("terceiros",updated).then(ok=>{setLoading(false);if(ok){showToast("✓ Pagamento registrado!");renderTerceiros();}});
 }
 function salvarAssinatura(){
-  const db=getDB();if(!db.assinaturas)db.assinaturas=[];
   const a={id:uid(),nome:document.getElementById("as-nome").value,valor:parseFloat(document.getElementById("as-valor").value)||0,dia:document.getElementById("as-dia").value,dono:document.getElementById("as-dono").value,status:document.getElementById("as-status").value,obs:document.getElementById("as-obs").value};
   if(!a.nome||!a.valor){showToast("Preencha nome e valor");return;}
-  db.assinaturas.push(a);saveDB(db);closeModal("modal-assinatura");
-  document.getElementById("as-nome").value="";document.getElementById("as-valor").value="";document.getElementById("as-obs").value="";
-  showToast("✓ Assinatura salva!");renderAssinaturas();
+  closeModal("modal-assinatura");
+  ["as-nome","as-valor","as-obs"].forEach(i=>document.getElementById(i).value="");
+  setLoading(true,"Salvando...");
+  saveRecord("assinaturas",a).then(ok=>{setLoading(false);if(ok){showToast("✓ Assinatura salva!");renderAssinaturas();}});
 }
-function toggleAssinatura(id){const db=getDB();const a=db.assinaturas.find(x=>x.id===id);if(a){a.status=a.status==="ativa"?"pausada":"ativa";saveDB(db);renderAssinaturas();}}
-function delAssinatura(id){const db=getDB();db.assinaturas=db.assinaturas.filter(a=>a.id!==id);saveDB(db);renderAssinaturas();showToast("Removida");}
-
-// ---- COBASI ----
-const COBASI_TIPOS={
-  racao_cachorro:{label:"🐶 Ração Mike",sub:"Premier Raças Específicas Pug · 7,5kg · a cada 2 meses",freq:"2 meses",parcelaPadrao:2},
-  racao_pig:{label:"🐹 Ração Pig",sub:"Nutrópica Porquinho-da-Índia Super Premium · 1,2kg · a cada 2 meses",freq:"2 meses",parcelaPadrao:1},
-  petisco:{label:"🛒 Petiscos & Ração Porquinho",sub:"Ração porquinho-da-índia + petiscos do cachorro · mensal",freq:"mensal",parcelaPadrao:1},
-};
-function renderCobasi(){
-  const db=getDB();
-  const pedidos=db.cobasiPedidos||[];
-  const cards=document.getElementById("cobasi-pedidos-cards");
-  cards.innerHTML=Object.entries(COBASI_TIPOS).map(([tipo,info])=>{
-    const ultimas=pedidos.filter(p=>p.tipo===tipo).sort((a,b)=>b.data.localeCompare(a.data));
-    const ultima=ultimas[0];
-    const totalGasto=ultimas.reduce((a,p)=>a+parseFloat(p.valor||0),0);
-    return`<div class="card">
-      <div style="font-size:18px;margin-bottom:8px">${info.label.split(" ")[0]}</div>
-      <div style="font-weight:600;font-size:14px;margin-bottom:4px">${info.label.slice(2)}</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.5">${info.sub}</div>
-      <div style="display:flex;gap:10px;margin-bottom:10px">
-        <div style="flex:1"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Última compra</div><div style="font-size:13px;font-weight:500">${ultima?fmtDate(ultima.data):"—"}</div></div>
-        <div style="flex:1"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Último valor</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--teal)">${ultima?R(ultima.valor):"—"}</div></div>
-      </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Total histórico: <span style="color:var(--text2)">${R(totalGasto)}</span> · ${ultimas.length} compra${ultimas.length!==1?"s":""}</div>
-      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="abrirCobasi('${tipo}')">+ Registrar nova compra</button>
-    </div>`;
-  }).join("");
-
-  const tbody=document.querySelector("#cobasi-hist-table tbody");
-  const sorted=[...pedidos].sort((a,b)=>b.data.localeCompare(a.data));
-  tbody.innerHTML=sorted.length?sorted.map(p=>{
-    const info=COBASI_TIPOS[p.tipo]||{label:p.tipo};
-    return`<tr>
-      <td style="color:var(--text2)">${fmtDate(p.data)}</td>
-      <td style="font-weight:500">${info.label}</td>
-      <td style="color:var(--text2)">${info.freq}</td>
-      <td style="color:var(--text2)">${p.parcelas}x</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--teal)">${R(p.valor)}</td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="delCobasi('${p.id}')">✕</button></td>
-    </tr>`;
-  }).join(""):"<tr><td colspan='6' class='empty-state'><p>Sem histórico</p></td></tr>";
+function toggleAssinatura(id){
+  const db=getDB();const a=db.assinaturas.find(x=>x.id===id);if(!a)return;
+  const updated={...a,status:a.status==="ativa"?"pausada":"ativa"};
+  setLoading(true,"Salvando...");
+  saveRecord("assinaturas",updated).then(ok=>{setLoading(false);if(ok)renderAssinaturas();});
 }
-function abrirCobasi(tipo){
-  document.getElementById("cp-tipo").value=tipo;
-  document.getElementById("cp-data").value=new Date().toISOString().slice(0,10);
-  document.getElementById("cp-valor").value="";
-  document.getElementById("cp-obs").value="";
-  document.getElementById("cp-parcelas").value=COBASI_TIPOS[tipo]?.parcelaPadrao||1;
-  openModal("modal-cobasi-pedido");
+function delAssinatura(id){
+  if(!confirm("Remover esta assinatura?"))return;
+  setLoading(true,"Removendo...");
+  deleteRecord("assinaturas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderAssinaturas();}});
 }
 function salvarCobasi(){
-  const db=getDB();if(!db.cobasiPedidos)db.cobasiPedidos=[];
   const p={id:uid(),tipo:document.getElementById("cp-tipo").value,data:document.getElementById("cp-data").value,valor:parseFloat(document.getElementById("cp-valor").value)||0,parcelas:parseInt(document.getElementById("cp-parcelas").value)||1,obs:document.getElementById("cp-obs").value};
   if(!p.valor){showToast("Informe o valor");return;}
-  db.cobasiPedidos.push(p);
-  // Also add to lancCartao BMG
-  db.lancCartao.push({id:uid(),data:p.data,cartaoId:"id0001",descricao:"Cobasi — "+COBASI_TIPOS[p.tipo]?.label,valor:p.valor,parcelas:p.parcelas,parcela:1,categoria:"pets"});
-  saveDB(db);closeModal("modal-cobasi-pedido");
-  showToast("✓ Compra Cobasi registrada!");renderCobasi();
+  const lanc={id:uid(),data:p.data,cartaoId:"id0001",descricao:"Cobasi — "+(COBASI_TIPOS[p.tipo]?.label||p.tipo),valor:p.valor,parcelas:p.parcelas,parcela:1,categoria:"pets"};
+  closeModal("modal-cobasi-pedido");
+  setLoading(true,"Salvando...");
+  Promise.all([saveRecord("cobasiPedidos",p),saveRecord("lancCartao",lanc)])
+    .then(()=>{setLoading(false);showToast("✓ Compra Cobasi registrada!");renderCobasi();});
 }
-function delCobasi(id){const db=getDB();db.cobasiPedidos=db.cobasiPedidos.filter(p=>p.id!==id);saveDB(db);renderCobasi();showToast("Removida");}
-
-// ---- EUDORA helper ---- add to contas fixas with variavel marker
-// (Eudora is handled via manual transaction entry with "Eudora" description)
-renderDashboard();
+function delCobasi(id){
+  if(!confirm("Remover?"))return;
+  setLoading(true,"Removendo...");
+  deleteRecord("cobasiPedidos",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderCobasi();}});
+}
+initApp();
 </script>
 </body>
 </html>
