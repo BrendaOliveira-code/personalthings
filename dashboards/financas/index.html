@@ -434,6 +434,54 @@
   </div>
 </div>
 
+<!-- MODAL GERAR PRÉ-LANÇAMENTOS MÊS ESPECÍFICO -->
+<div class="modal-overlay" id="modal-gerar-mes">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">📅 Gerar pré-lançamentos <button class="modal-close" onclick="closeModal('modal-gerar-mes')">×</button></div>
+    <div class="form-group">
+      <label>Mês de referência</label>
+      <input type="month" id="gm-mes">
+    </div>
+    <div id="gm-preview" style="display:none;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Será gerado para:</div>
+      <div id="gm-lista"></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);margin-top:8px">
+        <span style="font-size:13px;color:var(--text2)">Total previsto</span>
+        <span id="gm-total" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--amber)"></span>
+      </div>
+    </div>
+    <div id="gm-aviso" style="display:none;background:rgba(255,95,95,.08);border:1px solid rgba(255,95,95,.2);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:14px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-gerar-mes')">Cancelar</button>
+      <button class="btn btn-primary" style="flex:2" id="btn-gm-confirmar" onclick="gerarPresMes()">Gerar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">
+      <span>📅 Gerar pré-lançamentos</span>
+    </div>
+    <div style="background:rgba(255,184,77,.08);border:1px solid rgba(255,184,77,.2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--amber);line-height:1.6">
+      Nenhum lançamento encontrado para <strong id="pl-mes">—</strong>.<br>
+      Posso gerar <strong id="pl-count">—</strong> pré-lançamentos previstos com base nas suas assinaturas e cobranças fixas de terceiros.
+    </div>
+    <div id="pl-list" style="max-height:200px;overflow-y:auto;margin-bottom:12px"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border);margin-bottom:16px">
+      <span style="font-size:13px;color:var(--text2)">Total previsto</span>
+      <span id="pl-total" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--amber)">—</span>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">
+      Os valores são estimados com base no histórico. Quando você importar a fatura do BMG, os valores reais substituem automaticamente os previstos.
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1" onclick="ignorarPrelancamentos()">Agora não</button>
+      <button class="btn btn-primary" style="flex:2" onclick="confirmarPrelancamentos()">✓ Gerar pré-lançamentos</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- PAGE: TERCEIROS -->
@@ -462,7 +510,10 @@
       <div class="page-title">Assinaturas Fixas</div>
       <div class="page-sub">Cobranças mensais recorrentes no BMG</div>
     </div>
-    <button class="btn btn-primary" onclick="openModal('modal-assinatura')">+ Nova assinatura</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="abrirModalGerarMes()">📅 Gerar pré-lançamentos</button>
+      <button class="btn btn-primary" onclick="openModal('modal-assinatura')">+ Nova assinatura</button>
+    </div>
   </div>
 
   <div class="stats-grid" id="assin-stats"></div>
@@ -739,13 +790,88 @@ function saveConfigURL(){
   localStorage.setItem("brenda_sheets_url",url);
   closeModal("modal-config");
   _db=null;
-  initApp();
+  // initApp deferred
 }
 
 // Inicializa o app
 async function initApp(){
   const db=await loadDB();
-  if(db) renderDashboard();
+  if(!db) return;
+  renderDashboard();
+  // Check if we should suggest pre-launches for this month
+  setTimeout(()=>checkPrelancamentos(db), 600);
+}
+
+function checkPrelancamentos(db){
+  const now=new Date();
+  const y=now.getFullYear(), m=now.getMonth();
+  const mesKey=`${y}-${String(m+1).padStart(2,'0')}`;
+  // Check if already generated this month
+  const jaGerou=localStorage.getItem("prelancado_"+mesKey);
+  if(jaGerou) return;
+  // Check if there are already confirmed launches this month in lancCartao
+  const jaTemLanc=db.lancCartao.some(l=>l.data&&l.data.startsWith(mesKey)&&!l.prelancado);
+  // Build list of what would be generated
+  const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
+  const tercBMG=(db.terceiros||[]).filter(t=>t.ativo&&t.freq==="mensal"&&t.origem==="bmg");
+  const total=[...assinaturas,...tercBMG].length;
+  if(total===0) return;
+  // Show modal
+  const nomeMes=now.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  const list=[...assinaturas,...tercBMG];
+  const totalVal=list.reduce((a,x)=>a+parseFloat(x.valor||0),0);
+  document.getElementById("pl-mes").textContent=nomeMes;
+  document.getElementById("pl-count").textContent=total;
+  document.getElementById("pl-total").textContent=R(totalVal);
+  document.getElementById("pl-list").innerHTML=list.map(x=>
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:var(--text2)">${x.nome||x.desc}</span>
+      <span style="font-family:'DM Mono',monospace;color:var(--amber)">${R(x.valor)}</span>
+    </div>`
+  ).join("");
+  document.getElementById("modal-prelancamento").classList.add("open");
+}
+
+async function confirmarPrelancamentos(){
+  const db=getDB();
+  const now=new Date();
+  const y=now.getFullYear(), m=now.getMonth();
+  const mesKey=`${y}-${String(m+1).padStart(2,'0')}`;
+  const dataBase=`${mesKey}-05`; // lançar no dia 5 como estimativa
+  closeModal("modal-prelancamento");
+  setLoading(true,"Gerando pré-lançamentos...");
+  const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
+  const tercBMG=(db.terceiros||[]).filter(t=>t.ativo&&t.freq==="mensal"&&t.origem==="bmg");
+  const todos=[...assinaturas,...tercBMG];
+  const promises=todos.map(x=>{
+    const lanc={
+      id:uid(),
+      data:dataBase,
+      cartaoId:"id0001", // BMG
+      descricao:(x.nome||x.desc)+" (previsto)",
+      valor:parseFloat(x.valor||0),
+      parcelas:1,
+      parcela:1,
+      categoria:x.categoria||x.cat||"assinaturas",
+      prelancado:"true"
+    };
+    return saveRecord("lancCartao",lanc);
+  });
+  await Promise.all(promises);
+  localStorage.setItem("prelancado_"+mesKey,"1");
+  setLoading(false);
+  showToast(`✓ ${todos.length} pré-lançamentos gerados para ${now.toLocaleDateString("pt-BR",{month:"long"})}`);
+  // Reload data
+  _db=null;
+  const db2=await loadDB();
+  if(db2) renderDashboard();
+}
+
+function ignorarPrelancamentos(){
+  const now=new Date();
+  const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  localStorage.setItem("prelancado_"+mesKey,"skip");
+  closeModal("modal-prelancamento");
 }
 
 
@@ -1504,6 +1630,232 @@ function delReserva(id){
   if(!confirm("Remover?"))return;
   setLoading(true,"Removendo...");
   deleteRecord("reservas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderReserva();}});
+}
+
+// ---- GERAR PRÉ-LANÇAMENTOS MÊS ESPECÍFICO ----
+function abrirModalGerarMes(){
+  // Default to current month
+  const now=new Date();
+  const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById("gm-mes").value=mesKey;
+  atualizarPreviewMes();
+  openModal("modal-gerar-mes");
+}
+
+// Hook month input change
+document.addEventListener("change",e=>{
+  if(e.target.id==="gm-mes") atualizarPreviewMes();
+});
+
+function atualizarPreviewMes(){
+  const mesKey=document.getElementById("gm-mes").value;
+  if(!mesKey) return;
+  const db=getDB();
+  const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
+  const tercBMG=(db.terceiros||[]).filter(t=>t.ativo&&t.freq==="mensal"&&t.origem==="bmg");
+  const todos=[...assinaturas,...tercBMG];
+  const totalVal=todos.reduce((a,x)=>a+parseFloat(x.valor||0),0);
+
+  // Check if already has launches this month
+  const jaTemLanc=(db.lancCartao||[]).filter(l=>l.data&&l.data.startsWith(mesKey));
+  const jaTemPre=jaTemLanc.filter(l=>l.prelancado===true||l.prelancado==="true");
+  const jaTemReal=jaTemLanc.filter(l=>!l.prelancado||l.prelancado==="false");
+
+  const aviso=document.getElementById("gm-aviso");
+  const btn=document.getElementById("btn-gm-confirmar");
+
+  if(jaTemReal.length>0){
+    aviso.style.display="block";
+    aviso.textContent=`⚠️ Já existem ${jaTemReal.length} lançamentos reais em ${mesKey}. Os pré-lançamentos serão adicionados mesmo assim.`;
+    btn.disabled=false;btn.style.opacity="1";
+  } else if(jaTemPre.length>0){
+    aviso.style.display="block";
+    aviso.textContent=`ℹ️ Já existem ${jaTemPre.length} pré-lançamentos em ${mesKey}. Clique em Gerar para adicionar os que estiverem faltando.`;
+    btn.disabled=false;btn.style.opacity="1";
+  } else {
+    aviso.style.display="none";
+    btn.disabled=false;btn.style.opacity="1";
+  }
+
+  document.getElementById("gm-preview").style.display="block";
+  document.getElementById("gm-lista").innerHTML=todos.map(x=>`
+    <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:var(--text2)">${x.nome||x.desc}</span>
+      <span style="font-family:'DM Mono',monospace;color:var(--amber)">${R(x.valor)}</span>
+    </div>`).join("");
+  document.getElementById("gm-total").textContent=R(totalVal);
+}
+
+async function gerarPresMes(){
+  const mesKey=document.getElementById("gm-mes").value;
+  if(!mesKey){showToast("Selecione um mês");return;}
+  const db=getDB();
+  const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
+  const tercBMG=(db.terceiros||[]).filter(t=>t.ativo&&t.freq==="mensal"&&t.origem==="bmg");
+  const todos=[...assinaturas,...tercBMG];
+  if(!todos.length){showToast("Nenhuma assinatura ativa encontrada");return;}
+
+  // Check which ones already exist as pre-launches this month (avoid duplicates)
+  const jaExistem=new Set(
+    (db.lancCartao||[])
+      .filter(l=>l.data&&l.data.startsWith(mesKey)&&(l.prelancado===true||l.prelancado==="true"))
+      .map(l=>l.descricao.replace(" (previsto)","").toLowerCase().trim())
+  );
+
+  const novos=todos.filter(x=>{
+    const nome=(x.nome||x.desc).toLowerCase().trim();
+    return![...jaExistem].some(j=>j.includes(nome)||nome.includes(j));
+  });
+
+  if(!novos.length){
+    closeModal("modal-gerar-mes");
+    showToast("Todos os pré-lançamentos já existem para este mês");
+    return;
+  }
+
+  const dataBase=`${mesKey}-05`;
+  closeModal("modal-gerar-mes");
+  setLoading(true,`Gerando pré-lançamentos para ${mesKey}...`);
+
+  const promises=novos.map(x=>saveRecord("lancCartao",{
+    id:uid(),data:dataBase,cartaoId:"id0001",
+    descricao:(x.nome||x.desc)+" (previsto)",
+    valor:parseFloat(x.valor||0),parcelas:1,parcela:1,
+    categoria:x.categoria||x.cat||"assinaturas",
+    prelancado:"true"
+  }));
+
+  await Promise.all(promises);
+  // Mark month as generated
+  localStorage.setItem("prelancado_"+mesKey,"1");
+  setLoading(false);
+  showToast(`✓ ${novos.length} pré-lançamentos gerados para ${mesKey}!`);
+  _db=null;
+  const db2=await loadDB();
+  if(db2) renderDashboard();
+}
+let faturaFileData=null;
+let faturaFileType=null;
+let extractedItems=[];
+
+function populateImportCartao(){
+  const db=getDB();
+  const sel=document.getElementById("import-cartao");
+  if(sel)sel.innerHTML=db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+}
+function handleDrop(e){
+  e.preventDefault();document.getElementById("drop-zone").style.borderColor="";
+  const file=e.dataTransfer.files[0];if(file)processFile(file);
+}
+function handleFaturaFile(e){const file=e.target.files[0];if(file)processFile(file);}
+function processFile(file){
+  const allowed=["image/png","image/jpeg","image/jpg","image/webp","application/pdf"];
+  if(!allowed.includes(file.type)){showToast("Use PNG, JPG ou PDF");return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    faturaFileData=ev.target.result.split(",")[1];faturaFileType=file.type;
+    document.getElementById("upload-name").style.display="block";
+    document.getElementById("upload-name").textContent="📎 "+file.name;
+    document.getElementById("upload-idle").style.display="none";
+    document.getElementById("upload-preview").style.display="block";
+    if(file.type.startsWith("image/")){
+      const img=document.getElementById("img-preview");img.src=ev.target.result;img.style.display="block";
+      document.getElementById("pdf-icon").style.display="none";
+    }else{document.getElementById("pdf-icon").style.display="block";document.getElementById("img-preview").style.display="none";}
+    const btn=document.getElementById("btn-extrair");btn.disabled=false;btn.style.opacity="1";
+  };
+  reader.readAsDataURL(file);
+}
+async function extrairComIA(){
+  if(!faturaFileData){showToast("Selecione um arquivo primeiro");return;}
+  const btn=document.getElementById("btn-extrair");btn.disabled=true;btn.style.opacity=".5";
+  document.getElementById("ia-status").style.display="block";
+  document.getElementById("ia-msg").textContent="Analisando fatura com IA...";
+  document.getElementById("extract-empty").style.display="none";
+  document.getElementById("extract-result").style.display="none";
+  const contentType=faturaFileType==="application/pdf"?"document":"image";
+  const prompt=`Analise esta fatura e extraia TODOS os lançamentos de compra (ignore pagamentos e créditos). Responda APENAS com JSON válido: {"lancamentos":[{"data":"YYYY-MM-DD","descricao":"Nome limpo","valor":99.90,"categoria":"alimentacao"}]} Categorias: moradia,transporte,alimentacao,saude,lazer,assinaturas,educacao,vestuario,pets,outros. Cobasi/Petz=pets,Uber=transporte,Spotify/Netflix/Apple=assinaturas,Wellhub/Gympass/TotalPass=saude.`;
+  const msgContent=contentType==="document"
+    ?[{type:"document",source:{type:"base64",media_type:faturaFileType,data:faturaFileData}},{type:"text",text:prompt}]
+    :[{type:"image",source:{type:"base64",media_type:faturaFileType,data:faturaFileData}},{type:"text",text:prompt}];
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,messages:[{role:"user",content:msgContent}]})});
+    const data=await resp.json();
+    const text=data.content.filter(b=>b.type==="text").map(b=>b.text).join("");
+    const parsed=JSON.parse(text.replace(/```json|```/g,"").trim());
+    extractedItems=(parsed.lancamentos||[]).map((l,i)=>({...l,_id:"ex_"+i,_selected:true}));
+    renderExtracted();
+  }catch(err){showToast("Erro: "+err.message);document.getElementById("extract-empty").style.display="flex";}
+  finally{document.getElementById("ia-status").style.display="none";btn.disabled=false;btn.style.opacity="1";}
+}
+const CAT_LABELS={moradia:"Moradia",transporte:"Transporte",alimentacao:"Alimentação",saude:"Saúde",lazer:"Lazer",assinaturas:"Assinaturas",educacao:"Educação",vestuario:"Vestuário",pets:"Pets",estetica:"Estética",outros:"Outros"};
+function renderExtracted(){
+  if(!extractedItems.length){showToast("Nenhum lançamento encontrado.");return;}
+  document.getElementById("extract-result").style.display="flex";
+  document.getElementById("extract-result").style.flexDirection="column";
+  updateExtractCounts();
+  document.getElementById("extract-list").innerHTML=extractedItems.map((item,i)=>`
+    <div class="extract-item ${item._selected?"selected":""}" onclick="toggleExtracted(${i})" id="ei_${i}">
+      <input type="checkbox" ${item._selected?"checked":""} onclick="event.stopPropagation();toggleExtracted(${i})">
+      <div style="flex:1;min-width:0">
+        <div class="ei-desc">${item.descricao}</div>
+        <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
+          <span class="ei-date">${item.data}</span>
+          <select onclick="event.stopPropagation()" onchange="extractedItems[${i}].categoria=this.value" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;padding:2px 4px">
+            ${Object.entries(CAT_LABELS).map(([k,v])=>`<option value="${k}" ${item.categoria===k?"selected":""}>${v}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="ei-val">R$ ${Number(item.valor).toFixed(2).replace(".",",")}</div>
+    </div>`).join("");
+}
+function toggleExtracted(i){
+  extractedItems[i]._selected=!extractedItems[i]._selected;
+  const el=document.getElementById("ei_"+i);
+  el.classList.toggle("selected",extractedItems[i]._selected);
+  el.querySelector("input").checked=extractedItems[i]._selected;
+  updateExtractCounts();
+}
+function selectAllExtracted(v){extractedItems.forEach(it=>it._selected=v);renderExtracted();}
+function updateExtractCounts(){
+  const sel=extractedItems.filter(i=>i._selected);
+  const total=sel.reduce((a,i)=>a+parseFloat(i.valor||0),0);
+  document.getElementById("extract-count").textContent=`${sel.length} de ${extractedItems.length} selecionados`;
+  document.getElementById("extract-total").textContent=`Total: R$ ${total.toFixed(2).replace(".",",")}`;
+}
+async function confirmarImport(){
+  const db=getDB();
+  const cartaoId=document.getElementById("import-cartao").value;
+  const selecionados=extractedItems.filter(i=>i._selected);
+  if(!selecionados.length){showToast("Nenhum item selecionado");return;}
+  const now=new Date();
+  const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const prelancadosMes=(db.lancCartao||[]).filter(l=>l.prelancado&&(l.prelancado===true||l.prelancado==="true")&&l.data&&l.data.startsWith(mesKey)&&l.cartaoId===cartaoId);
+  setLoading(true,"Importando e cruzando pré-lançamentos...");
+  const promises=[];const usados=new Set();
+  selecionados.forEach(item=>{
+    const nNorm=item.descricao.toLowerCase().replace(/\s+/g," ").trim();
+    const match=prelancadosMes.find(pl=>{
+      if(usados.has(pl.id))return false;
+      const plNorm=pl.descricao.replace(" (previsto)","").toLowerCase().replace(/\s+/g," ").trim();
+      return nNorm.includes(plNorm)||plNorm.includes(nNorm)||(nNorm.slice(0,6)===plNorm.slice(0,6)&&nNorm.length>5);
+    });
+    if(match){
+      usados.add(match.id);
+      promises.push(saveRecord("lancCartao",{...match,descricao:item.descricao,valor:item.valor,data:item.data,prelancado:"false",categoria:item.categoria}));
+    }else{
+      promises.push(saveRecord("lancCartao",{id:uid(),data:item.data,cartaoId,descricao:item.descricao,valor:item.valor,parcelas:1,parcela:1,categoria:item.categoria,prelancado:"false"}));
+    }
+  });
+  await Promise.all(promises);
+  setLoading(false);
+  showToast(`✓ ${selecionados.length} importados · ${usados.size} pré-lançamentos confirmados!`);
+  extractedItems=[];faturaFileData=null;faturaFileType=null;
+  ["upload-idle","extract-empty"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="block";});
+  ["upload-preview","extract-result","upload-name"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="none";});
+  document.getElementById("fatura-file").value="";
+  document.getElementById("btn-extrair").disabled=true;document.getElementById("btn-extrair").style.opacity=".5";
+  _db=null;const db2=await loadDB();if(db2){renderLancCartao();renderDashboard();}
 }
 
 initApp();
