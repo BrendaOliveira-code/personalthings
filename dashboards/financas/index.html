@@ -416,7 +416,7 @@
 </div>
 
 <!-- MODAL CONFIG SHEETS URL -->
-<div class="modal-overlay open" id="modal-config">
+<div class="modal-overlay" id="modal-config">
   <div class="modal" style="max-width:500px">
     <div class="modal-title">🔗 Conectar ao Google Sheets</div>
     <div style="background:rgba(91,143,255,.07);border:1px solid rgba(91,143,255,.18);border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--blue);line-height:1.6">
@@ -624,7 +624,7 @@ const CATS=[
 // GOOGLE SHEETS DATA LAYER
 // Cole sua URL do Apps Script aqui depois de publicar:
 // ============================================================
-let SHEETS_URL = localStorage.getItem("brenda_sheets_url") || "";
+let SHEETS_URL = localStorage.getItem("brenda_sheets_url") || "https://script.google.com/macros/s/AKfycbzHmaUrWfgYr5DY1F4dcd8iSQTkFUtW3MXZa_F6kE-2qVunR5njQSm5_zNh4qbFTy8/exec";
 
 // Cache local (evita requests repetidos na mesma sessão)
 let _db = null;
