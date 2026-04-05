@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanças - Brenda</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0f0f11;--surface:#17171a;--surface2:#1e1e23;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f0eff4;--text2:#9896a8;--text3:#5c5a6b;--green:#1fd882;--green-dim:rgba(31,216,130,0.12);--red:#ff5f5f;--red-dim:rgba(255,95,95,0.12);--blue:#5b8fff;--blue-dim:rgba(91,143,255,0.12);--amber:#ffb84d;--amber-dim:rgba(255,184,77,0.12);--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.12);--teal:#2dd4bf;--teal-dim:rgba(45,212,191,0.12);--radius:12px;--radius-sm:8px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .main{flex:1;overflow-y:auto}
+  .logo{padding:0 20px 28px;font-size:17px;font-weight:600;letter-spacing:-0.5px}
+  .logo span{color:var(--green)}
+  .logo small{display:block;font-size:11px;color:var(--text3);font-weight:400;margin-top:2px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:var(--text2);transition:all .15s;font-size:13.5px;border-left:2px solid transparent}
+  .nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+  .nav-item.active{color:var(--text);background:rgba(255,255,255,0.06);border-left-color:var(--green)}
+  .nav-icon{width:16px;height:16px;opacity:.7;flex-shrink:0}
+  .nav-sep{margin:12px 20px;border:none;border-top:1px solid var(--border)}
+  .nav-label{padding:8px 20px 4px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+  .page{display:none;padding:32px;max-width:1100px}
+  .page.active{display:block}
+  .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:16px;flex-wrap:wrap}
+  .page-title{font-size:22px;font-weight:600;letter-spacing:-.5px}
+  .page-sub{color:var(--text2);font-size:13px;margin-top:3px}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;border:none;transition:all .15s}
+  .btn-primary{background:var(--green);color:#0a2015}
+  .btn-primary:hover{filter:brightness(1.1)}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{color:var(--text);background:var(--surface2)}
+  .btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+  .btn-danger:hover{background:rgba(255,95,95,.2)}
+  .btn-warning{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(255,184,77,.2)}
+  .btn-sm{padding:6px 12px;font-size:12px}
+  .btn-icon{padding:7px;border-radius:6px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .card-title{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+  .stat-label{font-size:11px;color:var(--text2);margin-bottom:6px}
+  .stat-value{font-size:20px;font-weight:600;letter-spacing:-.5px;font-family:'DM Mono',monospace}
+  .stat-value.green{color:var(--green)}
+  .stat-value.red{color:var(--red)}
+  .stat-value.blue{color:var(--blue)}
+  .stat-value.amber{color:var(--amber)}
+  .stat-value.teal{color:var(--teal)}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:9px 12px;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+  td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(255,255,255,0.015)}
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+  .badge-green{background:var(--green-dim);color:var(--green)}
+  .badge-red{background:var(--red-dim);color:var(--red)}
+  .badge-amber{background:var(--amber-dim);color:var(--amber)}
+  .badge-blue{background:var(--blue-dim);color:var(--blue)}
+  .badge-purple{background:var(--purple-dim);color:var(--purple)}
+  .badge-teal{background:var(--teal-dim);color:var(--teal)}
+  .cat-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+  .progress-bar{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;border-radius:3px;transition:width .4s}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:28px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto}
+  .modal-title{font-size:16px;font-weight:600;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+  .modal-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;line-height:1;padding:0}
+  .form-group{margin-bottom:14px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+  input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 11px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s}
+  input:focus,select:focus,textarea:focus{border-color:var(--green)}
+  select option{background:var(--surface2)}
+  textarea{resize:vertical;min-height:70px}
+  .month-nav{display:flex;align-items:center;gap:8px}
+  .month-display{font-size:14px;font-weight:500;min-width:130px;text-align:center}
+  .chart-bar-wrap{display:flex;align-items:flex-end;gap:5px;height:110px}
+  .chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .chart-bar{width:100%;border-radius:3px 3px 0 0;min-height:3px;transition:height .4s}
+  .chart-bar-label{font-size:10px;color:var(--text3)}
+  .divida-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+  .empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+  .empty-state .icon{font-size:28px;margin-bottom:10px}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--green);color:var(--green);padding:11px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;z-index:200;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .mt2{margin-top:20px}
+  .upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:28px;text-align:center;cursor:pointer;transition:all .15s;color:var(--text2)}
+  .upload-zone:hover{border-color:var(--green);color:var(--text)}
+  .section-title{font-size:14px;font-weight:600;margin-bottom:12px}
+  .alert-banner{background:rgba(255,184,77,.08);border:1px solid rgba(255,184,77,.2);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--amber);display:flex;align-items:center;gap:8px}
+  @media(max-width:700px){
+    .sidebar{width:56px}.logo small,.nav-label,.nav-item span{display:none}
+    .nav-item{justify-content:center;padding:12px}.page{padding:16px}
+    .grid2,.grid3,.form-row{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="sidebar">
+  <div class="logo">finança<span>.</span><small>Brenda Oliveira</small></div>
+  <div class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+    <span>Dashboard</span>
+  </div>
+  <div class="nav-item" onclick="navigate('transacoes')" id="nav-transacoes">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12M2 8h8M2 11h5"/></svg>
+    <span>Transações</span>
+  </div>
+  <div class="nav-item" onclick="navigate('fixas')" id="nav-fixas">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+    <span>Contas Fixas</span>
+  </div>
+  <div class="nav-item" onclick="navigate('cartoes')" id="nav-cartoes">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 7h14"/></svg>
+    <span>Cartões</span>
+  </div>
+  <div class="nav-item" onclick="navigate('dividas')" id="nav-dividas">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M5 4h4.5a2.5 2.5 0 010 5H5"/></svg>
+    <span>Dívidas</span>
+  </div>
+  <hr class="nav-sep">
+  <div class="nav-label"><span>Ferramentas</span></div>
+  <div class="nav-item" onclick="navigate('terceiros')" id="nav-terceiros">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><circle cx="11" cy="4" r="2"/><path d="M1 13c0-2.5 2-4 5-4s5 1.5 5 4"/><path d="M11 8c1.5 0 3 .8 3 2.5"/></svg>
+    <span>Terceiros</span>
+  </div>
+  <div class="nav-item" onclick="navigate('assinaturas')" id="nav-assinaturas">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M5 7h6M5 10h4"/></svg>
+    <span>Assinaturas</span>
+  </div>
+  <div class="nav-item" onclick="navigate('cobasi')" id="nav-cobasi">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10l-1 9H4L3 3z"/><path d="M1 3h14"/><path d="M6 3V2a2 2 0 014 0v1"/></svg>
+    <span>Cobasi</span>
+  </div>
+  <div class="nav-item" onclick="navigate('reserva')" id="nav-reserva">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3z"/><path d="M2 3l6 5 6-5"/></svg>
+    <span>Reserva</span>
+  </div>
+  <div class="nav-item" onclick="navigate('importar')" id="nav-importar">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10v3a1 1 0 001 1h10a1 1 0 001-1v-3M8 2v8M5 7l3 3 3-3"/></svg>
+    <span>Importar</span>
+  </div>
+</nav>
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div><div class="page-title">Visão Geral</div><div class="page-sub" id="dash-sub">—</div></div>
+    <div class="month-nav">
+      <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1)">‹</button>
+      <div class="month-display" id="month-display">—</div>
+      <button class="btn btn-ghost btn-sm" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+  <div id="dash-alert" style="display:none"></div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Gastos por categoria</div></div>
+      <div id="cat-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Evolução 6 meses</div></div>
+      <div style="display:flex;gap:16px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;background:var(--green);border-radius:2px;opacity:.7"></div>Receita</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;background:var(--red);border-radius:2px;opacity:.7"></div>Despesa</div>
+      </div>
+      <div class="chart-bar-wrap" id="bar-chart"></div>
+    </div>
+  </div>
+  <div class="card mt2">
+    <div class="card-header"><div class="card-title">Últimas transações e lançamentos</div><button class="btn btn-ghost btn-sm" onclick="navigate('transacoes')">Ver todas ›</button></div>
+    <div class="table-wrap"><table id="dash-table"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Origem</th><th style="text-align:right">Valor</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- TRANSAÇÕES -->
+<div class="page" id="page-transacoes">
+  <div class="page-header">
+    <div><div class="page-title">Transações Manuais</div><div class="page-sub">Receitas, despesas à vista e PIX</div></div>
+    <button class="btn btn-primary" onclick="openModal('modal-transacao')">+ Nova transação</button>
+  </div>
+  <div class="card">
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <input type="text" id="busca-trans" placeholder="Buscar..." style="max-width:200px" oninput="renderTransacoes()">
+      <select id="filtro-tipo" onchange="renderTransacoes()" style="max-width:140px"><option value="">Todos</option><option value="receita">Receitas</option><option value="despesa">Despesas</option></select>
+      <select id="filtro-cat" onchange="renderTransacoes()" style="max-width:160px"><option value="">Categorias</option></select>
+    </div>
+    <div class="table-wrap"><table id="trans-table"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- CONTAS FIXAS -->
+<div class="page" id="page-fixas">
+  <div class="page-header">
+    <div><div class="page-title">Contas Fixas</div><div class="page-sub">Cobranças mensais recorrentes</div></div>
+    <button class="btn btn-primary" onclick="openModal('modal-fixa')">+ Nova conta fixa</button>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total mensal fixo</div><div class="stat-value red" id="total-fixas">—</div></div>
+    <div class="stat-card"><div class="stat-label">Contas ativas</div><div class="stat-value blue" id="qtd-fixas">—</div></div>
+    <div class="stat-card"><div class="stat-label">% do salário (R$7.800)</div><div class="stat-value amber" id="pct-fixas">—</div></div>
+  </div>
+  <div id="fixas-list"></div>
+</div>
+
+<!-- CARTÕES -->
+<div class="page" id="page-cartoes">
+  <div class="page-header">
+    <div><div class="page-title">Cartões de Crédito</div><div class="page-sub">BMG Corinthians · C&A · Amazon</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="openModal('modal-cartao')">+ Cartão</button>
+      <button class="btn btn-primary" onclick="openModal('modal-lanc-cartao')">+ Lançamento</button>
+    </div>
+  </div>
+  <div id="cartoes-resumo" class="grid3" style="margin-bottom:20px"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Lançamentos</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="filtro-cartao" onchange="renderLancCartao()" style="max-width:160px"><option value="">Todos</option></select>
+        <select id="filtro-mes-cartao" onchange="renderLancCartao()" style="max-width:160px"><option value="">Todos os meses</option></select>
+      </div>
+    </div>
+    <div class="table-wrap"><table id="cartao-table"><thead><tr><th>Data</th><th>Descrição</th><th>Cartão</th><th>Categoria</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- DÍVIDAS -->
+<div class="page" id="page-dividas">
+  <div class="page-header">
+    <div><div class="page-title">Dívidas em Aberto</div><div class="page-sub">Nubank · Caixa · Renner · Espaço Laser</div></div>
+    <button class="btn btn-primary" onclick="openModal('modal-divida')">+ Nova dívida</button>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total em dívidas</div><div class="stat-value red" id="total-div-val">—</div></div>
+    <div class="stat-card"><div class="stat-label">Dívidas ativas</div><div class="stat-value amber" id="qtd-div">—</div></div>
+    <div class="stat-card"><div class="stat-label">Parcelas mensais</div><div class="stat-value blue" id="parc-mensais">—</div></div>
+  </div>
+  <div id="dividas-list"></div>
+</div>
+
+<!-- RESERVA -->
+<div class="page" id="page-reserva">
+  <div class="page-header">
+    <div><div class="page-title">Reserva / Poupança</div><div class="page-sub">Objetivos de dinheiro guardado</div></div>
+    <button class="btn btn-primary" onclick="openModal('modal-reserva')">+ Nova reserva</button>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total reservado</div><div class="stat-value teal" id="total-reserva">—</div></div>
+    <div class="stat-card"><div class="stat-label">Objetivos ativos</div><div class="stat-value blue" id="qtd-reserva">—</div></div>
+  </div>
+  <div id="reserva-list"></div>
+</div>
+
+<!-- IMPORTAR -->
+<div class="page" id="page-importar">
+  <div class="page-header">
+    <div><div class="page-title">Importar Fatura</div><div class="page-sub">Envie a imagem ou PDF da sua fatura — a IA extrai os lançamentos automaticamente</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px">
+    <!-- Upload card -->
+    <div class="card" style="display:flex;flex-direction:column;gap:14px">
+      <div class="card-title">1. Selecionar arquivo</div>
+
+      <div class="upload-zone" id="drop-zone" onclick="document.getElementById('fatura-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--green)'" ondragleave="this.style.borderColor=''" ondrop="handleDrop(event)">
+        <div id="upload-preview" style="display:none;margin-bottom:10px">
+          <img id="img-preview" style="max-height:120px;border-radius:6px;display:none">
+          <div id="pdf-icon" style="display:none;font-size:40px">📄</div>
+        </div>
+        <div id="upload-idle">
+          <div style="font-size:28px;margin-bottom:8px">🧾</div>
+          <p style="font-weight:500;margin-bottom:3px">Clique ou arraste aqui</p>
+          <p style="font-size:12px;color:var(--text3)">Imagem (PNG, JPG) ou PDF da fatura</p>
+        </div>
+        <div id="upload-name" style="display:none;font-size:12px;color:var(--green);margin-top:6px"></div>
+        <input type="file" id="fatura-file" accept="image/*,.pdf" style="display:none" onchange="handleFaturaFile(event)">
+      </div>
+
+      <div class="form-group" style="margin:0">
+        <label>Cartão de destino</label>
+        <select id="import-cartao"></select>
+      </div>
+
+      <button class="btn btn-primary" id="btn-extrair" onclick="extrairComIA()" disabled style="opacity:.5">
+        <span id="btn-extrair-txt">✦ Extrair com IA</span>
+      </button>
+
+      <div id="ia-status" style="display:none;font-size:12px;color:var(--text2);text-align:center;padding:8px 0">
+        <div id="ia-spinner" style="display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle"></div>
+        <span id="ia-msg">Analisando fatura...</span>
+      </div>
+    </div>
+
+    <!-- Result card -->
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="card-title">2. Revisar e importar</div>
+      <div id="extract-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);padding:24px 0;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🤖</div>
+        <p style="font-size:13px">A IA vai extrair os lançamentos<br>e listar aqui para você revisar</p>
+      </div>
+      <div id="extract-result" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span id="extract-count" style="font-size:13px;color:var(--text2)"></span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="selectAllExtracted(true)">Todos</button>
+            <button class="btn btn-ghost btn-sm" onclick="selectAllExtracted(false)">Nenhum</button>
+          </div>
+        </div>
+        <div id="extract-list" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <span id="extract-total" style="font-size:12px;color:var(--text2)"></span>
+          <button class="btn btn-primary btn-sm" onclick="confirmarImport()">Importar selecionados</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .extract-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s}
+    .extract-item:hover{border-color:var(--border2)}
+    .extract-item.selected{border-color:var(--green)}
+    .extract-item input[type=checkbox]{accent-color:var(--green);width:15px;height:15px;flex-shrink:0}
+    .extract-item .ei-desc{flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .extract-item .ei-date{font-size:11px;color:var(--text3);flex-shrink:0}
+    .extract-item .ei-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--amber);flex-shrink:0}
+    .extract-item select{background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;padding:2px 4px;max-width:100px}
+  </style>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-transacao">
+  <div class="modal">
+    <div class="modal-title">Nova Transação <button class="modal-close" onclick="closeModal('modal-transacao')">×</button></div>
+    <div class="form-row"><div class="form-group"><label>Data</label><input type="date" id="t-data"></div><div class="form-group"><label>Tipo</label><select id="t-tipo"><option value="despesa">Despesa</option><option value="receita">Receita</option></select></div></div>
+    <div class="form-group"><label>Descrição</label><input type="text" id="t-desc" placeholder="Ex: Mercado, Salário..."></div>
+    <div class="form-row"><div class="form-group"><label>Valor (R$)</label><input type="number" id="t-valor" placeholder="0,00" step="0.01" min="0"></div><div class="form-group"><label>Categoria</label><select id="t-cat"></select></div></div>
+    <div class="form-group"><label>Observação</label><textarea id="t-obs" rows="2"></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarTransacao()">Salvar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-fixa">
+  <div class="modal">
+    <div class="modal-title">Nova Conta Fixa <button class="modal-close" onclick="closeModal('modal-fixa')">×</button></div>
+    <div class="form-group"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: Aluguel, Netflix..."></div>
+    <div class="form-row"><div class="form-group"><label>Valor (R$)</label><input type="number" id="f-valor" step="0.01" min="0"></div><div class="form-group"><label>Dia de vencimento</label><input type="number" id="f-dia" min="1" max="31"></div></div>
+    <div class="form-row"><div class="form-group"><label>Categoria</label><select id="f-cat"></select></div><div class="form-group"><label>Status</label><select id="f-status"><option value="ativa">Ativa</option><option value="pausada">Pausada</option></select></div></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarFixa()">Salvar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-cartao">
+  <div class="modal">
+    <div class="modal-title">Novo Cartão <button class="modal-close" onclick="closeModal('modal-cartao')">×</button></div>
+    <div class="form-group"><label>Nome</label><input type="text" id="c-nome" placeholder="Ex: Nubank, Itaú..."></div>
+    <div class="form-row"><div class="form-group"><label>Limite (R$)</label><input type="number" id="c-limite" step="0.01" min="0"></div><div class="form-group"><label>Dia do fechamento</label><input type="number" id="c-fech" min="1" max="31"></div></div>
+    <div class="form-group"><label>Dia de vencimento</label><input type="number" id="c-venc" min="1" max="31"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarCartao()">Salvar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-lanc-cartao">
+  <div class="modal">
+    <div class="modal-title">Novo Lançamento <button class="modal-close" onclick="closeModal('modal-lanc-cartao')">×</button></div>
+    <div class="form-row"><div class="form-group"><label>Data</label><input type="date" id="lc-data"></div><div class="form-group"><label>Cartão</label><select id="lc-cartao"></select></div></div>
+    <div class="form-group"><label>Descrição</label><input type="text" id="lc-desc"></div>
+    <div class="form-row"><div class="form-group"><label>Valor (R$)</label><input type="number" id="lc-valor" step="0.01" min="0"></div><div class="form-group"><label>Parcelas</label><input type="number" id="lc-parcelas" value="1" min="1" max="72"></div></div>
+    <div class="form-group"><label>Categoria</label><select id="lc-cat"></select></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarLancCartao()">Salvar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-divida">
+  <div class="modal">
+    <div class="modal-title">Nova Dívida <button class="modal-close" onclick="closeModal('modal-divida')">×</button></div>
+    <div class="form-group"><label>Nome</label><input type="text" id="d-nome"></div>
+    <div class="form-group"><label>Credor</label><input type="text" id="d-credor"></div>
+    <div class="form-row"><div class="form-group"><label>Saldo atual (R$)</label><input type="number" id="d-saldo" step="0.01" min="0"></div><div class="form-group"><label>Parcela mensal (R$)</label><input type="number" id="d-parcela" step="0.01" min="0"></div></div>
+    <div class="form-row"><div class="form-group"><label>Juros (% a.m.)</label><input type="number" id="d-juros" step="0.01" min="0"></div><div class="form-group"><label>Vencimento</label><input type="date" id="d-venc"></div></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarDivida()">Salvar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-update-divida">
+  <div class="modal">
+    <div class="modal-title">Atualizar Saldo da Dívida <button class="modal-close" onclick="closeModal('modal-update-divida')">×</button></div>
+    <input type="hidden" id="ud-id">
+    <div class="form-group"><label>Novo saldo devedor (R$)</label><input type="number" id="ud-saldo" step="0.01" min="0"></div>
+    <div class="form-group"><label>Nova parcela mensal (R$)</label><input type="number" id="ud-parcela" step="0.01" min="0"></div>
+    <div class="form-group"><label>Observação</label><textarea id="ud-obs" rows="2" placeholder="Ex: Renegociação em mar/2026"></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="atualizarDivida()">Atualizar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-reserva">
+  <div class="modal">
+    <div class="modal-title">Nova Reserva <button class="modal-close" onclick="closeModal('modal-reserva')">×</button></div>
+    <div class="form-group"><label>Objetivo / Descrição</label><input type="text" id="r-nome" placeholder="Ex: Viagem, Emergência..."></div>
+    <div class="form-row"><div class="form-group"><label>Valor guardado (R$)</label><input type="number" id="r-valor" step="0.01" min="0"></div><div class="form-group"><label>Data</label><input type="date" id="r-data"></div></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarReserva()">Salvar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- PAGE: TERCEIROS -->
+<div class="page" id="page-terceiros" style="display:none">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Cobranças de Terceiros</div>
+      <div class="page-sub">Valores que você paga mas não são seus — controle quem deve o quê</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-terceiro')">+ Nova cobrança</button>
+  </div>
+
+  <div style="background:rgba(91,143,255,0.07);border:1px solid rgba(91,143,255,0.18);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--blue)">
+    💡 Esses valores <strong>entram no controle geral</strong> (você paga do seu bolso), mas são <strong>marcados como "a receber"</strong> e não impactam seu orçamento pessoal.
+  </div>
+
+  <div class="stats-grid" id="terc-stats"></div>
+
+  <div id="terc-pessoas"></div>
+</div>
+
+<!-- PAGE: ASSINATURAS -->
+<div class="page" id="page-assinaturas" style="display:none">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Assinaturas Fixas</div>
+      <div class="page-sub">Cobranças mensais recorrentes no BMG</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-assinatura')">+ Nova assinatura</button>
+  </div>
+
+  <div class="stats-grid" id="assin-stats"></div>
+  <div id="assin-list"></div>
+</div>
+
+<!-- PAGE: COBASI PROGRAMADA -->
+<div class="page" id="page-cobasi" style="display:none">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Cobasi Programada</div>
+      <div class="page-sub">3 compras recorrentes · Atualiza automaticamente quando importar fatura</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-cobasi-pedido')">+ Registrar compra</button>
+  </div>
+
+  <div style="background:rgba(45,212,191,0.07);border:1px solid rgba(45,212,191,0.18);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--teal)">
+    🐾 Quando você importar a fatura do BMG via IA, as compras da Cobasi são atualizadas automaticamente com o valor real.
+  </div>
+
+  <div class="grid3" id="cobasi-pedidos-cards" style="margin-bottom:20px"></div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">Histórico de compras</div></div>
+    <div class="table-wrap">
+      <table id="cobasi-hist-table">
+        <thead><tr><th>Data</th><th>Pedido</th><th>Frequência</th><th>Parcelas</th><th style="text-align:right">Valor</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TERCEIRO -->
+<div class="modal-overlay" id="modal-terceiro">
+  <div class="modal">
+    <div class="modal-title">Nova Cobrança de Terceiro <button class="modal-close" onclick="closeModal('modal-terceiro')">×</button></div>
+    <div class="form-group"><label>Nome da pessoa</label><input type="text" id="tc-pessoa" placeholder="Ex: Carlos, Emerson, Ryan..."></div>
+    <div class="form-group"><label>Descrição</label><input type="text" id="tc-desc" placeholder="Ex: Financiamento Carro, GymPass..."></div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor (R$)</label><input type="number" id="tc-valor" step="0.01" min="0"></div>
+      <div class="form-group"><label>Frequência</label>
+        <select id="tc-freq">
+          <option value="mensal">Mensal</option>
+          <option value="variavel">Variável (atualizo quando cobrar)</option>
+          <option value="unica">Única vez</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Categoria</label><select id="tc-cat"></select></div>
+      <div class="form-group"><label>Cobrado em qual cartão/conta</label>
+        <select id="tc-origem">
+          <option value="bmg">BMG Corinthians</option>
+          <option value="debito">Débito / PIX</option>
+          <option value="cca">C&A</option>
+          <option value="amazon">Amazon</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Observação</label><textarea id="tc-obs" rows="2" placeholder="Detalhes adicionais..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarTerceiro()">Salvar</button>
+  </div>
+</div>
+
+<!-- MODAL REGISTRAR PAGAMENTO TERCEIRO -->
+<div class="modal-overlay" id="modal-terc-pag">
+  <div class="modal">
+    <div class="modal-title">Registrar Pagamento Recebido <button class="modal-close" onclick="closeModal('modal-terc-pag')">×</button></div>
+    <input type="hidden" id="tp-id">
+    <div class="form-row">
+      <div class="form-group"><label>Data</label><input type="date" id="tp-data"></div>
+      <div class="form-group"><label>Valor recebido (R$)</label><input type="number" id="tp-valor" step="0.01" min="0"></div>
+    </div>
+    <div class="form-group"><label>Observação</label><textarea id="tp-obs" rows="2"></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="registrarPagTerc()">Confirmar recebimento</button>
+  </div>
+</div>
+
+<!-- MODAL ASSINATURA -->
+<div class="modal-overlay" id="modal-assinatura">
+  <div class="modal">
+    <div class="modal-title">Nova Assinatura <button class="modal-close" onclick="closeModal('modal-assinatura')">×</button></div>
+    <div class="form-group"><label>Nome do serviço</label><input type="text" id="as-nome" placeholder="Ex: Netflix, Spotify..."></div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor mensal (R$)</label><input type="number" id="as-valor" step="0.01" min="0"></div>
+      <div class="form-group"><label>Dia de cobrança</label><input type="number" id="as-dia" min="1" max="31" placeholder="Ex: 14"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Responsável</label>
+        <select id="as-dono">
+          <option value="brenda">Só eu (Brenda)</option>
+          <option value="casal">Casal (eu pago)</option>
+          <option value="carlos">Carlos (ele me paga)</option>
+          <option value="emerson">Emerson (me paga)</option>
+          <option value="ryan">Ryan (me paga)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="as-status">
+          <option value="ativa">Ativa</option>
+          <option value="pausada">Pausada</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Observação</label><input type="text" id="as-obs" placeholder="Ex: GymPass do Carlos incluído"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarAssinatura()">Salvar</button>
+  </div>
+</div>
+
+<!-- MODAL COBASI PEDIDO -->
+<div class="modal-overlay" id="modal-cobasi-pedido">
+  <div class="modal">
+    <div class="modal-title">Registrar Compra Cobasi <button class="modal-close" onclick="closeModal('modal-cobasi-pedido')">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>Tipo</label>
+        <select id="cp-tipo">
+          <option value="racao_cachorro">🐶 Ração Mike (2 em 2 meses · 2x)</option>
+          <option value="racao_pig">🐹 Ração Pig (2 em 2 meses · 1x)</option>
+          <option value="petisco">🛒 Petiscos / Ração porquinho-da-índia</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Data</label><input type="date" id="cp-data"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor real (R$)</label><input type="number" id="cp-valor" step="0.01" min="0"></div>
+      <div class="form-group"><label>Parcelas</label>
+        <select id="cp-parcelas">
+          <option value="1">1x (à vista)</option>
+          <option value="2">2x</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Observação</label><input type="text" id="cp-obs" placeholder="Ex: Premier 7,5kg - Frango"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="salvarCobasi()">Salvar</button>
+  </div>
+</div>
+
+<script>
+const INITIAL_DB = {"transacoes": [{"id": "id0100", "data": "2025-11-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 8900.29, "categoria": "receita", "obs": ""}, {"id": "id0101", "data": "2025-12-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 5000, "categoria": "receita", "obs": ""}, {"id": "id0102", "data": "2026-01-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0103", "data": "2026-02-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0104", "data": "2026-03-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0105", "data": "2026-04-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}], "fixas": [{"id": "id0010", "nome": "Aluguel", "valor": 1896.17, "dia": 5, "categoria": "moradia", "status": "ativa"}, {"id": "id0011", "nome": "Limpeza", "valor": 550, "dia": 10, "categoria": "moradia", "status": "ativa"}, {"id": "id0012", "nome": "Sem Parar", "valor": 591.63, "dia": 10, "categoria": "transporte", "status": "ativa"}, {"id": "id0013", "nome": "Empréstimo Consignado", "valor": 1992.97, "dia": 5, "categoria": "outros", "status": "ativa"}, {"id": "id0014", "nome": "Creche + Banho (Mike)", "valor": 330, "dia": 5, "categoria": "outros", "status": "ativa"}, {"id": "id0015", "nome": "Esteticista Elaine", "valor": 195, "dia": 15, "categoria": "outros", "status": "ativa"}, {"id": "id0016", "nome": "Itaú - Renegociação (dívida)", "valor": 1936.67, "dia": 5, "categoria": "outros", "status": "ativa"}], "cartoes": [{"id": "id0001", "nome": "Corinthians BMG", "limite": 1750, "fechamento": 26, "vencimento": 5}, {"id": "id0002", "nome": "C&A", "limite": 2000, "fechamento": 10, "vencimento": 20}, {"id": "id0003", "nome": "Amazon", "limite": 3000, "fechamento": 10, "vencimento": 20}], "lancCartao": [{"id": "id0200", "data": "2025-10-14", "cartaoId": "id0001", "descricao": "COBASI", "valor": 185.96, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0201", "data": "2025-11-30", "cartaoId": "id0001", "descricao": "Deezer", "valor": 39.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0202", "data": "2025-12-10", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 46.62, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0203", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "IFD Felipe Rocha Peixo", "valor": 108.97, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0204", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Ikesaki Tucuruvi", "valor": 171.78, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0205", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Lojas Americanas", "valor": 25.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0206", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Uber", "valor": 81.97, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0207", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "LZL Restaurantes", "valor": 166.11, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0208", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Uber", "valor": 32.93, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0209", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Netflix", "valor": 85.7, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0210", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 86.31, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0211", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Auto Posto Vitrine", "valor": 39.99, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0212", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0213", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Patrão Adega", "valor": 114.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0214", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Petz", "valor": 109.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0215", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Ecolavare", "valor": 100.0, "parcelas": 1, "parcela": 1, "categoria": "moradia"}, {"id": "id0216", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "JC Kids", "valor": 119.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0217", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Trimais II", "valor": 297.3, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0218", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "R Altavista Comercio", "valor": 119.96, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0219", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Petz Shopping Trimais", "valor": 32.0, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0220", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Adega do Gogo", "valor": 37.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0221", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Adega do Gogo", "valor": 158.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0222", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0223", "data": "2025-12-27", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 76.03, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0224", "data": "2025-12-28", "cartaoId": "id0001", "descricao": "99Food", "valor": 62.88, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0225", "data": "2025-12-29", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 209.28, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0226", "data": "2025-12-31", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 143.58, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0227", "data": "2026-01-02", "cartaoId": "id0001", "descricao": "O Burguer Tucuruvi", "valor": 131.6, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0228", "data": "2026-01-03", "cartaoId": "id0001", "descricao": "99Food Pizzas", "valor": 89.9, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0229", "data": "2026-01-03", "cartaoId": "id0001", "descricao": "Petz", "valor": 99.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0230", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0231", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 69.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0232", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Cobasi (parc 1/2)", "valor": 104.81, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0233", "data": "2026-01-06", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0234", "data": "2026-01-08", "cartaoId": "id0001", "descricao": "Wellhub WEL", "valor": 59.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0235", "data": "2026-01-20", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0236", "data": "2026-01-24", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0237", "data": "2026-01-26", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0238", "data": "2026-01-30", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 86.31, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0239", "data": "2026-01-30", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 69.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0240", "data": "2026-01-31", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 88.7, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0241", "data": "2026-02-01", "cartaoId": "id0001", "descricao": "Trimais II", "valor": 146.19, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0242", "data": "2026-02-01", "cartaoId": "id0001", "descricao": "Divino Fogão", "valor": 76.6, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0243", "data": "2026-02-02", "cartaoId": "id0001", "descricao": "TotalPass", "valor": 119.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0244", "data": "2026-02-05", "cartaoId": "id0001", "descricao": "Sem Parar (cartão c/ juros)", "valor": 381.24, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0245", "data": "2026-02-05", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 36.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0246", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 77.23, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0247", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Oba Hortifruiti", "valor": 125.51, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0248", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0249", "data": "2026-02-07", "cartaoId": "id0001", "descricao": "iFood Club", "valor": 12.9, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0250", "data": "2026-02-07", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 62.05, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0251", "data": "2026-02-08", "cartaoId": "id0001", "descricao": "Wellhub WEL", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0252", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 4.03, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0253", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 23.95, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0254", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 21.98, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0255", "data": "2026-02-11", "cartaoId": "id0001", "descricao": "Uber", "valor": 18.98, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0256", "data": "2026-02-13", "cartaoId": "id0001", "descricao": "Uber", "valor": 15.99, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0257", "data": "2026-02-14", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0258", "data": "2026-02-20", "cartaoId": "id0001", "descricao": "Uber", "valor": 13.97, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0259", "data": "2026-02-21", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 57.55, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0260", "data": "2026-02-26", "cartaoId": "id0001", "descricao": "Wellhub", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0261", "data": "2026-02-27", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0262", "data": "2026-02-28", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 94.21, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0263", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 50.22, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0264", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi (parc 1/2)", "valor": 104.81, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0265", "data": "2026-03-02", "cartaoId": "id0001", "descricao": "TotalPass", "valor": 119.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0266", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Wellhub (Brenda)", "valor": 36.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0267", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Centro Médico (parc 1/3)", "valor": 356.68, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0268", "data": "2026-03-06", "cartaoId": "id0001", "descricao": "Wellhub (Carlos)", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0269", "data": "2026-03-16", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0270", "data": "2026-03-16", "cartaoId": "id0001", "descricao": "Wellhub", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0271", "data": "2026-04-04", "cartaoId": "id0001", "descricao": "Uber Rides", "valor": 14.58, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0272", "data": "2026-04-04", "cartaoId": "id0001", "descricao": "Apple", "valor": 109.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0273", "data": "2026-03-30", "cartaoId": "id0001", "descricao": "Wellhub Ryan Fernando", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0274", "data": "2026-03-26", "cartaoId": "id0001", "descricao": "Cinemark Brasil", "valor": 40.9, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0275", "data": "2026-03-26", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0276", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Centro Médico (parc 2/3)", "valor": 356.66, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0277", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi (parc 2/2)", "valor": 104.8, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0278", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 18, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0279", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 53.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0280", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 194.78, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0281", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 121.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0282", "data": "2026-01-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 204.98, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0283", "data": "2026-02-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 204.98, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0284", "data": "2026-01-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0285", "data": "2026-02-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0286", "data": "2026-03-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0287", "data": "2026-04-01", "cartaoId": "id0002", "descricao": "Compras C&A (Brenda)", "valor": 90.66, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0288", "data": "2026-02-01", "cartaoId": "id0003", "descricao": "Jim.com Beatriz Gonc (parc 1)", "valor": 150, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0289", "data": "2026-03-01", "cartaoId": "id0003", "descricao": "Jim.com Beatriz Gonc (parc 2)", "valor": 150, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0290", "data": "2026-04-01", "cartaoId": "id0003", "descricao": "Centro Médico (Amazon)", "valor": 450, "parcelas": 1, "parcela": 1, "categoria": "saude"}], "dividas": [{"id": "id0020", "nome": "Nubank", "credor": "Nubank", "saldo": 11793.52, "parcela": 0, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 11793.52, "obs": "Saldo inicial"}]}, {"id": "id0021", "nome": "Caixa Econômica", "credor": "Caixa", "saldo": 11936.67, "parcela": 1936.67, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 11936.67, "obs": "Atualizada 17/01 - valor original 6540,60 com desconto"}]}, {"id": "id0022", "nome": "Renner", "credor": "Renner", "saldo": 17808.77, "parcela": 226.65, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 17808.77, "obs": "Atualizada 17/01"}]}, {"id": "id0023", "nome": "Espaço Laser", "credor": "Espaço Laser", "saldo": 1, "parcela": 0, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-01", "saldo": 1, "obs": "A quitar"}]}]};
+
+const CATS=[
+  {id:"moradia",label:"Moradia",icon:"🏠",color:"blue"},
+  {id:"transporte",label:"Transporte",icon:"🚗",color:"amber"},
+  {id:"alimentacao",label:"Alimentação",icon:"🍽️",color:"green"},
+  {id:"saude",label:"Saúde",icon:"💊",color:"red"},
+  {id:"lazer",label:"Lazer",icon:"🎮",color:"purple"},
+  {id:"assinaturas",label:"Assinaturas",icon:"📱",color:"blue"},
+  {id:"educacao",label:"Educação",icon:"📚",color:"teal"},
+  {id:"vestuario",label:"Vestuário",icon:"👔",color:"purple"},
+  {id:"receita",label:"Receita",icon:"💰",color:"green"},
+  {id:"outros",label:"Outros",icon:"📦",color:"amber"},
+  {id:"pets",label:"Pets",icon:"🐾",color:"teal"},
+];
+
+function getDB(){
+  const d=localStorage.getItem("financas_brenda_v2");
+  const db = d ? JSON.parse(d) : JSON.parse(JSON.stringify(INITIAL_DB));
+  if(!d){
+    db.reservas=[
+      {id:"r001",nome:"Rotina - Banhos do Mike",valor:120,data:"2025-10-31"},
+      {id:"r002",nome:"Elaine - Sobrancelha",valor:180,data:"2025-10-31"},
+      {id:"r003",nome:"Contas - Dezembro",valor:6300,data:"2025-10-31"},
+      {id:"r004",nome:"Reserva geral",valor:6000,data:"2025-11-03"},
+    ];
+    saveDB(db);
+  }
+  if(!db.terceiros) {
+    db.terceiros=[
+      {id:"tc01",pessoa:"Carlos",desc:"Financiamento Carro",valor:500.98,freq:"mensal",cat:"transporte",origem:"debito",obs:"Passou pro Carlos a partir de abr/2026",pagamentos:[],ativo:true},
+      {id:"tc02",pessoa:"Emerson (padrasto)",desc:"GymPass Emerson",valor:66.90,freq:"mensal",cat:"saude",origem:"bmg",obs:"Wellhub - padrasto",pagamentos:[],ativo:true},
+      {id:"tc03",pessoa:"Ryan (primo)",desc:"GymPass Ryan",valor:66.90,freq:"mensal",cat:"saude",origem:"bmg",obs:"Wellhub Ryan Fernando",pagamentos:[],ativo:true},
+    ];
+    saveDB(db);
+  }
+  if(!db.assinaturas) {
+    db.assinaturas=[
+      {id:"as01",nome:"Spotify",valor:31.90,dia:14,dono:"brenda",status:"ativa",obs:""},
+      {id:"as02",nome:"Apple (iCloud/TV+)",valor:66.90,dia:24,dono:"brenda",status:"ativa",obs:""},
+      {id:"as03",nome:"GymPass Brenda",valor:36.70,dia:5,dono:"brenda",status:"ativa",obs:"Wellhub - plano individual"},
+      {id:"as04",nome:"GymPass Carlos",valor:91.70,dia:5,dono:"casal",status:"ativa",obs:"Eu pago, casal"},
+      {id:"as05",nome:"TotalPass",valor:119.90,dia:2,dono:"casal",status:"ativa",obs:""},
+      {id:"as06",nome:"Cinemark",valor:40.90,dia:26,dono:"brenda",status:"ativa",obs:""},
+      {id:"as07",nome:"Claude IA",valor:109.90,dia:4,dono:"brenda",status:"ativa",obs:"Anthropic — aparece como APPLECOMBILL"},
+      {id:"as08",nome:"GymPass Emerson",valor:66.90,dia:5,dono:"emerson",status:"ativa",obs:"Padrasto — me paga"},
+      {id:"as09",nome:"GymPass Ryan",valor:66.90,dia:30,dono:"ryan",status:"ativa",obs:"Primo — me paga"},
+    ];
+    saveDB(db);
+  }
+  if(!db.cobasiPedidos) {
+    db.cobasiPedidos=[
+      {id:"cb01",tipo:"racao_cachorro",data:"2026-03-01",valor:209.61,parcelas:2,obs:"Premier 7,5kg Frango - Pug"},
+      {id:"cb02",tipo:"racao_pig",data:"2026-03-01",valor:86.31,parcelas:1,obs:"Nutrópica Porquinho-da-Índia Super Premium"},
+      {id:"cb03",tipo:"petisco",data:"2026-02-05",valor:124.05,parcelas:1,obs:"Petiscos + ração porquinho-da-índia"},
+    ];
+    saveDB(db);
+  }
+  return db;
+}
+function saveDB(db){localStorage.setItem("financas_brenda_v2",JSON.stringify(db));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+
+let currentPage="dashboard";
+let currentMonth=new Date().getMonth();
+let currentYear=new Date().getFullYear();
+
+function navigate(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  document.getElementById("page-"+page).classList.add("active");
+  document.getElementById("nav-"+page).classList.add("active");
+  currentPage=page;
+  renderPage(page);
+}
+function renderPage(p){
+  if(p==="dashboard")renderDashboard();
+  if(p==="transacoes")renderTransacoes();
+  if(p==="fixas")renderFixas();
+  if(p==="cartoes")renderCartoes();
+  if(p==="dividas")renderDividas();
+  if(p==="reserva")renderReserva();
+  if(p==="importar")populateImportCartao();
+  if(p==="terceiros")renderTerceiros();
+  if(p==="assinaturas")renderAssinaturas();
+  if(p==="cobasi")renderCobasi();
+}
+function changeMonth(d){
+  currentMonth+=d;
+  if(currentMonth>11){currentMonth=0;currentYear++;}
+  if(currentMonth<0){currentMonth=11;currentYear--;}
+  renderPage(currentPage);
+}
+function getMonthStr(){return new Date(currentYear,currentMonth,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});}
+function R(v){return"R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtDate(d){if(!d)return"";const p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0];}
+function cat(id){return CATS.find(c=>c.id===id)||{label:id||"—",color:"amber",icon:"📦"};}
+
+function inMonth(dateStr,y,m){
+  if(!dateStr)return false;
+  const[dy,dm]=dateStr.split("-");
+  return parseInt(dy)===y&&parseInt(dm)-1===m;
+}
+
+function renderDashboard(){
+  document.getElementById("month-display").textContent=getMonthStr();
+  document.getElementById("dash-sub").textContent="Referência: "+getMonthStr();
+  const db=getDB();
+  const trans=db.transacoes.filter(t=>inMonth(t.data,currentYear,currentMonth));
+  const fixasAtivas=db.fixas.filter(f=>f.status==="ativa");
+  const totalFixas=fixasAtivas.reduce((a,f)=>a+parseFloat(f.valor||0),0);
+  const lancMes=db.lancCartao.filter(l=>inMonth(l.data,currentYear,currentMonth));
+  const totalCartao=lancMes.reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const receitas=trans.filter(t=>t.tipo==="receita").reduce((a,t)=>a+parseFloat(t.valor||0),0);
+  const despesas=trans.filter(t=>t.tipo==="despesa").reduce((a,t)=>a+parseFloat(t.valor||0),0);
+  const totalDesp=despesas+totalFixas+totalCartao;
+  const saldo=receitas-totalDesp;
+
+  // Alert BMG
+  const alertEl=document.getElementById("dash-alert");
+  if(currentMonth===3&&currentYear===2026){
+    alertEl.style.display="flex";
+    alertEl.className="alert-banner";
+    alertEl.innerHTML="⚠️ Fatura BMG abril/2026: R$ 793,00 · Vencimento 05/04/2026. Próximas faturas: R$ 818,12 já comprometidos.";
+  } else alertEl.style.display="none";
+
+  document.getElementById("stats-grid").innerHTML=`
+    <div class="stat-card"><div class="stat-label">Receitas</div><div class="stat-value green">${R(receitas)}</div></div>
+    <div class="stat-card"><div class="stat-label">Despesas manuais</div><div class="stat-value red">${R(despesas)}</div></div>
+    <div class="stat-card"><div class="stat-label">Contas fixas</div><div class="stat-value red">${R(totalFixas)}</div></div>
+    <div class="stat-card"><div class="stat-label">Cartões (mês)</div><div class="stat-value amber">${R(totalCartao)}</div></div>
+    <div class="stat-card"><div class="stat-label">Total despesas</div><div class="stat-value red">${R(totalDesp)}</div></div>
+    <div class="stat-card"><div class="stat-label">Saldo estimado</div><div class="stat-value ${saldo>=0?"green":"red"}">${R(saldo)}</div></div>
+  `;
+
+  // Cats
+  const cats={};
+  trans.filter(t=>t.tipo==="despesa").forEach(t=>{cats[t.categoria]=(cats[t.categoria]||0)+parseFloat(t.valor||0);});
+  lancMes.forEach(l=>{cats[l.categoria]=(cats[l.categoria]||0)+parseFloat(l.valor||0);});
+  fixasAtivas.forEach(f=>{cats[f.categoria]=(cats[f.categoria]||0)+parseFloat(f.valor||0);});
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const total=sorted.reduce((a,e)=>a+e[1],0)||1;
+  const catEl=document.getElementById("cat-list");
+  catEl.innerHTML=sorted.length?sorted.slice(0,6).map(([cid,val])=>{
+    const c=cat(cid);const pct=Math.round(val/total*100);
+    return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+      <div class="cat-icon" style="background:var(--${c.color}-dim)">${c.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${c.label}</span><span style="color:var(--text2)">${pct}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--${c.color})"></div></div>
+      </div>
+      <div style="font-size:12px;font-weight:500;min-width:75px;text-align:right;font-family:'DM Mono',monospace">${R(val)}</div>
+    </div>`;
+  }).join(""):"<div class='empty-state'><p>Sem gastos este mês</p></div>";
+
+  // Bar chart
+  const bars=[];
+  for(let i=5;i>=0;i--){
+    let m=currentMonth-i,y=currentYear;
+    if(m<0){m+=12;y--;}
+    const tM=db.transacoes.filter(t=>inMonth(t.data,y,m));
+    const lM=db.lancCartao.filter(l=>inMonth(l.data,y,m));
+    const fV=db.fixas.filter(f=>f.status==="ativa").reduce((a,f)=>a+parseFloat(f.valor||0),0);
+    const desp=tM.filter(t=>t.tipo==="despesa").reduce((a,t)=>a+parseFloat(t.valor||0),0)+lM.reduce((a,l)=>a+parseFloat(l.valor||0),0)+fV;
+    const rec=tM.filter(t=>t.tipo==="receita").reduce((a,t)=>a+parseFloat(t.valor||0),0);
+    bars.push({label:new Date(y,m,1).toLocaleDateString("pt-BR",{month:"short"}),desp,rec});
+  }
+  const mx=Math.max(...bars.map(b=>Math.max(b.desp,b.rec)),1);
+  document.getElementById("bar-chart").innerHTML=bars.map(b=>`
+    <div class="chart-bar-col">
+      <div class="chart-bar" style="background:var(--green);height:${Math.round(b.rec/mx*95)}px;opacity:.75"></div>
+      <div class="chart-bar" style="background:var(--red);height:${Math.round(b.desp/mx*95)}px;opacity:.75"></div>
+      <div class="chart-bar-label">${b.label}</div>
+    </div>`).join("");
+
+  // Recent
+  const allItems=[
+    ...trans.map(t=>({...t,_src:"transacao"})),
+    ...lancMes.map(l=>{const c2=db.cartoes.find(x=>x.id===l.cartaoId)||{nome:"?"};return{...l,_src:"cartao:"+c2.nome,tipo:"despesa"};}),
+  ].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,8);
+  const tbody=document.querySelector("#dash-table tbody");
+  tbody.innerHTML=allItems.length?allItems.map(t=>{
+    const c2=cat(t.categoria);
+    return`<tr>
+      <td style="color:var(--text2)">${fmtDate(t.data)}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.descricao}</td>
+      <td><span class="badge badge-${c2.color}">${c2.label}</span></td>
+      <td style="font-size:11px;color:var(--text3)">${t._src||"—"}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:${t.tipo==="receita"?"var(--green)":"var(--red)"}">${R(t.valor)}</td>
+    </tr>`;
+  }).join(""):"<tr><td colspan='5' class='empty-state'><p>Sem dados este mês</p></td></tr>";
+}
+
+function renderTransacoes(){
+  const db=getDB();
+  const busca=document.getElementById("busca-trans").value.toLowerCase();
+  const tipo=document.getElementById("filtro-tipo").value;
+  const catf=document.getElementById("filtro-cat").value;
+  const catSel=document.getElementById("filtro-cat");
+  const prev=catSel.value;
+  catSel.innerHTML="<option value=''>Categorias</option>"+CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join("");
+  catSel.value=prev;
+  let trans=[...db.transacoes];
+  if(busca)trans=trans.filter(t=>t.descricao.toLowerCase().includes(busca));
+  if(tipo)trans=trans.filter(t=>t.tipo===tipo);
+  if(catf)trans=trans.filter(t=>t.categoria===catf);
+  trans.sort((a,b)=>b.data.localeCompare(a.data));
+  const tbody=document.querySelector("#trans-table tbody");
+  tbody.innerHTML=trans.length?trans.map(t=>{
+    const c=cat(t.categoria);
+    return`<tr><td style="color:var(--text2)">${fmtDate(t.data)}</td><td>${t.descricao}</td><td><span class="badge badge-${c.color}">${c.label}</span></td><td><span class="badge ${t.tipo==="receita"?"badge-green":"badge-red"}">${t.tipo}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:${t.tipo==="receita"?"var(--green)":"var(--red)"}">${R(t.valor)}</td><td><button class="btn btn-danger btn-sm btn-icon" onclick="delTrans('${t.id}')">✕</button></td></tr>`;
+  }).join(""):"<tr><td colspan='6' class='empty-state'><p>Nenhuma transação</p></td></tr>";
+}
+
+function renderFixas(){
+  const db=getDB();
+  const ativas=db.fixas.filter(f=>f.status==="ativa");
+  const total=ativas.reduce((a,f)=>a+parseFloat(f.valor||0),0);
+  const sal=7800;
+  document.getElementById("total-fixas").textContent=R(total);
+  document.getElementById("qtd-fixas").textContent=ativas.length;
+  document.getElementById("pct-fixas").textContent=Math.round(total/sal*100)+"%";
+  const list=document.getElementById("fixas-list");
+  if(!db.fixas.length){list.innerHTML="<div class='empty-state'><div class='icon'>📋</div><p>Nenhuma conta fixa</p></div>";return;}
+  list.innerHTML=`<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Nome</th><th>Categoria</th><th>Vencimento</th><th>% salário</th><th>Status</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+    <tbody>${db.fixas.map(f=>{
+      const c=cat(f.categoria);const pct=Math.round(parseFloat(f.valor||0)/sal*100);
+      return`<tr>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="cat-icon" style="background:var(--${c.color}-dim)">${c.icon}</div><span style="font-weight:500">${f.nome}</span></div></td>
+        <td><span class="badge badge-${c.color}">${c.label}</span></td>
+        <td style="color:var(--text2)">Dia ${f.dia||"—"}</td>
+        <td style="font-size:12px;color:var(--text2)">${pct}%</td>
+        <td><span class="badge ${f.status==="ativa"?"badge-green":"badge-amber"}">${f.status}</span></td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:500">${R(f.valor)}</td>
+        <td><div style="display:flex;gap:5px"><button class="btn btn-ghost btn-sm" onclick="toggleFixa('${f.id}')">${f.status==="ativa"?"Pausar":"Ativar"}</button><button class="btn btn-danger btn-sm btn-icon" onclick="delFixa('${f.id}')">✕</button></div></td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table></div></div>`;
+}
+
+function renderCartoes(){
+  const db=getDB();
+  const resumo=document.getElementById("cartoes-resumo");
+  resumo.innerHTML=db.cartoes.length?db.cartoes.map(c=>{
+    const usado=db.lancCartao.filter(l=>l.cartaoId===c.id&&inMonth(l.data,currentYear,currentMonth)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
+    const disp=Math.max(0,(c.limite||0)-usado);
+    const pct=c.limite?Math.min(100,Math.round(usado/c.limite*100)):0;
+    return`<div class="card">
+      <div style="font-weight:600;font-size:14px;margin-bottom:12px">💳 ${c.nome}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Usado (mês)</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--amber)">${R(usado)}</div></div>
+        <div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Disponível</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--green)">${R(disp)}</div></div>
+      </div>
+      ${c.limite?`<div class="progress-bar" style="margin-bottom:7px"><div class="progress-fill" style="width:${pct}%;background:${pct>80?"var(--red)":"var(--amber)"}"></div></div>`:""}
+      <div style="font-size:10px;color:var(--text3)">Limite: ${R(c.limite||0)} · Fecha dia ${c.fechamento||"—"} · Vence dia ${c.vencimento||"—"}</div>
+    </div>`;
+  }).join(""):"<div class='empty-state'><p>Nenhum cartão</p></div>";
+
+  // Fill selects
+  const filtroCart=document.getElementById("filtro-cartao");
+  filtroCart.innerHTML="<option value=''>Todos</option>"+db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+  const lcSel=document.getElementById("lc-cartao");
+  lcSel.innerHTML=db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+
+  // Month filter
+  const meses=new Set();
+  db.lancCartao.forEach(l=>{if(l.data)meses.add(l.data.slice(0,7));});
+  const mesSel=document.getElementById("filtro-mes-cartao");
+  const prevM=mesSel.value;
+  mesSel.innerHTML="<option value=''>Todos os meses</option>"+[...meses].sort().reverse().map(m=>`<option value="${m}">${m}</option>`).join("");
+  mesSel.value=prevM;
+
+  renderLancCartao();
+}
+
+function renderLancCartao(){
+  const db=getDB();
+  const fc=document.getElementById("filtro-cartao").value;
+  const fm=document.getElementById("filtro-mes-cartao").value;
+  let lancs=[...db.lancCartao];
+  if(fc)lancs=lancs.filter(l=>l.cartaoId===fc);
+  if(fm)lancs=lancs.filter(l=>l.data&&l.data.startsWith(fm));
+  lancs.sort((a,b)=>b.data.localeCompare(a.data));
+  const tbody=document.querySelector("#cartao-table tbody");
+  tbody.innerHTML=lancs.length?lancs.map(l=>{
+    const cart=db.cartoes.find(c=>c.id===l.cartaoId)||{nome:"—"};
+    const c=cat(l.categoria);
+    return`<tr><td style="color:var(--text2)">${fmtDate(l.data)}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.descricao}</td><td style="font-size:12px">${cart.nome}</td><td><span class="badge badge-${c.color}">${c.label}</span></td><td style="text-align:right;font-family:'DM Mono',monospace;color:var(--amber)">${R(l.valor)}</td><td><button class="btn btn-danger btn-sm btn-icon" onclick="delLanc('${l.id}')">✕</button></td></tr>`;
+  }).join(""):"<tr><td colspan='6' class='empty-state'><p>Nenhum lançamento</p></td></tr>";
+}
+
+function renderDividas(){
+  const db=getDB();
+  const total=db.dividas.reduce((a,d)=>a+parseFloat(d.saldo||0),0);
+  const parcelas=db.dividas.reduce((a,d)=>a+parseFloat(d.parcela||0),0);
+  document.getElementById("total-div-val").textContent=R(total);
+  document.getElementById("qtd-div").textContent=db.dividas.length;
+  document.getElementById("parc-mensais").textContent=R(parcelas);
+  const list=document.getElementById("dividas-list");
+  if(!db.dividas.length){list.innerHTML="<div class='empty-state'><div class='icon'>✅</div><p>Sem dívidas! 🎉</p></div>";return;}
+  list.innerHTML=db.dividas.map(d=>{
+    const hist=(d.historico||[]);
+    return`<div class="divida-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+        <div><div style="font-weight:600;font-size:15px">${d.nome}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${d.credor||"—"}</div></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn btn-warning btn-sm" onclick="openUpdateDiv('${d.id}')">Atualizar</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="delDiv('${d.id}')">✕</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;margin-bottom:${hist.length?"12px":"0"}">
+        <div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Saldo devedor</div><div style="font-family:'DM Mono',monospace;font-weight:600;font-size:17px;color:var(--red)">${R(d.saldo)}</div></div>
+        ${d.parcela?`<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Parcela mensal</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--amber)">${R(d.parcela)}</div></div>`:""}
+        ${d.juros?`<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Juros a.m.</div><div style="font-weight:500">${d.juros}%</div></div>`:""}
+      </div>
+      ${hist.length?`<div style="border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:7px">Histórico</div>
+        ${hist.slice(-3).reverse().map(h=>`<div style="font-size:12px;color:var(--text2);margin-bottom:3px">${fmtDate(h.data)} — <span style="color:var(--text);font-family:'DM Mono',monospace">${R(h.saldo)}</span>${h.obs?" · "+h.obs:""}</div>`).join("")}
+      </div>`:""}
+    </div>`;
+  }).join("");
+}
+
+function renderReserva(){
+  const db=getDB();
+  if(!db.reservas)db.reservas=[];
+  const total=db.reservas.reduce((a,r)=>a+parseFloat(r.valor||0),0);
+  document.getElementById("total-reserva").textContent=R(total);
+  document.getElementById("qtd-reserva").textContent=db.reservas.length;
+  const list=document.getElementById("reserva-list");
+  if(!db.reservas.length){list.innerHTML="<div class='empty-state'><div class='icon'>💰</div><p>Nenhuma reserva cadastrada</p></div>";return;}
+  list.innerHTML=`<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Data</th><th>Objetivo</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+    <tbody>${db.reservas.map(r=>`<tr>
+      <td style="color:var(--text2)">${fmtDate(r.data)}</td>
+      <td style="font-weight:500">${r.nome}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--teal);font-weight:500">${R(r.valor)}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="delReserva('${r.id}')">✕</button></td>
+    </tr>`).join("")}</tbody>
+  </table></div></div>`;
+}
+
+// MODALS
+function openModal(id){
+  CATS.forEach(()=>{});
+  ["t-cat","f-cat","lc-cat","tc-cat"].forEach(sid=>{const s=document.getElementById(sid);if(s)s.innerHTML=CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join("");});
+  const today=new Date().toISOString().slice(0,10);
+  ["t-data","lc-data","r-data"].forEach(i2=>{const e=document.getElementById(i2);if(e&&!e.value)e.value=today;});
+  if(id==="modal-lanc-cartao"){const db=getDB();document.getElementById("lc-cartao").innerHTML=db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");}
+  document.getElementById(id).classList.add("open");
+}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+document.addEventListener("click",e=>{if(e.target.classList.contains("modal-overlay"))e.target.classList.remove("open");});
+
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
+
+function salvarTransacao(){
+  const db=getDB();
+  const t={id:uid(),data:document.getElementById("t-data").value,tipo:document.getElementById("t-tipo").value,descricao:document.getElementById("t-desc").value,valor:parseFloat(document.getElementById("t-valor").value)||0,categoria:document.getElementById("t-cat").value,obs:document.getElementById("t-obs").value};
+  if(!t.data||!t.descricao||!t.valor){showToast("Preencha os campos obrigatórios");return;}
+  db.transacoes.push(t);saveDB(db);closeModal("modal-transacao");
+  document.getElementById("t-desc").value="";document.getElementById("t-valor").value="";document.getElementById("t-obs").value="";
+  showToast("✓ Transação salva!");renderPage(currentPage);
+}
+function delTrans(id){const db=getDB();db.transacoes=db.transacoes.filter(t=>t.id!==id);saveDB(db);renderTransacoes();showToast("Removida");}
+
+function salvarFixa(){
+  const db=getDB();
+  const f={id:uid(),nome:document.getElementById("f-nome").value,valor:parseFloat(document.getElementById("f-valor").value)||0,dia:document.getElementById("f-dia").value,categoria:document.getElementById("f-cat").value,status:document.getElementById("f-status").value};
+  if(!f.nome||!f.valor){showToast("Preencha nome e valor");return;}
+  db.fixas.push(f);saveDB(db);closeModal("modal-fixa");
+  document.getElementById("f-nome").value="";document.getElementById("f-valor").value="";
+  showToast("✓ Conta fixa salva!");renderFixas();
+}
+function toggleFixa(id){const db=getDB();const f=db.fixas.find(x=>x.id===id);if(f){f.status=f.status==="ativa"?"pausada":"ativa";saveDB(db);renderFixas();}}
+function delFixa(id){const db=getDB();db.fixas=db.fixas.filter(f=>f.id!==id);saveDB(db);renderFixas();showToast("Removida");}
+
+function salvarCartao(){
+  const db=getDB();
+  const c={id:uid(),nome:document.getElementById("c-nome").value,limite:parseFloat(document.getElementById("c-limite").value)||0,fechamento:document.getElementById("c-fech").value,vencimento:document.getElementById("c-venc").value};
+  if(!c.nome){showToast("Preencha o nome");return;}
+  db.cartoes.push(c);saveDB(db);closeModal("modal-cartao");
+  document.getElementById("c-nome").value="";document.getElementById("c-limite").value="";
+  showToast("✓ Cartão salvo!");renderCartoes();
+}
+
+function salvarLancCartao(){
+  const db=getDB();
+  const l={id:uid(),data:document.getElementById("lc-data").value,cartaoId:document.getElementById("lc-cartao").value,descricao:document.getElementById("lc-desc").value,valor:parseFloat(document.getElementById("lc-valor").value)||0,parcelas:parseInt(document.getElementById("lc-parcelas").value)||1,parcela:1,categoria:document.getElementById("lc-cat").value};
+  if(!l.data||!l.descricao||!l.valor){showToast("Preencha todos os campos");return;}
+  db.lancCartao.push(l);saveDB(db);closeModal("modal-lanc-cartao");
+  document.getElementById("lc-desc").value="";document.getElementById("lc-valor").value="";document.getElementById("lc-parcelas").value="1";
+  showToast("✓ Lançamento salvo!");renderLancCartao();
+}
+function delLanc(id){const db=getDB();db.lancCartao=db.lancCartao.filter(l=>l.id!==id);saveDB(db);renderLancCartao();showToast("Removido");}
+
+function salvarDivida(){
+  const db=getDB();
+  const d={id:uid(),nome:document.getElementById("d-nome").value,credor:document.getElementById("d-credor").value,saldo:parseFloat(document.getElementById("d-saldo").value)||0,parcela:parseFloat(document.getElementById("d-parcela").value)||0,juros:document.getElementById("d-juros").value,vencimento:document.getElementById("d-venc").value,historico:[]};
+  if(!d.nome||!d.saldo){showToast("Preencha nome e saldo");return;}
+  d.historico.push({data:new Date().toISOString().slice(0,10),saldo:d.saldo,obs:"Cadastro inicial"});
+  db.dividas.push(d);saveDB(db);closeModal("modal-divida");
+  ["d-nome","d-credor","d-saldo","d-parcela","d-juros","d-venc"].forEach(i=>document.getElementById(i).value="");
+  showToast("✓ Dívida cadastrada!");renderDividas();
+}
+function openUpdateDiv(id){
+  const db=getDB();const d=db.dividas.find(x=>x.id===id);if(!d)return;
+  document.getElementById("ud-id").value=id;document.getElementById("ud-saldo").value=d.saldo;document.getElementById("ud-parcela").value=d.parcela;document.getElementById("ud-obs").value="";
+  openModal("modal-update-divida");
+}
+function atualizarDivida(){
+  const db=getDB();const id=document.getElementById("ud-id").value;const d=db.dividas.find(x=>x.id===id);if(!d)return;
+  d.saldo=parseFloat(document.getElementById("ud-saldo").value)||d.saldo;
+  d.parcela=parseFloat(document.getElementById("ud-parcela").value)||d.parcela;
+  d.historico=d.historico||[];
+  d.historico.push({data:new Date().toISOString().slice(0,10),saldo:d.saldo,obs:document.getElementById("ud-obs").value});
+  saveDB(db);closeModal("modal-update-divida");showToast("✓ Saldo atualizado!");renderDividas();
+}
+function delDiv(id){const db=getDB();db.dividas=db.dividas.filter(d=>d.id!==id);saveDB(db);renderDividas();showToast("Removida");}
+
+function salvarReserva(){
+  const db=getDB();if(!db.reservas)db.reservas=[];
+  const r={id:uid(),nome:document.getElementById("r-nome").value,valor:parseFloat(document.getElementById("r-valor").value)||0,data:document.getElementById("r-data").value};
+  if(!r.nome||!r.valor){showToast("Preencha nome e valor");return;}
+  db.reservas.push(r);saveDB(db);closeModal("modal-reserva");
+  document.getElementById("r-nome").value="";document.getElementById("r-valor").value="";
+  showToast("✓ Reserva salva!");renderReserva();
+}
+function delReserva(id){const db=getDB();db.reservas=db.reservas.filter(r=>r.id!==id);saveDB(db);renderReserva();showToast("Removida");}
+
+// CSV
+let csvData=[];
+// ---- AI IMPORT ----
+let faturaFileData=null;
+let faturaFileType=null;
+let extractedItems=[];
+
+function populateImportCartao(){
+  const db=getDB();
+  const sel=document.getElementById("import-cartao");
+  if(sel)sel.innerHTML=db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+}
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById("drop-zone").style.borderColor="";
+  const file=e.dataTransfer.files[0];
+  if(file)processFile(file);
+}
+
+function handleFaturaFile(e){
+  const file=e.target.files[0];
+  if(file)processFile(file);
+}
+
+function processFile(file){
+  const allowed=["image/png","image/jpeg","image/jpg","image/webp","application/pdf"];
+  if(!allowed.includes(file.type)){showToast("Formato não suportado. Use PNG, JPG ou PDF.");return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    faturaFileData=ev.target.result.split(",")[1];
+    faturaFileType=file.type;
+    document.getElementById("upload-name").style.display="block";
+    document.getElementById("upload-name").textContent="📎 "+file.name;
+    document.getElementById("upload-idle").style.display="none";
+    document.getElementById("upload-preview").style.display="block";
+    if(file.type.startsWith("image/")){
+      const img=document.getElementById("img-preview");
+      img.src=ev.target.result;img.style.display="block";
+      document.getElementById("pdf-icon").style.display="none";
+    } else {
+      document.getElementById("pdf-icon").style.display="block";
+      document.getElementById("img-preview").style.display="none";
+    }
+    const btn=document.getElementById("btn-extrair");
+    btn.disabled=false;btn.style.opacity="1";
+  };
+  reader.readAsDataURL(file);
+}
+
+async function extrairComIA(){
+  if(!faturaFileData){showToast("Selecione um arquivo primeiro");return;}
+  const btn=document.getElementById("btn-extrair");
+  btn.disabled=true;btn.style.opacity=".5";
+  document.getElementById("ia-status").style.display="block";
+  document.getElementById("ia-msg").textContent="Analisando fatura com IA...";
+  document.getElementById("extract-empty").style.display="none";
+  document.getElementById("extract-result").style.display="none";
+
+  const mediaType=faturaFileType==="application/pdf"?"application/pdf":faturaFileType;
+  const contentType=faturaFileType==="application/pdf"?"document":"image";
+
+  const prompt=`Você é um extrator de dados financeiros. Analise esta fatura de cartão de crédito e extraia TODOS os lançamentos de compra (ignore pagamentos de fatura, créditos e antecipações).
+
+Responda APENAS com JSON válido, sem markdown, neste formato exato:
+{
+  "lancamentos": [
+    {"data": "YYYY-MM-DD", "descricao": "Nome limpo do estabelecimento", "valor": 99.90, "categoria": "alimentacao"},
+    ...
+  ]
+}
+
+Categorias disponíveis: moradia, transporte, alimentacao, saude, lazer, assinaturas, educacao, vestuario, pets, outros
+
+Regras:
+- data no formato YYYY-MM-DD (se o ano não estiver, use 2026)
+- valor como número positivo (sem R$)
+- descricao limpa, sem sufixos como SA, LTDA, BRA
+- categorize corretamente: Cobasi/Petz=pets, Uber=transporte, Spotify/Netflix/Apple=assinaturas, Wellhub/Gympass/TotalPass=saude, restaurantes/iFood/supermercado=alimentacao, cinema=lazer`;
+
+  const msgContent=contentType==="document"
+    ?[{type:"document",source:{type:"base64",media_type:mediaType,data:faturaFileData}},{type:"text",text:prompt}]
+    :[{type:"image",source:{type:"base64",media_type:mediaType,data:faturaFileData}},{type:"text",text:prompt}];
+
+  try{
+    document.getElementById("ia-msg").textContent="Processando lançamentos...";
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:2000,
+        messages:[{role:"user",content:msgContent}]
+      })
+    });
+    const data=await resp.json();
+    const text=data.content.filter(b=>b.type==="text").map(b=>b.text).join("");
+    let parsed;
+    try{
+      const clean=text.replace(/```json|```/g,"").trim();
+      parsed=JSON.parse(clean);
+    } catch(e){
+      throw new Error("A IA retornou um formato inesperado. Tente novamente.");
+    }
+    extractedItems=(parsed.lancamentos||[]).map((l,i)=>({...l,_id:"ex_"+i,_selected:true}));
+    renderExtracted();
+  } catch(err){
+    showToast("Erro: "+err.message);
+    document.getElementById("extract-empty").style.display="flex";
+  } finally {
+    document.getElementById("ia-status").style.display="none";
+    btn.disabled=false;btn.style.opacity="1";
+  }
+}
+
+const CAT_LABELS={moradia:"Moradia",transporte:"Transporte",alimentacao:"Alimentação",saude:"Saúde",lazer:"Lazer",assinaturas:"Assinaturas",educacao:"Educação",vestuario:"Vestuário",pets:"Pets",outros:"Outros",receita:"Receita"};
+
+function renderExtracted(){
+  if(!extractedItems.length){showToast("Nenhum lançamento encontrado.");return;}
+  document.getElementById("extract-result").style.display="flex";
+  document.getElementById("extract-result").style.flexDirection="column";
+  updateExtractCounts();
+  const list=document.getElementById("extract-list");
+  list.innerHTML=extractedItems.map((item,i)=>`
+    <div class="extract-item ${item._selected?"selected":""}" onclick="toggleExtracted(${i})" id="ei_${i}">
+      <input type="checkbox" ${item._selected?"checked":""} onclick="event.stopPropagation();toggleExtracted(${i})">
+      <div style="flex:1;min-width:0">
+        <div class="ei-desc">${item.descricao}</div>
+        <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
+          <span class="ei-date">${item.data}</span>
+          <select onclick="event.stopPropagation()" onchange="extractedItems[${i}].categoria=this.value" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;padding:2px 4px">
+            ${Object.entries(CAT_LABELS).filter(([k])=>k!=="receita").map(([k,v])=>`<option value="${k}" ${item.categoria===k?"selected":""}>${v}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="ei-val">R$ ${Number(item.valor).toFixed(2).replace(".",",")}</div>
+    </div>`).join("");
+}
+
+function toggleExtracted(i){
+  extractedItems[i]._selected=!extractedItems[i]._selected;
+  const el=document.getElementById("ei_"+i);
+  el.classList.toggle("selected",extractedItems[i]._selected);
+  el.querySelector("input").checked=extractedItems[i]._selected;
+  updateExtractCounts();
+}
+
+function selectAllExtracted(v){
+  extractedItems.forEach((it,i)=>{it._selected=v;});
+  renderExtracted();
+}
+
+function updateExtractCounts(){
+  const sel=extractedItems.filter(i=>i._selected);
+  const total=sel.reduce((a,i)=>a+parseFloat(i.valor||0),0);
+  document.getElementById("extract-count").textContent=`${sel.length} de ${extractedItems.length} selecionados`;
+  document.getElementById("extract-total").textContent=`Total: R$ ${total.toFixed(2).replace(".",",")}`;
+}
+
+function confirmarImport(){
+  const db=getDB();
+  const cartaoId=document.getElementById("import-cartao").value;
+  const selecionados=extractedItems.filter(i=>i._selected);
+  if(!selecionados.length){showToast("Nenhum item selecionado");return;}
+  selecionados.forEach(item=>{
+    db.lancCartao.push({id:uid(),data:item.data,cartaoId,descricao:item.descricao,valor:parseFloat(item.valor)||0,parcelas:1,parcela:1,categoria:item.categoria});
+  });
+  saveDB(db);
+  showToast(`✓ ${selecionados.length} lançamentos importados!`);
+  extractedItems=[];faturaFileData=null;faturaFileType=null;
+  document.getElementById("upload-idle").style.display="block";
+  document.getElementById("upload-preview").style.display="none";
+  document.getElementById("upload-name").style.display="none";
+  document.getElementById("extract-result").style.display="none";
+  document.getElementById("extract-empty").style.display="flex";
+  document.getElementById("fatura-file").value="";
+  const btn=document.getElementById("btn-extrair");
+  btn.disabled=true;btn.style.opacity=".5";
+}
+
+// ---- TERCEIROS ----
+const DONO_LABELS={brenda:"Só eu",casal:"Casal (eu pago)",carlos:"Carlos (me paga)",emerson:"Emerson (me paga)",ryan:"Ryan (me paga)"};
+const DONO_COLORS={brenda:"green",casal:"blue",carlos:"amber",emerson:"purple",ryan:"teal"};
+
+function renderTerceiros(){
+  const db=getDB();
+  const terc=db.terceiros||[];
+  const totalMensal=terc.filter(t=>t.ativo&&t.freq==="mensal").reduce((a,t)=>a+parseFloat(t.valor||0),0);
+  const totalDevendo=terc.reduce((a,t)=>{
+    const pago=((t.pagamentos||[]).reduce((s,p)=>s+parseFloat(p.valor||0),0));
+    return a+(parseFloat(t.valor||0)-pago>0?parseFloat(t.valor||0)-pago:0);
+  },0);
+  document.getElementById("terc-stats").innerHTML=`
+    <div class="stat-card"><div class="stat-label">Total mensal de terceiros</div><div class="stat-value amber">${R(totalMensal)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">sai do seu bolso</div></div>
+    <div class="stat-card"><div class="stat-label">Total a receber acumulado</div><div class="stat-value blue">${R(totalDevendo)}</div></div>
+    <div class="stat-card"><div class="stat-label">Pessoas</div><div class="stat-value purple">${[...new Set(terc.map(t=>t.pessoa))].length}</div></div>
+  `;
+  const pessoas=[...new Set(terc.map(t=>t.pessoa))];
+  document.getElementById("terc-pessoas").innerHTML=pessoas.map(pessoa=>{
+    const itens=terc.filter(t=>t.pessoa===pessoa);
+    const totalP=itens.reduce((a,t)=>a+parseFloat(t.valor||0),0);
+    const recebidoP=itens.reduce((a,t)=>(t.pagamentos||[]).reduce((s,p)=>s+parseFloat(p.valor||0),0)+a,0);
+    const devendoP=Math.max(0,totalP*1-recebidoP);
+    return`<div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--purple-dim);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:var(--purple)">${pessoa.charAt(0)}</div>
+          <div><div style="font-weight:600;font-size:15px">${pessoa}</div><div style="font-size:12px;color:var(--text2)">${itens.length} cobrança${itens.length>1?"s":""}</div></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:${devendoP>0?"var(--amber)":"var(--green)"}">${R(devendoP)}</div>
+          <div style="font-size:11px;color:var(--text3)">${devendoP>0?"a receber":"em dia"}</div>
+        </div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Descrição</th><th>Frequência</th><th>Pago</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+        <tbody>${itens.map(t=>{
+          const pago=(t.pagamentos||[]).reduce((s,p)=>s+parseFloat(p.valor||0),0);
+          const saldoItem=Math.max(0,parseFloat(t.valor)-pago);
+          return`<tr>
+            <td><div style="font-weight:500">${t.desc}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${t.obs||""}</div></td>
+            <td><span class="badge ${t.freq==="mensal"?"badge-blue":t.freq==="unica"?"badge-amber":"badge-purple"}">${t.freq}</span></td>
+            <td style="font-size:12px;color:${saldoItem>0?"var(--amber)":"var(--green)"}">${saldoItem>0?"Deve "+R(saldoItem):"✓ Pago"}</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--amber)">${R(t.valor)}</td>
+            <td><div style="display:flex;gap:5px">
+              <button class="btn btn-ghost btn-sm" onclick="openPagTerc('${t.id}')">Receber</button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="delTerceiro('${t.id}')">✕</button>
+            </div></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>
+      ${itens.some(t=>(t.pagamentos||[]).length>0)?`
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:7px">Histórico de recebimentos</div>
+        ${itens.flatMap(t=>(t.pagamentos||[]).map(p=>({...p,desc:t.desc}))).sort((a,b)=>b.data.localeCompare(a.data)).slice(0,5).map(p=>`
+          <div style="font-size:12px;color:var(--text2);margin-bottom:3px">${fmtDate(p.data)} · ${p.desc} · <span style="color:var(--green);font-family:'DM Mono',monospace">${R(p.valor)}</span>${p.obs?" · "+p.obs:""}</div>
+        `).join("")}
+      </div>`:""} 
+    </div>`;
+  }).join("")||"<div class='empty-state'><div class='icon'>🤝</div><p>Nenhuma cobrança de terceiro</p></div>";
+}
+
+function openPagTerc(id){
+  document.getElementById("tp-id").value=id;
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById("tp-data").value=today;
+  document.getElementById("tp-valor").value="";
+  document.getElementById("tp-obs").value="";
+  openModal("modal-terc-pag");
+}
+function registrarPagTerc(){
+  const db=getDB();const id=document.getElementById("tp-id").value;
+  const t=db.terceiros.find(x=>x.id===id);if(!t)return;
+  t.pagamentos=t.pagamentos||[];
+  t.pagamentos.push({data:document.getElementById("tp-data").value,valor:parseFloat(document.getElementById("tp-valor").value)||0,obs:document.getElementById("tp-obs").value});
+  saveDB(db);closeModal("modal-terc-pag");showToast("✓ Pagamento registrado!");renderTerceiros();
+}
+function salvarTerceiro(){
+  const db=getDB();if(!db.terceiros)db.terceiros=[];
+  const t={id:uid(),pessoa:document.getElementById("tc-pessoa").value,desc:document.getElementById("tc-desc").value,valor:parseFloat(document.getElementById("tc-valor").value)||0,freq:document.getElementById("tc-freq").value,cat:document.getElementById("tc-cat").value,origem:document.getElementById("tc-origem").value,obs:document.getElementById("tc-obs").value,pagamentos:[],ativo:true};
+  if(!t.pessoa||!t.desc){showToast("Preencha pessoa e descrição");return;}
+  db.terceiros.push(t);saveDB(db);closeModal("modal-terceiro");
+  ["tc-pessoa","tc-desc","tc-valor","tc-obs"].forEach(i=>document.getElementById(i).value="");
+  showToast("✓ Cobrança salva!");renderTerceiros();
+}
+function delTerceiro(id){const db=getDB();db.terceiros=db.terceiros.filter(t=>t.id!==id);saveDB(db);renderTerceiros();showToast("Removida");}
+
+// ---- ASSINATURAS ----
+function renderAssinaturas(){
+  const db=getDB();
+  const ass=db.assinaturas||[];
+  const minhas=ass.filter(a=>a.status==="ativa"&&(a.dono==="brenda"||a.dono==="casal")).reduce((s,a)=>s+parseFloat(a.valor||0),0);
+  const tercAss=ass.filter(a=>a.status==="ativa"&&!["brenda","casal"].includes(a.dono)).reduce((s,a)=>s+parseFloat(a.valor||0),0);
+  document.getElementById("assin-stats").innerHTML=`
+    <div class="stat-card"><div class="stat-label">Total assinaturas (minhas)</div><div class="stat-value blue">${R(minhas)}</div></div>
+    <div class="stat-card"><div class="stat-label">Pago por terceiros (a receber)</div><div class="stat-value amber">${R(tercAss)}</div></div>
+    <div class="stat-card"><div class="stat-label">Total no cartão</div><div class="stat-value red">${R(minhas+tercAss)}</div></div>
+  `;
+  const list=document.getElementById("assin-list");
+  list.innerHTML=`<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Serviço</th><th>Responsável</th><th>Dia cobrança</th><th>Status</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+    <tbody>${ass.map(a=>{
+      const donoLabel=DONO_LABELS[a.dono]||a.dono;
+      const donoColor=DONO_COLORS[a.dono]||"amber";
+      return`<tr>
+        <td><div style="font-weight:500">${a.nome}</div>${a.obs?`<div style="font-size:11px;color:var(--text3)">${a.obs}</div>`:""}}</td>
+        <td><span class="badge badge-${donoColor}">${donoLabel}</span></td>
+        <td style="color:var(--text2)">Dia ${a.dia||"—"}</td>
+        <td><span class="badge ${a.status==="ativa"?"badge-green":"badge-amber"}">${a.status}</span></td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:500;color:${["brenda","casal"].includes(a.dono)?"var(--text)":"var(--amber)"}">${R(a.valor)}</td>
+        <td><div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAssinatura('${a.id}')">${a.status==="ativa"?"Pausar":"Ativar"}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="delAssinatura('${a.id}')">✕</button>
+        </div></td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table></div></div>`;
+}
+function salvarAssinatura(){
+  const db=getDB();if(!db.assinaturas)db.assinaturas=[];
+  const a={id:uid(),nome:document.getElementById("as-nome").value,valor:parseFloat(document.getElementById("as-valor").value)||0,dia:document.getElementById("as-dia").value,dono:document.getElementById("as-dono").value,status:document.getElementById("as-status").value,obs:document.getElementById("as-obs").value};
+  if(!a.nome||!a.valor){showToast("Preencha nome e valor");return;}
+  db.assinaturas.push(a);saveDB(db);closeModal("modal-assinatura");
+  document.getElementById("as-nome").value="";document.getElementById("as-valor").value="";document.getElementById("as-obs").value="";
+  showToast("✓ Assinatura salva!");renderAssinaturas();
+}
+function toggleAssinatura(id){const db=getDB();const a=db.assinaturas.find(x=>x.id===id);if(a){a.status=a.status==="ativa"?"pausada":"ativa";saveDB(db);renderAssinaturas();}}
+function delAssinatura(id){const db=getDB();db.assinaturas=db.assinaturas.filter(a=>a.id!==id);saveDB(db);renderAssinaturas();showToast("Removida");}
+
+// ---- COBASI ----
+const COBASI_TIPOS={
+  racao_cachorro:{label:"🐶 Ração Mike",sub:"Premier Raças Específicas Pug · 7,5kg · a cada 2 meses",freq:"2 meses",parcelaPadrao:2},
+  racao_pig:{label:"🐹 Ração Pig",sub:"Nutrópica Porquinho-da-Índia Super Premium · 1,2kg · a cada 2 meses",freq:"2 meses",parcelaPadrao:1},
+  petisco:{label:"🛒 Petiscos & Ração Porquinho",sub:"Ração porquinho-da-índia + petiscos do cachorro · mensal",freq:"mensal",parcelaPadrao:1},
+};
+function renderCobasi(){
+  const db=getDB();
+  const pedidos=db.cobasiPedidos||[];
+  const cards=document.getElementById("cobasi-pedidos-cards");
+  cards.innerHTML=Object.entries(COBASI_TIPOS).map(([tipo,info])=>{
+    const ultimas=pedidos.filter(p=>p.tipo===tipo).sort((a,b)=>b.data.localeCompare(a.data));
+    const ultima=ultimas[0];
+    const totalGasto=ultimas.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+    return`<div class="card">
+      <div style="font-size:18px;margin-bottom:8px">${info.label.split(" ")[0]}</div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px">${info.label.slice(2)}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.5">${info.sub}</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div style="flex:1"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Última compra</div><div style="font-size:13px;font-weight:500">${ultima?fmtDate(ultima.data):"—"}</div></div>
+        <div style="flex:1"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Último valor</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--teal)">${ultima?R(ultima.valor):"—"}</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Total histórico: <span style="color:var(--text2)">${R(totalGasto)}</span> · ${ultimas.length} compra${ultimas.length!==1?"s":""}</div>
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="abrirCobasi('${tipo}')">+ Registrar nova compra</button>
+    </div>`;
+  }).join("");
+
+  const tbody=document.querySelector("#cobasi-hist-table tbody");
+  const sorted=[...pedidos].sort((a,b)=>b.data.localeCompare(a.data));
+  tbody.innerHTML=sorted.length?sorted.map(p=>{
+    const info=COBASI_TIPOS[p.tipo]||{label:p.tipo};
+    return`<tr>
+      <td style="color:var(--text2)">${fmtDate(p.data)}</td>
+      <td style="font-weight:500">${info.label}</td>
+      <td style="color:var(--text2)">${info.freq}</td>
+      <td style="color:var(--text2)">${p.parcelas}x</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--teal)">${R(p.valor)}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="delCobasi('${p.id}')">✕</button></td>
+    </tr>`;
+  }).join(""):"<tr><td colspan='6' class='empty-state'><p>Sem histórico</p></td></tr>";
+}
+function abrirCobasi(tipo){
+  document.getElementById("cp-tipo").value=tipo;
+  document.getElementById("cp-data").value=new Date().toISOString().slice(0,10);
+  document.getElementById("cp-valor").value="";
+  document.getElementById("cp-obs").value="";
+  document.getElementById("cp-parcelas").value=COBASI_TIPOS[tipo]?.parcelaPadrao||1;
+  openModal("modal-cobasi-pedido");
+}
+function salvarCobasi(){
+  const db=getDB();if(!db.cobasiPedidos)db.cobasiPedidos=[];
+  const p={id:uid(),tipo:document.getElementById("cp-tipo").value,data:document.getElementById("cp-data").value,valor:parseFloat(document.getElementById("cp-valor").value)||0,parcelas:parseInt(document.getElementById("cp-parcelas").value)||1,obs:document.getElementById("cp-obs").value};
+  if(!p.valor){showToast("Informe o valor");return;}
+  db.cobasiPedidos.push(p);
+  // Also add to lancCartao BMG
+  db.lancCartao.push({id:uid(),data:p.data,cartaoId:"id0001",descricao:"Cobasi — "+COBASI_TIPOS[p.tipo]?.label,valor:p.valor,parcelas:p.parcelas,parcela:1,categoria:"pets"});
+  saveDB(db);closeModal("modal-cobasi-pedido");
+  showToast("✓ Compra Cobasi registrada!");renderCobasi();
+}
+function delCobasi(id){const db=getDB();db.cobasiPedidos=db.cobasiPedidos.filter(p=>p.id!==id);saveDB(db);renderCobasi();showToast("Removida");}
+
+// ---- EUDORA helper ---- add to contas fixas with variavel marker
+// (Eudora is handled via manual transaction entry with "Eudora" description)
+renderDashboard();
+</script>
+</body>
+</html>
