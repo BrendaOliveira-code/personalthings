@@ -264,7 +264,35 @@
 <!-- IMPORTAR -->
 <div class="page" id="page-importar">
   <div class="page-header">
-    <div><div class="page-title">Importar Fatura</div><div class="page-sub">Envie a imagem ou PDF da sua fatura — a IA extrai os lançamentos automaticamente</div></div>
+    <div><div class="page-title">Importar & Pré-lançamentos</div><div class="page-sub">Importe faturas via IA ou gere pré-lançamentos mensais estimados</div></div>
+  </div>
+
+  <!-- PRÉ-LANÇAMENTOS SECTION -->
+  <div class="card" style="max-width:860px;margin-bottom:20px">
+    <div class="card-header">
+      <div class="card-title">📅 Pré-lançamentos mensais</div>
+      <button class="btn btn-ghost btn-sm" onclick="abrirModalGerarMes()">+ Gerar para um mês</button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px">
+      Gera automaticamente os lançamentos previstos de assinaturas e cobranças fixas. Quando você importar a fatura real, os valores são substituídos.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Ao abrir o app num mês novo</div>
+        <div style="font-size:13px;color:var(--text2)">O sistema detecta automaticamente e pergunta se quer gerar os pré-lançamentos do mês</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Para meses anteriores ou futuros</div>
+        <div style="font-size:13px;color:var(--text2)">Use o botão <strong style="color:var(--text)">+ Gerar para um mês</strong> e escolha qualquer mês</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div style="display:flex;align-items:center;gap:12px;max-width:860px;margin-bottom:20px">
+    <div style="flex:1;height:1px;background:var(--border)"></div>
+    <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">ou importe a fatura real</span>
+    <div style="flex:1;height:1px;background:var(--border)"></div>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px">
@@ -485,7 +513,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- PAGE: TERCEIROS -->
-<div class="page" id="page-terceiros" style="display:none">
+<div class="page" id="page-terceiros">
   <div class="page-header">
     <div>
       <div class="page-title">Cobranças de Terceiros</div>
@@ -504,14 +532,13 @@
 </div>
 
 <!-- PAGE: ASSINATURAS -->
-<div class="page" id="page-assinaturas" style="display:none">
+<div class="page" id="page-assinaturas">
   <div class="page-header">
     <div>
       <div class="page-title">Assinaturas Fixas</div>
       <div class="page-sub">Cobranças mensais recorrentes no BMG</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-ghost" onclick="abrirModalGerarMes()">📅 Gerar pré-lançamentos</button>
       <button class="btn btn-primary" onclick="openModal('modal-assinatura')">+ Nova assinatura</button>
     </div>
   </div>
@@ -521,7 +548,7 @@
 </div>
 
 <!-- PAGE: COBASI PROGRAMADA -->
-<div class="page" id="page-cobasi" style="display:none">
+<div class="page" id="page-cobasi">
   <div class="page-header">
     <div>
       <div class="page-title">Cobasi Programada</div>
@@ -802,66 +829,68 @@ async function initApp(){
   setTimeout(()=>checkPrelancamentos(db), 600);
 }
 
+// Store db reference so confirmarPrelancamentos can use it
+let _prelancDb=null;
+
 function checkPrelancamentos(db){
   const now=new Date();
   const y=now.getFullYear(), m=now.getMonth();
   const mesKey=`${y}-${String(m+1).padStart(2,'0')}`;
-  // Check if already generated this month
   const jaGerou=localStorage.getItem("prelancado_"+mesKey);
   if(jaGerou) return;
-  // Check if there are already confirmed launches this month in lancCartao
-  const jaTemLanc=db.lancCartao.some(l=>l.data&&l.data.startsWith(mesKey)&&!l.prelancado);
-  // Build list of what would be generated
   const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
-  const tercBMG=(db.terceiros||[]).filter(t=>t.ativo&&t.freq==="mensal"&&t.origem==="bmg");
-  const total=[...assinaturas,...tercBMG].length;
-  if(total===0) return;
-  // Show modal
-  const nomeMes=now.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  // Terceiros BMG que NÃO estão já cobertos pelas assinaturas (evita duplicatas)
+  const nomesAssin=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
+  const tercBMG=(db.terceiros||[]).filter(t=>{
+    if(!t.ativo||t.freq!=="mensal"||t.origem!=="bmg") return false;
+    const nome=(t.desc||"").toLowerCase().trim();
+    // Skip if already in assinaturas by same name
+    return ![...nomesAssin].some(n=>n.includes(nome)||nome.includes(n));
+  });
   const list=[...assinaturas,...tercBMG];
+  if(!list.length) return;
+  _prelancDb=db;
+  const nomeMes=now.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
   const totalVal=list.reduce((a,x)=>a+parseFloat(x.valor||0),0);
   document.getElementById("pl-mes").textContent=nomeMes;
-  document.getElementById("pl-count").textContent=total;
+  document.getElementById("pl-count").textContent=list.length;
   document.getElementById("pl-total").textContent=R(totalVal);
-  document.getElementById("pl-list").innerHTML=list.map(x=>
-    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+  document.getElementById("pl-list").innerHTML=list.map(x=>`
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
       <span style="color:var(--text2)">${x.nome||x.desc}</span>
       <span style="font-family:'DM Mono',monospace;color:var(--amber)">${R(x.valor)}</span>
-    </div>`
-  ).join("");
+    </div>`).join("");
   document.getElementById("modal-prelancamento").classList.add("open");
 }
 
 async function confirmarPrelancamentos(){
-  const db=getDB();
+  const db=_prelancDb||getDB();
   const now=new Date();
   const y=now.getFullYear(), m=now.getMonth();
   const mesKey=`${y}-${String(m+1).padStart(2,'0')}`;
-  const dataBase=`${mesKey}-05`; // lançar no dia 5 como estimativa
+  const dataBase=`${mesKey}-05`;
   closeModal("modal-prelancamento");
   setLoading(true,"Gerando pré-lançamentos...");
   const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
-  const tercBMG=(db.terceiros||[]).filter(t=>t.ativo&&t.freq==="mensal"&&t.origem==="bmg");
-  const todos=[...assinaturas,...tercBMG];
-  const promises=todos.map(x=>{
-    const lanc={
-      id:uid(),
-      data:dataBase,
-      cartaoId:"id0001", // BMG
-      descricao:(x.nome||x.desc)+" (previsto)",
-      valor:parseFloat(x.valor||0),
-      parcelas:1,
-      parcela:1,
-      categoria:x.categoria||x.cat||"assinaturas",
-      prelancado:"true"
-    };
-    return saveRecord("lancCartao",lanc);
+  const nomesAssin=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
+  const tercBMG=(db.terceiros||[]).filter(t=>{
+    if(!t.ativo||t.freq!=="mensal"||t.origem!=="bmg") return false;
+    const nome=(t.desc||"").toLowerCase().trim();
+    return![...nomesAssin].some(n=>n.includes(nome)||nome.includes(n));
   });
+  const todos=[...assinaturas,...tercBMG];
+  const promises=todos.map(x=>saveRecord("lancCartao",{
+    id:uid(),data:dataBase,cartaoId:"id0001",
+    descricao:(x.nome||x.desc)+" (previsto)",
+    valor:parseFloat(x.valor||0),
+    parcelas:1,parcela:1,
+    categoria:x.categoria||x.cat||"assinaturas",
+    prelancado:"true"
+  }));
   await Promise.all(promises);
   localStorage.setItem("prelancado_"+mesKey,"1");
   setLoading(false);
   showToast(`✓ ${todos.length} pré-lançamentos gerados para ${now.toLocaleDateString("pt-BR",{month:"long"})}`);
-  // Reload data
   _db=null;
   const db2=await loadDB();
   if(db2) renderDashboard();
@@ -1441,7 +1470,9 @@ const DONO_COLORS={brenda:"green",casal:"blue",carlos:"amber",emerson:"purple",r
 
 function renderTerceiros(){
   const db=getDB();
-  const terc=db.terceiros||[];
+  // If Sheets not loaded yet, show loading
+  if(!_db){document.getElementById("terc-pessoas").innerHTML="<div class='empty-state'><p style='color:var(--text3)'>Carregando...</p></div>";return;}
+  const terc=(db.terceiros||[]).map(t=>({...t,ativo:t.ativo===true||t.ativo==="true"||t.ativo==="TRUE"}));
   if(!terc.length){
     document.getElementById("terc-stats").innerHTML="";
     document.getElementById("terc-pessoas").innerHTML="<div class='empty-state'><div class='icon'>🤝</div><p>Nenhuma cobrança de terceiro</p></div>";
@@ -1508,6 +1539,7 @@ function openPagTerc(id){
 
 // ---- RENDER ASSINATURAS ----
 function renderAssinaturas(){
+  if(!_db){document.getElementById("assin-list").innerHTML="<div class='empty-state'><p style='color:var(--text3)'>Carregando dados...</p></div>";return;}
   const db=getDB();
   const ass=db.assinaturas||[];
   if(!ass.length){
@@ -1550,6 +1582,7 @@ const COBASI_TIPOS={
 };
 
 function renderCobasi(){
+  if(!_db){document.getElementById("cobasi-pedidos-cards").innerHTML="<div class='empty-state'><p style='color:var(--text3)'>Carregando dados...</p></div>";return;}
   const db=getDB();
   const pedidos=db.cobasiPedidos||[];
   const cards=document.getElementById("cobasi-pedidos-cards");
@@ -1652,9 +1685,13 @@ function atualizarPreviewMes(){
   if(!mesKey) return;
   const db=getDB();
   const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
-  const tercBMG=(db.terceiros||[]).filter(t=>t.ativo&&t.freq==="mensal"&&t.origem==="bmg");
+  const nomesA=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
+  const tercBMG=(db.terceiros||[]).filter(t=>{
+    if(!t.ativo||t.freq!=="mensal"||t.origem!=="bmg") return false;
+    const nome=(t.desc||"").toLowerCase().trim();
+    return![...nomesA].some(n=>n.includes(nome)||nome.includes(n));
+  });
   const todos=[...assinaturas,...tercBMG];
-  const totalVal=todos.reduce((a,x)=>a+parseFloat(x.valor||0),0);
 
   // Check if already has launches this month
   const jaTemLanc=(db.lancCartao||[]).filter(l=>l.data&&l.data.startsWith(mesKey));
@@ -1691,7 +1728,12 @@ async function gerarPresMes(){
   if(!mesKey){showToast("Selecione um mês");return;}
   const db=getDB();
   const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
-  const tercBMG=(db.terceiros||[]).filter(t=>t.ativo&&t.freq==="mensal"&&t.origem==="bmg");
+  const nomesAssinG=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
+  const tercBMG=(db.terceiros||[]).filter(t=>{
+    if(!t.ativo||t.freq!=="mensal"||t.origem!=="bmg") return false;
+    const nome=(t.desc||"").toLowerCase().trim();
+    return![...nomesAssinG].some(n=>n.includes(nome)||nome.includes(n));
+  });
   const todos=[...assinaturas,...tercBMG];
   if(!todos.length){showToast("Nenhuma assinatura ativa encontrada");return;}
 
