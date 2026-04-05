@@ -486,32 +486,6 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-  <div class="modal" style="max-width:480px">
-    <div class="modal-title">
-      <span>📅 Gerar pré-lançamentos</span>
-    </div>
-    <div style="background:rgba(255,184,77,.08);border:1px solid rgba(255,184,77,.2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--amber);line-height:1.6">
-      Nenhum lançamento encontrado para <strong id="pl-mes">—</strong>.<br>
-      Posso gerar <strong id="pl-count">—</strong> pré-lançamentos previstos com base nas suas assinaturas e cobranças fixas de terceiros.
-    </div>
-    <div id="pl-list" style="max-height:200px;overflow-y:auto;margin-bottom:12px"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border);margin-bottom:16px">
-      <span style="font-size:13px;color:var(--text2)">Total previsto</span>
-      <span id="pl-total" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--amber)">—</span>
-    </div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">
-      Os valores são estimados com base no histórico. Quando você importar a fatura do BMG, os valores reais substituem automaticamente os previstos.
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ghost" style="flex:1" onclick="ignorarPrelancamentos()">Agora não</button>
-      <button class="btn btn-primary" style="flex:2" onclick="confirmarPrelancamentos()">✓ Gerar pré-lançamentos</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
 <!-- PAGE: TERCEIROS -->
 <div class="page" id="page-terceiros">
   <div class="page-header">
@@ -679,6 +653,8 @@
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
 const INITIAL_DB = {"transacoes": [{"id": "id0100", "data": "2025-11-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 8900.29, "categoria": "receita", "obs": ""}, {"id": "id0101", "data": "2025-12-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 5000, "categoria": "receita", "obs": ""}, {"id": "id0102", "data": "2026-01-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0103", "data": "2026-02-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0104", "data": "2026-03-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0105", "data": "2026-04-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}], "fixas": [{"id": "id0010", "nome": "Aluguel", "valor": 1896.17, "dia": 5, "categoria": "moradia", "status": "ativa"}, {"id": "id0011", "nome": "Limpeza", "valor": 550, "dia": 10, "categoria": "moradia", "status": "ativa"}, {"id": "id0012", "nome": "Sem Parar", "valor": 591.63, "dia": 10, "categoria": "transporte", "status": "ativa"}, {"id": "id0013", "nome": "Empréstimo Consignado", "valor": 1992.97, "dia": 5, "categoria": "outros", "status": "ativa"}, {"id": "id0014", "nome": "Creche + Banho (Mike)", "valor": 330, "dia": 5, "categoria": "outros", "status": "ativa"}, {"id": "id0015", "nome": "Esteticista Elaine", "valor": 195, "dia": 15, "categoria": "outros", "status": "ativa"}, {"id": "id0016", "nome": "Itaú - Renegociação (dívida)", "valor": 1936.67, "dia": 5, "categoria": "outros", "status": "ativa"}], "cartoes": [{"id": "id0001", "nome": "Corinthians BMG", "limite": 1750, "fechamento": 26, "vencimento": 5}, {"id": "id0002", "nome": "C&A", "limite": 2000, "fechamento": 10, "vencimento": 20}, {"id": "id0003", "nome": "Amazon", "limite": 3000, "fechamento": 10, "vencimento": 20}], "lancCartao": [{"id": "id0200", "data": "2025-10-14", "cartaoId": "id0001", "descricao": "COBASI", "valor": 185.96, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0201", "data": "2025-11-30", "cartaoId": "id0001", "descricao": "Deezer", "valor": 39.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0202", "data": "2025-12-10", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 46.62, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0203", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "IFD Felipe Rocha Peixo", "valor": 108.97, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0204", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Ikesaki Tucuruvi", "valor": 171.78, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0205", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Lojas Americanas", "valor": 25.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0206", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Uber", "valor": 81.97, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0207", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "LZL Restaurantes", "valor": 166.11, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0208", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Uber", "valor": 32.93, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0209", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Netflix", "valor": 85.7, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0210", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 86.31, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0211", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Auto Posto Vitrine", "valor": 39.99, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0212", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0213", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Patrão Adega", "valor": 114.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0214", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Petz", "valor": 109.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0215", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Ecolavare", "valor": 100.0, "parcelas": 1, "parcela": 1, "categoria": "moradia"}, {"id": "id0216", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "JC Kids", "valor": 119.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0217", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Trimais II", "valor": 297.3, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0218", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "R Altavista Comercio", "valor": 119.96, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0219", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Petz Shopping Trimais", "valor": 32.0, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0220", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Adega do Gogo", "valor": 37.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0221", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Adega do Gogo", "valor": 158.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0222", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0223", "data": "2025-12-27", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 76.03, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0224", "data": "2025-12-28", "cartaoId": "id0001", "descricao": "99Food", "valor": 62.88, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0225", "data": "2025-12-29", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 209.28, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0226", "data": "2025-12-31", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 143.58, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0227", "data": "2026-01-02", "cartaoId": "id0001", "descricao": "O Burguer Tucuruvi", "valor": 131.6, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0228", "data": "2026-01-03", "cartaoId": "id0001", "descricao": "99Food Pizzas", "valor": 89.9, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0229", "data": "2026-01-03", "cartaoId": "id0001", "descricao": "Petz", "valor": 99.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0230", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0231", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 69.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0232", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Cobasi (parc 1/2)", "valor": 104.81, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0233", "data": "2026-01-06", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0234", "data": "2026-01-08", "cartaoId": "id0001", "descricao": "Wellhub WEL", "valor": 59.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0235", "data": "2026-01-20", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0236", "data": "2026-01-24", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0237", "data": "2026-01-26", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0238", "data": "2026-01-30", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 86.31, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0239", "data": "2026-01-30", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 69.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0240", "data": "2026-01-31", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 88.7, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0241", "data": "2026-02-01", "cartaoId": "id0001", "descricao": "Trimais II", "valor": 146.19, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0242", "data": "2026-02-01", "cartaoId": "id0001", "descricao": "Divino Fogão", "valor": 76.6, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0243", "data": "2026-02-02", "cartaoId": "id0001", "descricao": "TotalPass", "valor": 119.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0244", "data": "2026-02-05", "cartaoId": "id0001", "descricao": "Sem Parar (cartão c/ juros)", "valor": 381.24, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0245", "data": "2026-02-05", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 36.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0246", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 77.23, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0247", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Oba Hortifruiti", "valor": 125.51, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0248", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0249", "data": "2026-02-07", "cartaoId": "id0001", "descricao": "iFood Club", "valor": 12.9, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0250", "data": "2026-02-07", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 62.05, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0251", "data": "2026-02-08", "cartaoId": "id0001", "descricao": "Wellhub WEL", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0252", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 4.03, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0253", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 23.95, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0254", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 21.98, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0255", "data": "2026-02-11", "cartaoId": "id0001", "descricao": "Uber", "valor": 18.98, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0256", "data": "2026-02-13", "cartaoId": "id0001", "descricao": "Uber", "valor": 15.99, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0257", "data": "2026-02-14", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0258", "data": "2026-02-20", "cartaoId": "id0001", "descricao": "Uber", "valor": 13.97, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0259", "data": "2026-02-21", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 57.55, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0260", "data": "2026-02-26", "cartaoId": "id0001", "descricao": "Wellhub", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0261", "data": "2026-02-27", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0262", "data": "2026-02-28", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 94.21, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0263", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 50.22, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0264", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi (parc 1/2)", "valor": 104.81, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0265", "data": "2026-03-02", "cartaoId": "id0001", "descricao": "TotalPass", "valor": 119.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0266", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Wellhub (Brenda)", "valor": 36.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0267", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Centro Médico (parc 1/3)", "valor": 356.68, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0268", "data": "2026-03-06", "cartaoId": "id0001", "descricao": "Wellhub (Carlos)", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0269", "data": "2026-03-16", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0270", "data": "2026-03-16", "cartaoId": "id0001", "descricao": "Wellhub", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0271", "data": "2026-04-04", "cartaoId": "id0001", "descricao": "Uber Rides", "valor": 14.58, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0272", "data": "2026-04-04", "cartaoId": "id0001", "descricao": "Apple", "valor": 109.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0273", "data": "2026-03-30", "cartaoId": "id0001", "descricao": "Wellhub Ryan Fernando", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0274", "data": "2026-03-26", "cartaoId": "id0001", "descricao": "Cinemark Brasil", "valor": 40.9, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0275", "data": "2026-03-26", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0276", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Centro Médico (parc 2/3)", "valor": 356.66, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0277", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi (parc 2/2)", "valor": 104.8, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0278", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 18, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0279", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 53.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0280", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 194.78, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0281", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 121.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0282", "data": "2026-01-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 204.98, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0283", "data": "2026-02-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 204.98, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0284", "data": "2026-01-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0285", "data": "2026-02-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0286", "data": "2026-03-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0287", "data": "2026-04-01", "cartaoId": "id0002", "descricao": "Compras C&A (Brenda)", "valor": 90.66, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0288", "data": "2026-02-01", "cartaoId": "id0003", "descricao": "Jim.com Beatriz Gonc (parc 1)", "valor": 150, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0289", "data": "2026-03-01", "cartaoId": "id0003", "descricao": "Jim.com Beatriz Gonc (parc 2)", "valor": 150, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0290", "data": "2026-04-01", "cartaoId": "id0003", "descricao": "Centro Médico (Amazon)", "valor": 450, "parcelas": 1, "parcela": 1, "categoria": "saude"}], "dividas": [{"id": "id0020", "nome": "Nubank", "credor": "Nubank", "saldo": 11793.52, "parcela": 0, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 11793.52, "obs": "Saldo inicial"}]}, {"id": "id0021", "nome": "Caixa Econômica", "credor": "Caixa", "saldo": 11936.67, "parcela": 1936.67, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 11936.67, "obs": "Atualizada 17/01 - valor original 6540,60 com desconto"}]}, {"id": "id0022", "nome": "Renner", "credor": "Renner", "saldo": 17808.77, "parcela": 226.65, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 17808.77, "obs": "Atualizada 17/01"}]}, {"id": "id0023", "nome": "Espaço Laser", "credor": "Espaço Laser", "saldo": 1, "parcela": 0, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-01", "saldo": 1, "obs": "A quitar"}]}]};
 
@@ -698,20 +674,14 @@ const CATS=[
   {id:"outros",label:"Outros",icon:"📦",color:"amber"},
 ];
 
-// ============================================================
-// GOOGLE SHEETS DATA LAYER
-// Cole sua URL do Apps Script aqui depois de publicar:
-// ============================================================
 let SHEETS_URL = localStorage.getItem("brenda_sheets_url") || "https://script.google.com/macros/s/AKfycbzHmaUrWfgYr5DY1F4dcd8iSQTkFUtW3MXZa_F6kE-2qVunR5njQSm5_zNh4qbFTy8/exec";
 
-// Cache local (evita requests repetidos na mesma sessão)
 let _db = null;
 let _loading = false;
 let _loadCallbacks = [];
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
-// Mostra/esconde loading overlay
 function setLoading(on, msg="Carregando..."){
   let el=document.getElementById("global-loading");
   if(!el){
@@ -725,10 +695,8 @@ function setLoading(on, msg="Carregando..."){
   document.getElementById("gl-msg").textContent=msg;
 }
 
-// Checa se URL está configurada
 function hasURL(){ return SHEETS_URL && SHEETS_URL.startsWith("https://script.google.com"); }
 
-// Carrega todos os dados do Sheets (com cache)
 async function loadDB(force=false){
   if(_db && !force) return _db;
   if(!hasURL()){
@@ -745,7 +713,6 @@ async function loadDB(force=false){
     const data=await resp.json();
     if(data.error) throw new Error(data.error);
     _db=data;
-    // garantir arrays existam
     ["transacoes","fixas","cartoes","lancCartao","dividas","terceiros","assinaturas","cobasiPedidos"].forEach(k=>{if(!_db[k])_db[k]=[];});
     _loadCallbacks.forEach(cb=>cb(_db));
     _loadCallbacks=[];
@@ -759,7 +726,6 @@ async function loadDB(force=false){
   }
 }
 
-// Salva um registro no Sheets
 async function saveRecord(table, record){
   if(!hasURL()){showToast("Configure a URL primeiro");return false;}
   try{
@@ -769,7 +735,6 @@ async function saveRecord(table, record){
     });
     const data=await resp.json();
     if(data.error) throw new Error(data.error);
-    // Atualiza cache local
     if(_db){
       const arr=_db[table];
       const idx=arr.findIndex(r=>r.id===record.id);
@@ -782,7 +747,6 @@ async function saveRecord(table, record){
   }
 }
 
-// Deleta um registro no Sheets
 async function deleteRecord(table, id){
   if(!hasURL()){showToast("Configure a URL primeiro");return false;}
   try{
@@ -800,10 +764,8 @@ async function deleteRecord(table, id){
   }
 }
 
-// Compatibilidade: getDB() agora retorna o cache (síncrono após loadDB)
 function getDB(){ return _db || {transacoes:[],fixas:[],cartoes:[],lancCartao:[],dividas:[],terceiros:[],assinaturas:[],cobasiPedidos:[]}; }
 
-// Modal de configuração da URL
 function showConfigModal(){
   document.getElementById("modal-config").classList.add("open");
 }
@@ -817,92 +779,18 @@ function saveConfigURL(){
   localStorage.setItem("brenda_sheets_url",url);
   closeModal("modal-config");
   _db=null;
-  // initApp deferred
 }
 
-// Inicializa o app
+// =============================================
+// INICIALIZAÇÃO - SEM POP-UP AUTOMÁTICO
+// =============================================
 async function initApp(){
   const db=await loadDB();
   if(!db) return;
   renderDashboard();
-  // Check if we should suggest pre-launches for this month
-  setTimeout(()=>checkPrelancamentos(db), 600);
+  // POP-UP DE PRÉ-LANÇAMENTOS REMOVIDO
+  // Use o botão "+ Gerar para um mês" na página Importar
 }
-
-// Store db reference so confirmarPrelancamentos can use it
-let _prelancDb=null;
-
-function checkPrelancamentos(db){
-  const now=new Date();
-  const y=now.getFullYear(), m=now.getMonth();
-  const mesKey=`${y}-${String(m+1).padStart(2,'0')}`;
-  const jaGerou=localStorage.getItem("prelancado_"+mesKey);
-  if(jaGerou) return;
-  const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
-  // Terceiros BMG que NÃO estão já cobertos pelas assinaturas (evita duplicatas)
-  const nomesAssin=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
-  const tercBMG=(db.terceiros||[]).filter(t=>{
-    if(!t.ativo||t.freq!=="mensal"||t.origem!=="bmg") return false;
-    const nome=(t.desc||"").toLowerCase().trim();
-    // Skip if already in assinaturas by same name
-    return ![...nomesAssin].some(n=>n.includes(nome)||nome.includes(n));
-  });
-  const list=[...assinaturas,...tercBMG];
-  if(!list.length) return;
-  _prelancDb=db;
-  const nomeMes=now.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
-  const totalVal=list.reduce((a,x)=>a+parseFloat(x.valor||0),0);
-  document.getElementById("pl-mes").textContent=nomeMes;
-  document.getElementById("pl-count").textContent=list.length;
-  document.getElementById("pl-total").textContent=R(totalVal);
-  document.getElementById("pl-list").innerHTML=list.map(x=>`
-    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="color:var(--text2)">${x.nome||x.desc}</span>
-      <span style="font-family:'DM Mono',monospace;color:var(--amber)">${R(x.valor)}</span>
-    </div>`).join("");
-  document.getElementById("modal-prelancamento").classList.add("open");
-}
-
-async function confirmarPrelancamentos(){
-  const db=_prelancDb||getDB();
-  const now=new Date();
-  const y=now.getFullYear(), m=now.getMonth();
-  const mesKey=`${y}-${String(m+1).padStart(2,'0')}`;
-  const dataBase=`${mesKey}-05`;
-  closeModal("modal-prelancamento");
-  setLoading(true,"Gerando pré-lançamentos...");
-  const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
-  const nomesAssin=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
-  const tercBMG=(db.terceiros||[]).filter(t=>{
-    if(!t.ativo||t.freq!=="mensal"||t.origem!=="bmg") return false;
-    const nome=(t.desc||"").toLowerCase().trim();
-    return![...nomesAssin].some(n=>n.includes(nome)||nome.includes(n));
-  });
-  const todos=[...assinaturas,...tercBMG];
-  const promises=todos.map(x=>saveRecord("lancCartao",{
-    id:uid(),data:dataBase,cartaoId:"id0001",
-    descricao:(x.nome||x.desc)+" (previsto)",
-    valor:parseFloat(x.valor||0),
-    parcelas:1,parcela:1,
-    categoria:x.categoria||x.cat||"assinaturas",
-    prelancado:"true"
-  }));
-  await Promise.all(promises);
-  localStorage.setItem("prelancado_"+mesKey,"1");
-  setLoading(false);
-  showToast(`✓ ${todos.length} pré-lançamentos gerados para ${now.toLocaleDateString("pt-BR",{month:"long"})}`);
-  _db=null;
-  const db2=await loadDB();
-  if(db2) renderDashboard();
-}
-
-function ignorarPrelancamentos(){
-  const now=new Date();
-  const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  localStorage.setItem("prelancado_"+mesKey,"skip");
-  closeModal("modal-prelancamento");
-}
-
 
 let currentPage="dashboard";
 let currentMonth=new Date().getMonth();
@@ -938,13 +826,9 @@ function getMonthStr(){return new Date(currentYear,currentMonth,1).toLocaleDateS
 function R(v){return"R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
 function parseDate(d){
   if(!d) return "";
-  // Already YYYY-MM-DD
   if(typeof d==="string"&&d.match(/^\d{4}-\d{2}-\d{2}/)) return d.slice(0,10);
-  // ISO string from Sheets: "2026-04-04T03:00:00.000Z"
   if(typeof d==="string"&&d.includes("T")) return d.slice(0,10);
-  // DD/MM/YYYY
   if(typeof d==="string"&&d.match(/^\d{2}\/\d{2}\/\d{4}/)){const p=d.split("/");return`${p[2]}-${p[1]}-${p[0]}`;}
-  // Date object or number (Sheets serial)
   if(d instanceof Date||typeof d==="number"){const dt=new Date(d);return dt.toISOString().slice(0,10);}
   return String(d).slice(0,10);
 }
@@ -971,7 +855,6 @@ function renderDashboard(){
   const totalDesp=despesas+totalFixas+totalCartao;
   const saldo=receitas-totalDesp;
 
-  // Alert BMG
   const alertEl=document.getElementById("dash-alert");
   if(currentMonth===3&&currentYear===2026){
     alertEl.style.display="flex";
@@ -988,7 +871,6 @@ function renderDashboard(){
     <div class="stat-card"><div class="stat-label">Saldo estimado</div><div class="stat-value ${saldo>=0?"green":"red"}">${R(saldo)}</div></div>
   `;
 
-  // Cats
   const cats={};
   trans.filter(t=>t.tipo==="despesa").forEach(t=>{cats[t.categoria]=(cats[t.categoria]||0)+parseFloat(t.valor||0);});
   lancMes.forEach(l=>{cats[l.categoria]=(cats[l.categoria]||0)+parseFloat(l.valor||0);});
@@ -1008,7 +890,6 @@ function renderDashboard(){
     </div>`;
   }).join(""):"<div class='empty-state'><p>Sem gastos este mês</p></div>";
 
-  // Bar chart
   const bars=[];
   for(let i=5;i>=0;i--){
     let m=currentMonth-i,y=currentYear;
@@ -1028,7 +909,6 @@ function renderDashboard(){
       <div class="chart-bar-label">${b.label}</div>
     </div>`).join("");
 
-  // Recent
   const allItems=[
     ...trans.map(t=>({...t,_src:"transacao"})),
     ...lancMes.map(l=>{const c2=db.cartoes.find(x=>x.id===l.cartaoId)||{nome:"?"};return{...l,_src:"cartao:"+c2.nome,tipo:"despesa"};}),
@@ -1071,7 +951,6 @@ function renderTransacoes(){
   }).join(""):"<tr><td colspan='6' class='empty-state'><p>Nenhuma transação</p></td></tr>";
 }
 
-// ---- EDIT FUNCTIONS ----
 function openEditTrans(id){
   const db=getDB();const t=db.transacoes.find(x=>x.id===id);if(!t)return;
   openModal("modal-transacao");
@@ -1189,13 +1068,11 @@ function renderCartoes(){
     </div>`;
   }).join(""):"<div class='empty-state'><p>Nenhum cartão</p></div>";
 
-  // Fill selects
   const filtroCart=document.getElementById("filtro-cartao");
   filtroCart.innerHTML="<option value=''>Todos</option>"+db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
   const lcSel=document.getElementById("lc-cartao");
   lcSel.innerHTML=db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
 
-  // Month filter
   const meses=new Set();
   db.lancCartao.forEach(l=>{if(l.data)meses.add(l.data.slice(0,7));});
   const mesSel=document.getElementById("filtro-mes-cartao");
@@ -1301,15 +1178,6 @@ function delTrans(id){
   setLoading(true,"Removendo...");
   deleteRecord("transacoes",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderTransacoes();}});
 }
-function salvarEditTrans(id){
-  const db=getDB();const idx=db.transacoes.findIndex(x=>x.id===id);if(idx<0)return;
-  const t={...db.transacoes[idx],data:document.getElementById("t-data").value,tipo:document.getElementById("t-tipo").value,descricao:document.getElementById("t-desc").value,valor:parseFloat(document.getElementById("t-valor").value)||0,categoria:document.getElementById("t-cat").value,obs:document.getElementById("t-obs").value};
-  closeModal("modal-transacao");
-  document.querySelector("#modal-transacao .modal-title").childNodes[0].textContent="Nova Transação ";
-  document.querySelector("#modal-transacao .btn-primary").onclick=salvarTransacao;
-  setLoading(true,"Salvando...");
-  saveRecord("transacoes",t).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderTransacoes();}});
-}
 function salvarFixa(){
   const f={id:uid(),nome:document.getElementById("f-nome").value,valor:parseFloat(document.getElementById("f-valor").value)||0,dia:document.getElementById("f-dia").value,categoria:document.getElementById("f-cat").value,status:document.getElementById("f-status").value};
   if(!f.nome||!f.valor){showToast("Preencha nome e valor");return;}
@@ -1328,15 +1196,6 @@ function delFixa(id){
   if(!confirm("Remover esta conta fixa?"))return;
   setLoading(true,"Removendo...");
   deleteRecord("fixas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderFixas();}});
-}
-function salvarEditFixa(id){
-  const db=getDB();const idx=db.fixas.findIndex(x=>x.id===id);if(idx<0)return;
-  const f={...db.fixas[idx],nome:document.getElementById("f-nome").value,valor:parseFloat(document.getElementById("f-valor").value)||0,dia:document.getElementById("f-dia").value,categoria:document.getElementById("f-cat").value,status:document.getElementById("f-status").value};
-  closeModal("modal-fixa");
-  document.querySelector("#modal-fixa .modal-title").childNodes[0].textContent="Nova Conta Fixa ";
-  document.querySelector("#modal-fixa .btn-primary").onclick=salvarFixa;
-  setLoading(true,"Salvando...");
-  saveRecord("fixas",f).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderFixas();}});
 }
 function salvarCartao(){
   const c={id:uid(),nome:document.getElementById("c-nome").value,limite:parseFloat(document.getElementById("c-limite").value)||0,fechamento:document.getElementById("c-fech").value,vencimento:document.getElementById("c-venc").value};
@@ -1383,25 +1242,6 @@ function atualizarDivida(){
   closeModal("modal-update-divida");
   setLoading(true,"Salvando...");
   saveRecord("dividas",updated).then(ok=>{setLoading(false);if(ok){showToast("✓ Saldo atualizado!");renderDividas();}});
-}
-function openEditDiv(id){
-  const db=getDB();const d=db.dividas.find(x=>x.id===id);if(!d)return;
-  openModal("modal-divida");
-  document.getElementById("d-nome").value=d.nome;document.getElementById("d-credor").value=d.credor||"";
-  document.getElementById("d-saldo").value=d.saldo;document.getElementById("d-parcela").value=d.parcela||"";
-  document.getElementById("d-juros").value=d.juros||"";document.getElementById("d-venc").value=d.vencimento||"";
-  document.querySelector("#modal-divida .modal-title").childNodes[0].textContent="Editar Dívida ";
-  document.querySelector("#modal-divida .btn-primary").onclick=()=>salvarEditDiv(id);
-}
-function salvarEditDiv(id){
-  const db=getDB();const idx=db.dividas.findIndex(x=>x.id===id);if(idx<0)return;
-  const d={...db.dividas[idx],nome:document.getElementById("d-nome").value,credor:document.getElementById("d-credor").value,saldo:parseFloat(document.getElementById("d-saldo").value)||0,parcela:parseFloat(document.getElementById("d-parcela").value)||0,juros:document.getElementById("d-juros").value,vencimento:document.getElementById("d-venc").value};
-  if(Array.isArray(d.historico))d.historico=JSON.stringify(d.historico);
-  closeModal("modal-divida");
-  document.querySelector("#modal-divida .modal-title").childNodes[0].textContent="Nova Dívida ";
-  document.querySelector("#modal-divida .btn-primary").onclick=salvarDivida;
-  setLoading(true,"Salvando...");
-  saveRecord("dividas",d).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderDividas();}});
 }
 function delDiv(id){
   if(!confirm("Remover esta dívida?"))return;
@@ -1470,7 +1310,6 @@ const DONO_COLORS={brenda:"green",casal:"blue",carlos:"amber",emerson:"purple",r
 
 function renderTerceiros(){
   const db=getDB();
-  // If Sheets not loaded yet, show loading
   if(!_db){document.getElementById("terc-pessoas").innerHTML="<div class='empty-state'><p style='color:var(--text3)'>Carregando...</p></div>";return;}
   const terc=(db.terceiros||[]).map(t=>({...t,ativo:t.ativo===true||t.ativo==="true"||t.ativo==="TRUE"}));
   if(!terc.length){
@@ -1607,8 +1446,8 @@ function renderCobasi(){
   }).join("");
 
   const tbody=document.querySelector("#cobasi-hist-table tbody");
-  const sorted=[...pedidos].sort((a,b)=>parseDate(b.data).localeCompare(parseDate(a.data)));
-  tbody.innerHTML=sorted.length?sorted.map(p=>{
+  const sorted2=[...pedidos].sort((a,b)=>parseDate(b.data).localeCompare(parseDate(a.data)));
+  tbody.innerHTML=sorted2.length?sorted2.map(p=>{
     const info=COBASI_TIPOS[p.tipo]||{label:p.tipo,freq:"—"};
     return`<tr>
       <td style="color:var(--text2)">${fmtDate(p.data)}</td>
@@ -1631,7 +1470,7 @@ function abrirCobasi(tipo){
   openModal("modal-cobasi-pedido");
 }
 
-// ---- RENDER RESERVA (usa Sheets) ----
+// ---- RENDER RESERVA ----
 function renderReserva(){
   const db=getDB();
   const reservas=db.reservas||[];
@@ -1665,24 +1504,10 @@ function delReserva(id){
   deleteRecord("reservas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderReserva();}});
 }
 
-// ---- GERAR PRÉ-LANÇAMENTOS MÊS ESPECÍFICO ----
-function abrirModalGerarMes(){
-  // Default to current month
-  const now=new Date();
-  const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById("gm-mes").value=mesKey;
-  atualizarPreviewMes();
-  openModal("modal-gerar-mes");
-}
-
-// Hook month input change
-document.addEventListener("change",e=>{
-  if(e.target.id==="gm-mes") atualizarPreviewMes();
-});
-
-function atualizarPreviewMes(){
-  const mesKey=document.getElementById("gm-mes").value;
-  if(!mesKey) return;
+// =============================================
+// GERAR PRÉ-LANÇAMENTOS MÊS ESPECÍFICO (CORRIGIDO)
+// =============================================
+function _getPreLancItems(){
   const db=getDB();
   const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
   const nomesA=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
@@ -1691,7 +1516,26 @@ function atualizarPreviewMes(){
     const nome=(t.desc||"").toLowerCase().trim();
     return![...nomesA].some(n=>n.includes(nome)||nome.includes(n));
   });
-  const todos=[...assinaturas,...tercBMG];
+  return [...assinaturas,...tercBMG];
+}
+
+function abrirModalGerarMes(){
+  const now=new Date();
+  const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById("gm-mes").value=mesKey;
+  atualizarPreviewMes();
+  openModal("modal-gerar-mes");
+}
+
+document.addEventListener("change",e=>{
+  if(e.target.id==="gm-mes") atualizarPreviewMes();
+});
+
+function atualizarPreviewMes(){
+  const mesKey=document.getElementById("gm-mes").value;
+  if(!mesKey) return;
+  const db=getDB();
+  const todos=_getPreLancItems();
 
   // Check if already has launches this month
   const jaTemLanc=(db.lancCartao||[]).filter(l=>l.data&&l.data.startsWith(mesKey));
@@ -1714,6 +1558,9 @@ function atualizarPreviewMes(){
     btn.disabled=false;btn.style.opacity="1";
   }
 
+  // FIX: calcular totalVal corretamente
+  const totalVal=todos.reduce((a,x)=>a+parseFloat(x.valor||0),0);
+
   document.getElementById("gm-preview").style.display="block";
   document.getElementById("gm-lista").innerHTML=todos.map(x=>`
     <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
@@ -1727,17 +1574,10 @@ async function gerarPresMes(){
   const mesKey=document.getElementById("gm-mes").value;
   if(!mesKey){showToast("Selecione um mês");return;}
   const db=getDB();
-  const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
-  const nomesAssinG=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
-  const tercBMG=(db.terceiros||[]).filter(t=>{
-    if(!t.ativo||t.freq!=="mensal"||t.origem!=="bmg") return false;
-    const nome=(t.desc||"").toLowerCase().trim();
-    return![...nomesAssinG].some(n=>n.includes(nome)||nome.includes(n));
-  });
-  const todos=[...assinaturas,...tercBMG];
+  const todos=_getPreLancItems();
   if(!todos.length){showToast("Nenhuma assinatura ativa encontrada");return;}
 
-  // Check which ones already exist as pre-launches this month (avoid duplicates)
+  // Check which ones already exist as pre-launches this month
   const jaExistem=new Set(
     (db.lancCartao||[])
       .filter(l=>l.data&&l.data.startsWith(mesKey)&&(l.prelancado===true||l.prelancado==="true"))
@@ -1768,7 +1608,6 @@ async function gerarPresMes(){
   }));
 
   await Promise.all(promises);
-  // Mark month as generated
   localStorage.setItem("prelancado_"+mesKey,"1");
   setLoading(false);
   showToast(`✓ ${novos.length} pré-lançamentos gerados para ${mesKey}!`);
@@ -1776,6 +1615,8 @@ async function gerarPresMes(){
   const db2=await loadDB();
   if(db2) renderDashboard();
 }
+
+// ---- IMPORTAR FATURA ----
 let faturaFileData=null;
 let faturaFileType=null;
 let extractedItems=[];
