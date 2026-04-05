@@ -781,14 +781,26 @@ function changeMonth(d){
 }
 function getMonthStr(){return new Date(currentYear,currentMonth,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});}
 function R(v){return"R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fmtDate(d){if(!d)return"";const p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0];}
-function cat(id){return CATS.find(c=>c.id===id)||{label:id||"—",color:"amber",icon:"📦"};}
-
+function parseDate(d){
+  if(!d) return "";
+  // Already YYYY-MM-DD
+  if(typeof d==="string"&&d.match(/^\d{4}-\d{2}-\d{2}/)) return d.slice(0,10);
+  // ISO string from Sheets: "2026-04-04T03:00:00.000Z"
+  if(typeof d==="string"&&d.includes("T")) return d.slice(0,10);
+  // DD/MM/YYYY
+  if(typeof d==="string"&&d.match(/^\d{2}\/\d{2}\/\d{4}/)){const p=d.split("/");return`${p[2]}-${p[1]}-${p[0]}`;}
+  // Date object or number (Sheets serial)
+  if(d instanceof Date||typeof d==="number"){const dt=new Date(d);return dt.toISOString().slice(0,10);}
+  return String(d).slice(0,10);
+}
+function fmtDate(d){const s=parseDate(d);if(!s)return"";const p=s.split("-");return`${p[2]}/${p[1]}/${p[0]}`;}
 function inMonth(dateStr,y,m){
-  if(!dateStr)return false;
-  const[dy,dm]=dateStr.split("-");
+  const s=parseDate(dateStr);
+  if(!s)return false;
+  const[dy,dm]=s.split("-");
   return parseInt(dy)===y&&parseInt(dm)-1===m;
 }
+function cat(id){return CATS.find(c=>c.id===id)||{label:id||"—",color:"amber",icon:"📦"};}
 
 function renderDashboard(){
   document.getElementById("month-display").textContent=getMonthStr();
@@ -1107,25 +1119,6 @@ function renderDividas(){
   list.innerHTML=html;
 }
 
-function renderReserva(){
-  const db=getDB();
-  if(!db.reservas)db.reservas=[];
-  const total=db.reservas.reduce((a,r)=>a+parseFloat(r.valor||0),0);
-  document.getElementById("total-reserva").textContent=R(total);
-  document.getElementById("qtd-reserva").textContent=db.reservas.length;
-  const list=document.getElementById("reserva-list");
-  if(!db.reservas.length){list.innerHTML="<div class='empty-state'><div class='icon'>💰</div><p>Nenhuma reserva cadastrada</p></div>";return;}
-  list.innerHTML=`<div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>Data</th><th>Objetivo</th><th style="text-align:right">Valor</th><th></th></tr></thead>
-    <tbody>${db.reservas.map(r=>`<tr>
-      <td style="color:var(--text2)">${fmtDate(r.data)}</td>
-      <td style="font-weight:500">${r.nome}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--teal);font-weight:500">${R(r.valor)}</td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="delReserva('${r.id}')">✕</button></td>
-    </tr>`).join("")}</tbody>
-  </table></div></div>`;
-}
-
 // MODALS
 function openModal(id){
   CATS.forEach(()=>{});
@@ -1260,20 +1253,6 @@ function delDiv(id){
   setLoading(true,"Removendo...");
   deleteRecord("dividas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderDividas();}});
 }
-function salvarReserva(){
-  const db=getDB();if(!db.reservas)db.reservas=[];
-  const r={id:uid(),nome:document.getElementById("r-nome").value,valor:parseFloat(document.getElementById("r-valor").value)||0,data:document.getElementById("r-data").value};
-  if(!r.nome||!r.valor){showToast("Preencha nome e valor");return;}
-  closeModal("modal-reserva");
-  ["r-nome","r-valor"].forEach(i=>document.getElementById(i).value="");
-  db.reservas.push(r);localStorage.setItem("brenda_reservas",JSON.stringify(db.reservas));
-  showToast("✓ Reserva salva!");renderReserva();
-}
-function delReserva(id){
-  const db=getDB();db.reservas=(db.reservas||[]).filter(r=>r.id!==id);
-  localStorage.setItem("brenda_reservas",JSON.stringify(db.reservas));
-  showToast("Removida");renderReserva();
-}
 function salvarTerceiro(){
   const t={id:uid(),pessoa:document.getElementById("tc-pessoa").value,desc:document.getElementById("tc-desc").value,valor:parseFloat(document.getElementById("tc-valor").value)||0,freq:document.getElementById("tc-freq").value,cat:document.getElementById("tc-cat").value,origem:document.getElementById("tc-origem").value,obs:document.getElementById("tc-obs").value,pagamentos:JSON.stringify([]),ativo:"true"};
   if(!t.pessoa||!t.desc){showToast("Preencha pessoa e descrição");return;}
@@ -1329,6 +1308,204 @@ function delCobasi(id){
   setLoading(true,"Removendo...");
   deleteRecord("cobasiPedidos",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderCobasi();}});
 }
+
+// ---- RENDER TERCEIROS ----
+const DONO_LABELS={brenda:"Só eu",casal:"Casal (eu pago)",carlos:"Carlos (me paga)",emerson:"Emerson (me paga)",ryan:"Ryan (me paga)"};
+const DONO_COLORS={brenda:"green",casal:"blue",carlos:"amber",emerson:"purple",ryan:"teal"};
+
+function renderTerceiros(){
+  const db=getDB();
+  const terc=db.terceiros||[];
+  if(!terc.length){
+    document.getElementById("terc-stats").innerHTML="";
+    document.getElementById("terc-pessoas").innerHTML="<div class='empty-state'><div class='icon'>🤝</div><p>Nenhuma cobrança de terceiro</p></div>";
+    return;
+  }
+  const totalMensal=terc.filter(t=>t.ativo&&t.freq==="mensal").reduce((a,t)=>a+parseFloat(t.valor||0),0);
+  document.getElementById("terc-stats").innerHTML=`
+    <div class="stat-card"><div class="stat-label">Total mensal de terceiros</div><div class="stat-value amber">${R(totalMensal)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">sai do seu bolso</div></div>
+    <div class="stat-card"><div class="stat-label">Pessoas</div><div class="stat-value purple">${[...new Set(terc.map(t=>t.pessoa))].length}</div></div>
+  `;
+  const pessoas=[...new Set(terc.map(t=>t.pessoa))];
+  document.getElementById("terc-pessoas").innerHTML=pessoas.map(pessoa=>{
+    const itens=terc.filter(t=>t.pessoa===pessoa);
+    const totalP=itens.reduce((a,t)=>a+parseFloat(t.valor||0),0);
+    const pags=itens.flatMap(t=>{
+      const p=Array.isArray(t.pagamentos)?t.pagamentos:(typeof t.pagamentos==="string"&&t.pagamentos?JSON.parse(t.pagamentos):[]);
+      return p.map(pg=>({...pg,desc:t.desc}));
+    });
+    const recebido=pags.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+    const devendo=Math.max(0,totalP-recebido);
+    return`<div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--purple-dim);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:var(--purple)">${pessoa.charAt(0)}</div>
+          <div><div style="font-weight:600;font-size:15px">${pessoa}</div><div style="font-size:12px;color:var(--text2)">${itens.length} cobrança${itens.length>1?"s":""}</div></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:${devendo>0?"var(--amber)":"var(--green)"}">${R(devendo)}</div>
+          <div style="font-size:11px;color:var(--text3)">${devendo>0?"a receber":"em dia"}</div>
+        </div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Descrição</th><th>Frequência</th><th>Status</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+        <tbody>${itens.map(t=>{
+          const tPags=Array.isArray(t.pagamentos)?t.pagamentos:(typeof t.pagamentos==="string"&&t.pagamentos?JSON.parse(t.pagamentos):[]);
+          const tPago=tPags.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+          const saldo=Math.max(0,parseFloat(t.valor)-tPago);
+          return`<tr>
+            <td><div style="font-weight:500">${t.desc}</div><div style="font-size:11px;color:var(--text3)">${t.obs||""}</div></td>
+            <td><span class="badge badge-blue">${t.freq}</span></td>
+            <td style="font-size:12px;color:${saldo>0?"var(--amber)":"var(--green)"}">${saldo>0?"Deve "+R(saldo):"✓ Pago"}</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace">${R(t.valor)}</td>
+            <td><div style="display:flex;gap:5px">
+              <button class="btn btn-ghost btn-sm" onclick="openPagTerc('${t.id}')">Receber</button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="delTerceiro('${t.id}')">✕</button>
+            </div></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>
+      ${pags.length?`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Histórico de recebimentos</div>
+        ${pags.sort((a,b)=>b.data.localeCompare(a.data)).slice(0,4).map(p=>`<div style="font-size:12px;color:var(--text2);margin-bottom:3px">${fmtDate(p.data)} · ${p.desc} · <span style="color:var(--green);font-family:'DM Mono',monospace">${R(p.valor)}</span></div>`).join("")}
+      </div>`:""}
+    </div>`;
+  }).join("");
+}
+
+function openPagTerc(id){
+  document.getElementById("tp-id").value=id;
+  document.getElementById("tp-data").value=new Date().toISOString().slice(0,10);
+  document.getElementById("tp-valor").value="";document.getElementById("tp-obs").value="";
+  openModal("modal-terc-pag");
+}
+
+// ---- RENDER ASSINATURAS ----
+function renderAssinaturas(){
+  const db=getDB();
+  const ass=db.assinaturas||[];
+  if(!ass.length){
+    document.getElementById("assin-stats").innerHTML="";
+    document.getElementById("assin-list").innerHTML="<div class='empty-state'><div class='icon'>📱</div><p>Nenhuma assinatura cadastrada</p></div>";
+    return;
+  }
+  const minhas=ass.filter(a=>a.status==="ativa"&&(a.dono==="brenda"||a.dono==="casal")).reduce((s,a)=>s+parseFloat(a.valor||0),0);
+  const tercAss=ass.filter(a=>a.status==="ativa"&&!["brenda","casal"].includes(a.dono)).reduce((s,a)=>s+parseFloat(a.valor||0),0);
+  document.getElementById("assin-stats").innerHTML=`
+    <div class="stat-card"><div class="stat-label">Minhas assinaturas</div><div class="stat-value blue">${R(minhas)}</div></div>
+    <div class="stat-card"><div class="stat-label">Pagas por terceiros</div><div class="stat-value amber">${R(tercAss)}</div></div>
+    <div class="stat-card"><div class="stat-label">Total no cartão</div><div class="stat-value red">${R(minhas+tercAss)}</div></div>
+  `;
+  document.getElementById("assin-list").innerHTML=`<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Serviço</th><th>Responsável</th><th>Dia</th><th>Status</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+    <tbody>${ass.map(a=>{
+      const donoColor=DONO_COLORS[a.dono]||"amber";
+      const donoLabel=DONO_LABELS[a.dono]||a.dono;
+      return`<tr>
+        <td><div style="font-weight:500">${a.nome}</div>${a.obs?`<div style="font-size:11px;color:var(--text3)">${a.obs}</div>`:""}</td>
+        <td><span class="badge badge-${donoColor}">${donoLabel}</span></td>
+        <td style="color:var(--text2)">Dia ${a.dia||"—"}</td>
+        <td><span class="badge ${a.status==="ativa"?"badge-green":"badge-amber"}">${a.status}</span></td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:500;color:${["brenda","casal"].includes(a.dono)?"var(--text)":"var(--amber)"}">${R(a.valor)}</td>
+        <td><div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAssinatura('${a.id}')">${a.status==="ativa"?"Pausar":"Ativar"}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="delAssinatura('${a.id}')">✕</button>
+        </div></td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table></div></div>`;
+}
+
+// ---- RENDER COBASI ----
+const COBASI_TIPOS={
+  racao_cachorro:{label:"🐶 Ração Mike",sub:"Premier Raças Específicas Pug · 7,5kg · a cada 2 meses",freq:"2 meses",parcelaPadrao:2},
+  racao_pig:{label:"🐹 Ração Pig",sub:"Nutrópica Porquinho-da-Índia · 1,2kg · a cada 2 meses",freq:"2 meses",parcelaPadrao:1},
+  petisco:{label:"🛒 Petiscos & Ração Porquinho",sub:"Ração porquinho + petiscos do cachorro · mensal",freq:"mensal",parcelaPadrao:1},
+};
+
+function renderCobasi(){
+  const db=getDB();
+  const pedidos=db.cobasiPedidos||[];
+  const cards=document.getElementById("cobasi-pedidos-cards");
+  cards.innerHTML=Object.entries(COBASI_TIPOS).map(([tipo,info])=>{
+    const ultimas=pedidos.filter(p=>p.tipo===tipo).sort((a,b)=>parseDate(b.data).localeCompare(parseDate(a.data)));
+    const ultima=ultimas[0];
+    const totalGasto=ultimas.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+    const isPrelancado=ultima&&ultima.prelancado;
+    return`<div class="card">
+      <div style="font-size:18px;margin-bottom:6px">${info.label.split(" ")[0]}</div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px">${info.label.slice(2)}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.5">${info.sub}</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div style="flex:1"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Última compra</div><div style="font-size:13px;font-weight:500">${ultima?fmtDate(ultima.data):"—"}</div></div>
+        <div style="flex:1"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Último valor</div>
+          <div style="font-family:'DM Mono',monospace;font-weight:500;color:${isPrelancado?"var(--amber)":"var(--teal)"}">${ultima?R(ultima.valor):"—"}${isPrelancado?" <span style='font-size:10px;opacity:.8'>(previsto)</span>":""}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Total histórico: <span style="color:var(--text2)">${R(totalGasto)}</span> · ${ultimas.length} compra${ultimas.length!==1?"s":""}</div>
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="abrirCobasi('${tipo}')">+ Registrar nova compra</button>
+    </div>`;
+  }).join("");
+
+  const tbody=document.querySelector("#cobasi-hist-table tbody");
+  const sorted=[...pedidos].sort((a,b)=>parseDate(b.data).localeCompare(parseDate(a.data)));
+  tbody.innerHTML=sorted.length?sorted.map(p=>{
+    const info=COBASI_TIPOS[p.tipo]||{label:p.tipo,freq:"—"};
+    return`<tr>
+      <td style="color:var(--text2)">${fmtDate(p.data)}</td>
+      <td style="font-weight:500">${info.label}</td>
+      <td style="color:var(--text2)">${info.freq}</td>
+      <td style="color:var(--text2)">${p.parcelas||1}x</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:${p.prelancado?"var(--amber)":"var(--teal)"}">
+        ${R(p.valor)}${p.prelancado?` <span class="badge badge-amber" style="font-size:9px">previsto</span>`:""}
+      </td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="delCobasi('${p.id}')">✕</button></td>
+    </tr>`;
+  }).join(""):"<tr><td colspan='6' class='empty-state'><p>Sem histórico</p></td></tr>";
+}
+
+function abrirCobasi(tipo){
+  document.getElementById("cp-tipo").value=tipo;
+  document.getElementById("cp-data").value=new Date().toISOString().slice(0,10);
+  document.getElementById("cp-valor").value="";document.getElementById("cp-obs").value="";
+  document.getElementById("cp-parcelas").value=COBASI_TIPOS[tipo]?.parcelaPadrao||1;
+  openModal("modal-cobasi-pedido");
+}
+
+// ---- RENDER RESERVA (usa Sheets) ----
+function renderReserva(){
+  const db=getDB();
+  const reservas=db.reservas||[];
+  const total=reservas.reduce((a,r)=>a+parseFloat(r.valor||0),0);
+  document.getElementById("total-reserva").textContent=R(total);
+  document.getElementById("qtd-reserva").textContent=reservas.length;
+  const list=document.getElementById("reserva-list");
+  if(!reservas.length){list.innerHTML="<div class='empty-state'><div class='icon'>💰</div><p>Nenhuma reserva cadastrada</p></div>";return;}
+  list.innerHTML=`<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Data</th><th>Objetivo</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+    <tbody>${reservas.map(r=>`<tr>
+      <td style="color:var(--text2)">${fmtDate(r.data)}</td>
+      <td style="font-weight:500">${r.nome}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--teal);font-weight:500">${R(r.valor)}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="delReserva('${r.id}')">✕</button></td>
+    </tr>`).join("")}</tbody>
+  </table></div></div>`;
+}
+
+function salvarReserva(){
+  const r={id:uid(),nome:document.getElementById("r-nome").value,valor:parseFloat(document.getElementById("r-valor").value)||0,data:document.getElementById("r-data").value};
+  if(!r.nome||!r.valor){showToast("Preencha nome e valor");return;}
+  closeModal("modal-reserva");
+  ["r-nome","r-valor"].forEach(i=>document.getElementById(i).value="");
+  setLoading(true,"Salvando...");
+  saveRecord("reservas",r).then(ok=>{setLoading(false);if(ok){showToast("✓ Reserva salva!");renderReserva();}});
+}
+function delReserva(id){
+  if(!confirm("Remover?"))return;
+  setLoading(true,"Removendo...");
+  deleteRecord("reservas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderReserva();}});
+}
+
 initApp();
 </script>
 </body>
