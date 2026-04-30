@@ -2078,11 +2078,6 @@ function _parseBMGText(text){
     let valorStr=m[4].replace(",",".");
     let valor=parseFloat(valorStr);
     
-    // Ignorar pagamentos e créditos (valores negativos)
-    if(valor<0) continue;
-    // Ignorar linhas com "Pgto", "Pagamento", "Antecipacao"
-    if(/pgto|pagamento|antecipa/i.test(desc)) continue;
-    
     // Limpar descrição (remover sufixos como SA, EC, etc)
     desc=desc.replace(/\s+(SA|EC|U|D)\s*$/i,"").replace(/\s+/g," ").trim();
     // Remover "DL " prefix
