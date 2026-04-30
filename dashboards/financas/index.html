@@ -1990,15 +1990,18 @@ async function gerarPresMes(){
   closeModal("modal-gerar-mes");
   setLoading(true,`Gerando pré-lançamentos para ${mesKey}...`);
 
-  const promises=novos.map(x=>saveRecord("lancCartao",{
-    id:uid(),data:dataBase,cartaoId:"id0001",
-    descricao:(x.nome||x.desc)+" (previsto)",
-    valor:parseFloat(x.valor||0),parcelas:1,parcela:1,
-    categoria:x.categoria||x.cat||"assinaturas",
-    prelancado:"true"
-  }));
+  for(let i=0;i<novos.length;i++){
+    const x=novos[i];
+    setLoading(true,`Gerando ${i+1} de ${novos.length}...`);
+    await saveRecord("lancCartao",{
+      id:uid(),data:dataBase,cartaoId:"id0001",
+      descricao:(x.nome||x.desc)+" (previsto)",
+      valor:parseFloat(x.valor||0),parcelas:1,parcela:1,
+      categoria:x.categoria||x.cat||"assinaturas",
+      prelancado:"true"
+    });
+  }
 
-  await Promise.all(promises);
   localStorage.setItem("prelancado_"+mesKey,"1");
   setLoading(false);
   showToast(`✓ ${novos.length} pré-lançamentos gerados para ${mesKey}!`);
@@ -2305,12 +2308,13 @@ async function confirmarImport(){
     await deleteRecord("lancCartao",pl.id);
   }
   
-  // 3. INSERIR os lançamentos reais com data = mês da fatura + dia original
-  setLoading(true,`Inserindo ${selecionados.length} lançamentos reais...`);
+  // 3. INSERIR os lançamentos reais sequencialmente (evita timeout do Apps Script)
   const dataFinal=`${mesFatura}-01`;
   
-  const promises=selecionados.map(item=>{
-    return saveRecord("lancCartao",{
+  for(let i=0;i<selecionados.length;i++){
+    const item=selecionados[i];
+    setLoading(true,`Inserindo ${i+1} de ${selecionados.length}...`);
+    await saveRecord("lancCartao",{
       id:uid(),
       data:dataFinal,
       cartaoId,
@@ -2321,8 +2325,7 @@ async function confirmarImport(){
       categoria:item.categoria,
       prelancado:"false"
     });
-  });
-  await Promise.all(promises);
+  }
   
   setLoading(false);
   showToast(`✓ ${previstos.length} previstos removidos · ${selecionados.length} reais importados para ${mesFatura}!`);
