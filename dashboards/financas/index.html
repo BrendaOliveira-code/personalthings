@@ -380,10 +380,10 @@
         <div id="upload-idle">
           <div style="font-size:28px;margin-bottom:8px">🧾</div>
           <p style="font-weight:500;margin-bottom:3px">Clique ou arraste aqui</p>
-          <p style="font-size:12px;color:var(--text3)">Imagem (PNG, JPG) ou PDF da fatura</p>
+          <p style="font-size:12px;color:var(--text3)">PDF da fatura, CSV ou Excel</p>
         </div>
         <div id="upload-name" style="display:none;font-size:12px;color:var(--green);margin-top:6px"></div>
-        <input type="file" id="fatura-file" accept="image/*,.pdf" style="display:none" onchange="handleFaturaFile(event)">
+        <input type="file" id="fatura-file" accept=".pdf,.csv,.xlsx,.xls" style="display:none" onchange="handleFaturaFile(event)">
       </div>
 
       <div class="form-group" style="margin:0">
@@ -391,8 +391,8 @@
         <select id="import-cartao"></select>
       </div>
 
-      <button class="btn btn-primary" id="btn-extrair" onclick="extrairComIA()" disabled style="opacity:.5">
-        <span id="btn-extrair-txt">✦ Extrair com IA</span>
+      <button class="btn btn-primary" id="btn-extrair" onclick="extrairFatura()" disabled style="opacity:.5">
+        <span id="btn-extrair-txt">✦ Extrair lançamentos</span>
       </button>
 
       <div id="ia-status" style="display:none;font-size:12px;color:var(--text2);text-align:center;padding:8px 0">
@@ -421,6 +421,7 @@
           <span id="extract-total" style="font-size:12px;color:var(--text2)"></span>
           <button class="btn btn-primary btn-sm" onclick="confirmarImport()">Importar selecionados</button>
         </div>
+        <div id="extract-previstos-aviso" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(255,184,77,.08);border:1px solid rgba(255,184,77,.2);border-radius:6px"></div>
       </div>
     </div>
   </div>
@@ -671,6 +672,12 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const INITIAL_DB = {"transacoes": [{"id": "id0100", "data": "2025-11-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 8900.29, "categoria": "receita", "obs": ""}, {"id": "id0101", "data": "2025-12-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 5000, "categoria": "receita", "obs": ""}, {"id": "id0102", "data": "2026-01-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0103", "data": "2026-02-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0104", "data": "2026-03-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0105", "data": "2026-04-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}], "fixas": [{"id": "id0010", "nome": "Aluguel", "valor": 1896.17, "dia": 5, "categoria": "moradia", "status": "ativa"}, {"id": "id0011", "nome": "Limpeza", "valor": 550, "dia": 10, "categoria": "moradia", "status": "ativa"}, {"id": "id0012", "nome": "Sem Parar", "valor": 591.63, "dia": 10, "categoria": "transporte", "status": "ativa"}, {"id": "id0013", "nome": "Empréstimo Consignado", "valor": 1992.97, "dia": 5, "categoria": "outros", "status": "ativa"}, {"id": "id0014", "nome": "Creche + Banho (Mike)", "valor": 330, "dia": 5, "categoria": "outros", "status": "ativa"}, {"id": "id0015", "nome": "Esteticista Elaine", "valor": 195, "dia": 15, "categoria": "outros", "status": "ativa"}, {"id": "id0016", "nome": "Itaú - Renegociação (dívida)", "valor": 1936.67, "dia": 5, "categoria": "outros", "status": "ativa"}], "cartoes": [{"id": "id0001", "nome": "Corinthians BMG", "limite": 1750, "fechamento": 26, "vencimento": 5}, {"id": "id0002", "nome": "C&A", "limite": 2000, "fechamento": 10, "vencimento": 20}, {"id": "id0003", "nome": "Amazon", "limite": 3000, "fechamento": 10, "vencimento": 20}], "lancCartao": [{"id": "id0200", "data": "2025-10-14", "cartaoId": "id0001", "descricao": "COBASI", "valor": 185.96, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0201", "data": "2025-11-30", "cartaoId": "id0001", "descricao": "Deezer", "valor": 39.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0202", "data": "2025-12-10", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 46.62, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0203", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "IFD Felipe Rocha Peixo", "valor": 108.97, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0204", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Ikesaki Tucuruvi", "valor": 171.78, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0205", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Lojas Americanas", "valor": 25.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0206", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Uber", "valor": 81.97, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0207", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "LZL Restaurantes", "valor": 166.11, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0208", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Uber", "valor": 32.93, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0209", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Netflix", "valor": 85.7, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0210", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 86.31, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0211", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Auto Posto Vitrine", "valor": 39.99, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0212", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0213", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Patrão Adega", "valor": 114.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0214", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Petz", "valor": 109.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0215", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Ecolavare", "valor": 100.0, "parcelas": 1, "parcela": 1, "categoria": "moradia"}, {"id": "id0216", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "JC Kids", "valor": 119.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0217", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Trimais II", "valor": 297.3, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0218", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "R Altavista Comercio", "valor": 119.96, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0219", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Petz Shopping Trimais", "valor": 32.0, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0220", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Adega do Gogo", "valor": 37.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0221", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Adega do Gogo", "valor": 158.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0222", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0223", "data": "2025-12-27", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 76.03, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0224", "data": "2025-12-28", "cartaoId": "id0001", "descricao": "99Food", "valor": 62.88, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0225", "data": "2025-12-29", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 209.28, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0226", "data": "2025-12-31", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 143.58, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0227", "data": "2026-01-02", "cartaoId": "id0001", "descricao": "O Burguer Tucuruvi", "valor": 131.6, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0228", "data": "2026-01-03", "cartaoId": "id0001", "descricao": "99Food Pizzas", "valor": 89.9, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0229", "data": "2026-01-03", "cartaoId": "id0001", "descricao": "Petz", "valor": 99.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0230", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0231", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 69.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0232", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Cobasi (parc 1/2)", "valor": 104.81, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0233", "data": "2026-01-06", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0234", "data": "2026-01-08", "cartaoId": "id0001", "descricao": "Wellhub WEL", "valor": 59.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0235", "data": "2026-01-20", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0236", "data": "2026-01-24", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0237", "data": "2026-01-26", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0238", "data": "2026-01-30", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 86.31, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0239", "data": "2026-01-30", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 69.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0240", "data": "2026-01-31", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 88.7, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0241", "data": "2026-02-01", "cartaoId": "id0001", "descricao": "Trimais II", "valor": 146.19, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0242", "data": "2026-02-01", "cartaoId": "id0001", "descricao": "Divino Fogão", "valor": 76.6, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0243", "data": "2026-02-02", "cartaoId": "id0001", "descricao": "TotalPass", "valor": 119.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0244", "data": "2026-02-05", "cartaoId": "id0001", "descricao": "Sem Parar (cartão c/ juros)", "valor": 381.24, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0245", "data": "2026-02-05", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 36.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0246", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 77.23, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0247", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Oba Hortifruiti", "valor": 125.51, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0248", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0249", "data": "2026-02-07", "cartaoId": "id0001", "descricao": "iFood Club", "valor": 12.9, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0250", "data": "2026-02-07", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 62.05, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0251", "data": "2026-02-08", "cartaoId": "id0001", "descricao": "Wellhub WEL", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0252", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 4.03, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0253", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 23.95, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0254", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 21.98, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0255", "data": "2026-02-11", "cartaoId": "id0001", "descricao": "Uber", "valor": 18.98, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0256", "data": "2026-02-13", "cartaoId": "id0001", "descricao": "Uber", "valor": 15.99, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0257", "data": "2026-02-14", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0258", "data": "2026-02-20", "cartaoId": "id0001", "descricao": "Uber", "valor": 13.97, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0259", "data": "2026-02-21", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 57.55, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0260", "data": "2026-02-26", "cartaoId": "id0001", "descricao": "Wellhub", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0261", "data": "2026-02-27", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0262", "data": "2026-02-28", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 94.21, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0263", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 50.22, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0264", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi (parc 1/2)", "valor": 104.81, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0265", "data": "2026-03-02", "cartaoId": "id0001", "descricao": "TotalPass", "valor": 119.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0266", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Wellhub (Brenda)", "valor": 36.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0267", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Centro Médico (parc 1/3)", "valor": 356.68, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0268", "data": "2026-03-06", "cartaoId": "id0001", "descricao": "Wellhub (Carlos)", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0269", "data": "2026-03-16", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0270", "data": "2026-03-16", "cartaoId": "id0001", "descricao": "Wellhub", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0271", "data": "2026-04-04", "cartaoId": "id0001", "descricao": "Uber Rides", "valor": 14.58, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0272", "data": "2026-04-04", "cartaoId": "id0001", "descricao": "Apple", "valor": 109.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0273", "data": "2026-03-30", "cartaoId": "id0001", "descricao": "Wellhub Ryan Fernando", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0274", "data": "2026-03-26", "cartaoId": "id0001", "descricao": "Cinemark Brasil", "valor": 40.9, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0275", "data": "2026-03-26", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0276", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Centro Médico (parc 2/3)", "valor": 356.66, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0277", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi (parc 2/2)", "valor": 104.8, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0278", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 18, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0279", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 53.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0280", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 194.78, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0281", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 121.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0282", "data": "2026-01-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 204.98, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0283", "data": "2026-02-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 204.98, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0284", "data": "2026-01-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0285", "data": "2026-02-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0286", "data": "2026-03-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0287", "data": "2026-04-01", "cartaoId": "id0002", "descricao": "Compras C&A (Brenda)", "valor": 90.66, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0288", "data": "2026-02-01", "cartaoId": "id0003", "descricao": "Jim.com Beatriz Gonc (parc 1)", "valor": 150, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0289", "data": "2026-03-01", "cartaoId": "id0003", "descricao": "Jim.com Beatriz Gonc (parc 2)", "valor": 150, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0290", "data": "2026-04-01", "cartaoId": "id0003", "descricao": "Centro Médico (Amazon)", "valor": 450, "parcelas": 1, "parcela": 1, "categoria": "saude"}], "dividas": [{"id": "id0020", "nome": "Nubank", "credor": "Nubank", "saldo": 11793.52, "parcela": 0, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 11793.52, "obs": "Saldo inicial"}]}, {"id": "id0021", "nome": "Caixa Econômica", "credor": "Caixa", "saldo": 11936.67, "parcela": 1936.67, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 11936.67, "obs": "Atualizada 17/01 - valor original 6540,60 com desconto"}]}, {"id": "id0022", "nome": "Renner", "credor": "Renner", "saldo": 17808.77, "parcela": 226.65, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 17808.77, "obs": "Atualizada 17/01"}]}, {"id": "id0023", "nome": "Espaço Laser", "credor": "Espaço Laser", "saldo": 1, "parcela": 0, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-01", "saldo": 1, "obs": "A quitar"}]}]};
 
@@ -1970,8 +1977,8 @@ async function gerarPresMes(){
   if(db2) renderDashboard();
 }
 
-// ---- IMPORTAR FATURA ----
-let faturaFileData=null;
+// ---- IMPORTAR FATURA (sem IA — parser local) ----
+let faturaFile=null;
 let faturaFileType=null;
 let extractedItems=[];
 
@@ -1986,51 +1993,218 @@ function handleDrop(e){
 }
 function handleFaturaFile(e){const file=e.target.files[0];if(file)processFile(file);}
 function processFile(file){
-  const allowed=["image/png","image/jpeg","image/jpg","image/webp","application/pdf"];
-  if(!allowed.includes(file.type)){showToast("Use PNG, JPG ou PDF");return;}
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    faturaFileData=ev.target.result.split(",")[1];faturaFileType=file.type;
-    document.getElementById("upload-name").style.display="block";
-    document.getElementById("upload-name").textContent="📎 "+file.name;
-    document.getElementById("upload-idle").style.display="none";
-    document.getElementById("upload-preview").style.display="block";
-    if(file.type.startsWith("image/")){
-      const img=document.getElementById("img-preview");img.src=ev.target.result;img.style.display="block";
-      document.getElementById("pdf-icon").style.display="none";
-    }else{document.getElementById("pdf-icon").style.display="block";document.getElementById("img-preview").style.display="none";}
-    const btn=document.getElementById("btn-extrair");btn.disabled=false;btn.style.opacity="1";
-  };
-  reader.readAsDataURL(file);
+  const allowed=["application/pdf","text/csv","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.ms-excel"];
+  const ext=file.name.split(".").pop().toLowerCase();
+  if(!allowed.includes(file.type)&&!["pdf","csv","xlsx","xls"].includes(ext)){
+    showToast("Use PDF, CSV ou Excel");return;
+  }
+  faturaFile=file;
+  faturaFileType=ext;
+  document.getElementById("upload-name").style.display="block";
+  document.getElementById("upload-name").textContent="📎 "+file.name;
+  document.getElementById("upload-idle").style.display="none";
+  document.getElementById("upload-preview").style.display="block";
+  document.getElementById("pdf-icon").style.display="block";
+  document.getElementById("img-preview").style.display="none";
+  const btn=document.getElementById("btn-extrair");btn.disabled=false;btn.style.opacity="1";
 }
-async function extrairComIA(){
-  if(!faturaFileData){showToast("Selecione um arquivo primeiro");return;}
+
+// ---- CATEGORIZAR AUTOMATICAMENTE ----
+function _autoCat(desc){
+  const d=(desc||"").toLowerCase();
+  if(/cobasi|petz/.test(d)) return "pets";
+  if(/uber|99|taxi|sem parar|auto posto|combusti/.test(d)) return "transporte";
+  if(/spotify|netflix|deezer|apple|disney|hbo|prime|cinema/.test(d)) return "assinaturas";
+  if(/wellhub|gympass|totalpass|academia|centro.?m[eé]dico|farmacia|drogaria/.test(d)) return "saude";
+  if(/ifood|99food|rappi|restaurante|burguer|pizz|muffato|hortifrut|mercado|supermercado|padaria|fogao|daki/.test(d)) return "alimentacao";
+  if(/aluguel|condomini|ecolavare|limpeza/.test(d)) return "moradia";
+  if(/adega|bar|lazer|cinemark|teatro|show/.test(d)) return "lazer";
+  if(/c&a|renner|riachuelo|marisa|zara|roupa/.test(d)) return "vestuario";
+  return "outros";
+}
+
+// ---- EXTRAIR DE PDF (parser local) ----
+async function _extractFromPDF(file){
+  const arrayBuffer=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+  let fullText="";
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const content=await page.getTextContent();
+    const lines=[];
+    let lastY=null;
+    content.items.forEach(item=>{
+      if(lastY!==null&&Math.abs(item.transform[5]-lastY)>5){
+        lines.push("\n");
+      }
+      lines.push(item.str);
+      lastY=item.transform[5];
+    });
+    fullText+=lines.join(" ")+"\n";
+  }
+  return _parseBMGText(fullText);
+}
+
+// ---- PARSER PADRÃO BMG ----
+function _parseBMGText(text){
+  const lancamentos=[];
+  const lines=text.split("\n").map(l=>l.trim()).filter(l=>l);
+  // Detectar o ano da fatura pelo vencimento
+  let anoFatura=new Date().getFullYear();
+  const vencMatch=text.match(/Vencimento[:\s]*(\d{2})\/(\d{2})\/(\d{4})/i);
+  if(vencMatch) anoFatura=parseInt(vencMatch[3]);
+  
+  // Padrão BMG: DD/MM DESCRIÇÃO VALOR (positivo = compra, negativo = pagamento/crédito)
+  const regex=/(\d{2})\/(\d{2})\s+(.+?)\s+([\-]?\d{1,3}(?:[.,]\d{2}))\s*$/;
+  
+  for(const line of lines){
+    const m=line.match(regex);
+    if(!m) continue;
+    const dia=m[1], mes=m[2];
+    let desc=m[3].trim();
+    let valorStr=m[4].replace(",",".");
+    let valor=parseFloat(valorStr);
+    
+    // Ignorar pagamentos e créditos (valores negativos)
+    if(valor<0) continue;
+    // Ignorar linhas com "Pgto", "Pagamento", "Antecipacao"
+    if(/pgto|pagamento|antecipa/i.test(desc)) continue;
+    
+    // Limpar descrição (remover sufixos como SA, EC, etc)
+    desc=desc.replace(/\s+(SA|EC|U|D)\s*$/i,"").replace(/\s+/g," ").trim();
+    // Remover "DL " prefix
+    desc=desc.replace(/^DL\s+/i,"");
+    
+    // Determinar o ano correto (meses antes do vencimento podem ser do ano anterior)
+    let ano=anoFatura;
+    const mesNum=parseInt(mes);
+    const vencMes=vencMatch?parseInt(vencMatch[2]):new Date().getMonth()+1;
+    if(mesNum>vencMes+1) ano=anoFatura-1;
+    
+    const data=`${ano}-${mes}-${dia}`;
+    const categoria=_autoCat(desc);
+    
+    lancamentos.push({data, descricao:desc, valor, categoria});
+  }
+  return lancamentos;
+}
+
+// ---- EXTRAIR DE CSV ----
+async function _extractFromCSV(file){
+  return new Promise((resolve)=>{
+    Papa.parse(file,{
+      header:true,
+      skipEmptyLines:true,
+      complete:function(results){
+        const lancs=[];
+        results.data.forEach(row=>{
+          // Tenta detectar colunas comuns
+          const data=row.data||row.Data||row.DATE||row["Data Lançamento"]||"";
+          const desc=row.descricao||row.Descricao||row.Descrição||row.DESCRICAO||row.description||"";
+          let valor=row.valor||row.Valor||row.VALOR||row.value||row.amount||"0";
+          valor=parseFloat(String(valor).replace(",",".").replace(/[^\d.\-]/g,""))||0;
+          if(!desc||valor<=0) return;
+          // Parse date
+          let dataFmt=parseDate(data);
+          if(!dataFmt){
+            const dm=String(data).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if(dm) dataFmt=`${dm[3]}-${dm[2]}-${dm[1]}`;
+            else dataFmt=new Date().toISOString().slice(0,10);
+          }
+          lancs.push({data:dataFmt,descricao:desc,valor,categoria:_autoCat(desc)});
+        });
+        resolve(lancs);
+      }
+    });
+  });
+}
+
+// ---- EXTRAIR DE EXCEL ----
+async function _extractFromExcel(file){
+  const arrayBuffer=await file.arrayBuffer();
+  const wb=XLSX.read(arrayBuffer,{type:"array",cellDates:true});
+  const sheet=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(sheet,{defval:""});
+  const lancs=[];
+  rows.forEach(row=>{
+    const data=row.data||row.Data||row.DATE||row["Data Lançamento"]||"";
+    const desc=row.descricao||row.Descricao||row.Descrição||row.DESCRICAO||row.description||"";
+    let valor=row.valor||row.Valor||row.VALOR||row.value||row.amount||"0";
+    valor=parseFloat(String(valor).replace(",",".").replace(/[^\d.\-]/g,""))||0;
+    if(!desc||valor<=0) return;
+    let dataFmt=parseDate(data);
+    if(!dataFmt) dataFmt=new Date().toISOString().slice(0,10);
+    lancs.push({data:dataFmt,descricao:desc,valor,categoria:_autoCat(desc)});
+  });
+  return lancs;
+}
+
+// ---- FUNÇÃO PRINCIPAL DE EXTRAÇÃO ----
+async function extrairFatura(){
+  if(!faturaFile){showToast("Selecione um arquivo primeiro");return;}
   const btn=document.getElementById("btn-extrair");btn.disabled=true;btn.style.opacity=".5";
   document.getElementById("ia-status").style.display="block";
-  document.getElementById("ia-msg").textContent="Analisando fatura com IA...";
+  document.getElementById("ia-msg").textContent="Extraindo lançamentos...";
   document.getElementById("extract-empty").style.display="none";
   document.getElementById("extract-result").style.display="none";
-  const contentType=faturaFileType==="application/pdf"?"document":"image";
-  const prompt=`Analise esta fatura e extraia TODOS os lançamentos de compra (ignore pagamentos e créditos). Responda APENAS com JSON válido: {"lancamentos":[{"data":"YYYY-MM-DD","descricao":"Nome limpo","valor":99.90,"categoria":"alimentacao"}]} Categorias: moradia,transporte,alimentacao,saude,lazer,assinaturas,educacao,vestuario,pets,outros. Cobasi/Petz=pets,Uber=transporte,Spotify/Netflix/Apple=assinaturas,Wellhub/Gympass/TotalPass=saude.`;
+  
   try{
-    // Usa o Apps Script como proxy para chamar a API Anthropic (evita CORS)
-    const resp=await fetch(SHEETS_URL,{
-      method:"POST",
-      body:JSON.stringify({
-        action:"extractIA",
-        fileData:faturaFileData,
-        fileType:faturaFileType,
-        contentType:contentType,
-        prompt:prompt
-      })
-    });
-    const data=await resp.json();
-    if(data.error) throw new Error(data.error);
-    const parsed=typeof data.result==="string"?JSON.parse(data.result.replace(/```json|```/g,"").trim()):data.result;
-    extractedItems=(parsed.lancamentos||[]).map((l,i)=>({...l,_id:"ex_"+i,_selected:true}));
+    let lancs=[];
+    if(faturaFileType==="pdf"){
+      lancs=await _extractFromPDF(faturaFile);
+    } else if(faturaFileType==="csv"){
+      lancs=await _extractFromCSV(faturaFile);
+    } else if(faturaFileType==="xlsx"||faturaFileType==="xls"){
+      lancs=await _extractFromExcel(faturaFile);
+    } else {
+      throw new Error("Formato não suportado: "+faturaFileType);
+    }
+    
+    if(!lancs.length){
+      showToast("Nenhum lançamento encontrado no arquivo");
+      document.getElementById("extract-empty").style.display="flex";
+      return;
+    }
+    
+    extractedItems=lancs.map((l,i)=>({...l,_id:"ex_"+i,_selected:true}));
     renderExtracted();
-  }catch(err){showToast("Erro: "+err.message);document.getElementById("extract-empty").style.display="flex";}
-  finally{document.getElementById("ia-status").style.display="none";btn.disabled=false;btn.style.opacity="1";}
+    
+    // Verificar previstos que serão substituídos
+    _checkPrevistos();
+    
+  }catch(err){
+    showToast("Erro: "+err.message);
+    document.getElementById("extract-empty").style.display="flex";
+  }finally{
+    document.getElementById("ia-status").style.display="none";
+    btn.disabled=false;btn.style.opacity="1";
+  }
+}
+
+// ---- VERIFICAR PREVISTOS QUE SERÃO REMOVIDOS ----
+function _checkPrevistos(){
+  const db=getDB();
+  const cartaoId=document.getElementById("import-cartao").value;
+  // Pegar meses dos lançamentos extraídos
+  const meses=new Set(extractedItems.map(i=>i.data.slice(0,7)));
+  // Buscar previstos desses meses no mesmo cartão
+  const previstos=(db.lancCartao||[]).filter(l=>
+    (l.prelancado===true||l.prelancado==="true")&&
+    l.cartaoId===cartaoId&&
+    l.data&&meses.has(l.data.slice(0,7))
+  );
+  
+  if(previstos.length>0){
+    // Mostrar aviso dos previstos que serão removidos
+    const avisoEl=document.getElementById("extract-previstos-aviso");
+    if(avisoEl){
+      avisoEl.style.display="block";
+      avisoEl.innerHTML=`
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--amber)">⚠️ ${previstos.length} pré-lançamento${previstos.length>1?"s":""} será${previstos.length>1?"ão":""} removido${previstos.length>1?"s":""}:</div>
+        ${previstos.map(p=>`<div style="font-size:11px;color:var(--text2);padding:2px 0">${p.descricao.replace(" (previsto)","")} — ${R(p.valor)}</div>`).join("")}
+      `;
+    }
+  }
 }
 const CAT_LABELS={moradia:"Moradia",transporte:"Transporte",alimentacao:"Alimentação",saude:"Saúde",lazer:"Lazer",assinaturas:"Assinaturas",educacao:"Educação",vestuario:"Vestuário",pets:"Pets",estetica:"Estética",outros:"Outros"};
 function renderExtracted(){
@@ -2072,34 +2246,65 @@ async function confirmarImport(){
   const cartaoId=document.getElementById("import-cartao").value;
   const selecionados=extractedItems.filter(i=>i._selected);
   if(!selecionados.length){showToast("Nenhum item selecionado");return;}
-  const now=new Date();
-  const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const prelancadosMes=(db.lancCartao||[]).filter(l=>l.prelancado&&(l.prelancado===true||l.prelancado==="true")&&l.data&&l.data.startsWith(mesKey)&&l.cartaoId===cartaoId);
-  setLoading(true,"Importando e cruzando pré-lançamentos...");
-  const promises=[];const usados=new Set();
-  selecionados.forEach(item=>{
-    const nNorm=item.descricao.toLowerCase().replace(/\s+/g," ").trim();
-    const match=prelancadosMes.find(pl=>{
-      if(usados.has(pl.id))return false;
-      const plNorm=pl.descricao.replace(" (previsto)","").toLowerCase().replace(/\s+/g," ").trim();
-      return nNorm.includes(plNorm)||plNorm.includes(nNorm)||(nNorm.slice(0,6)===plNorm.slice(0,6)&&nNorm.length>5);
-    });
-    if(match){
-      usados.add(match.id);
-      promises.push(saveRecord("lancCartao",{...match,descricao:item.descricao,valor:item.valor,data:item.data,prelancado:"false",categoria:item.categoria}));
-    }else{
-      promises.push(saveRecord("lancCartao",{id:uid(),data:item.data,cartaoId,descricao:item.descricao,valor:item.valor,parcelas:1,parcela:1,categoria:item.categoria,prelancado:"false"}));
+  
+  // Pegar meses dos lançamentos extraídos
+  const meses=new Set(selecionados.map(i=>i.data.slice(0,7)));
+  
+  // 1. Buscar TODOS os previstos desses meses no mesmo cartão
+  const previstos=(db.lancCartao||[]).filter(l=>
+    (l.prelancado===true||l.prelancado==="true")&&
+    l.cartaoId===cartaoId&&
+    l.data&&meses.has(l.data.slice(0,7))
+  );
+  
+  // Confirmar remoção se houver previstos
+  if(previstos.length>0){
+    const nomes=previstos.map(p=>p.descricao.replace(" (previsto)","")).join(", ");
+    if(!confirm(`Serão removidos ${previstos.length} pré-lançamentos:\n${nomes}\n\nE substituídos pelos ${selecionados.length} lançamentos reais da fatura.\n\nConfirma?`)){
+      return;
     }
-  });
+  }
+  
+  setLoading(true,"Removendo pré-lançamentos...");
+  
+  // 2. DELETAR todos os previstos do Sheets
+  for(const pl of previstos){
+    await deleteRecord("lancCartao",pl.id);
+  }
+  
+  // 3. INSERIR os lançamentos reais no Sheets
+  setLoading(true,`Inserindo ${selecionados.length} lançamentos reais...`);
+  const promises=selecionados.map(item=>
+    saveRecord("lancCartao",{
+      id:uid(),
+      data:item.data,
+      cartaoId,
+      descricao:item.descricao,
+      valor:item.valor,
+      parcelas:1,
+      parcela:1,
+      categoria:item.categoria,
+      prelancado:"false"
+    })
+  );
   await Promise.all(promises);
+  
   setLoading(false);
-  showToast(`✓ ${selecionados.length} importados · ${usados.size} pré-lançamentos confirmados!`);
-  extractedItems=[];faturaFileData=null;faturaFileType=null;
+  showToast(`✓ ${previstos.length} previstos removidos · ${selecionados.length} reais importados!`);
+  
+  // Reset UI
+  extractedItems=[];faturaFile=null;faturaFileType=null;
   ["upload-idle","extract-empty"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="block";});
   ["upload-preview","extract-result","upload-name"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="none";});
+  const avisoEl=document.getElementById("extract-previstos-aviso");
+  if(avisoEl) avisoEl.style.display="none";
   document.getElementById("fatura-file").value="";
   document.getElementById("btn-extrair").disabled=true;document.getElementById("btn-extrair").style.opacity=".5";
-  _db=null;const db2=await loadDB();if(db2){renderLancCartao();renderDashboard();}
+  
+  // Recarregar dados do Sheets
+  _db=null;
+  const db2=await loadDB();
+  if(db2){renderLancCartao();renderDashboard();}
 }
 
 initApp();
