@@ -843,7 +843,7 @@ function renderPage(p){
   if(p==="assinaturas")renderAssinaturas();
 }
 // ---- NAVEGAÇÃO DE MÊS COM LIMITES ----
-const MIN_YEAR=2025, MIN_MONTH=9; // outubro/2025 (0-indexed)
+const MIN_YEAR=2026, MIN_MONTH=0; // janeiro/2026 (0-indexed)
 let selectedYearFilter="all"; // "all" ou ano específico
 
 function getMaxMonth(){
@@ -2282,13 +2282,9 @@ async function confirmarImport(){
   
   // 3. INSERIR os lançamentos reais com data = mês da fatura + dia original
   setLoading(true,`Inserindo ${selecionados.length} lançamentos reais...`);
-  const [fatAno,fatMes]=mesFatura.split("-");
+  const dataFinal=`${mesFatura}-01`;
   
   const promises=selecionados.map(item=>{
-    // Usar dia original do lançamento, mas mês/ano da fatura
-    const diaOriginal=item.dataOriginal?item.dataOriginal.slice(8,10):"01";
-    const dataFinal=`${fatAno}-${fatMes}-${diaOriginal}`;
-    
     return saveRecord("lancCartao",{
       id:uid(),
       data:dataFinal,
