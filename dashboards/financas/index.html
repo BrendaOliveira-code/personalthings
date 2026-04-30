@@ -391,6 +391,11 @@
         <select id="import-cartao"></select>
       </div>
 
+      <div class="form-group" style="margin:0">
+        <label>Mês da fatura</label>
+        <input type="month" id="import-mes-fatura" style="font-size:13px">
+      </div>
+
       <button class="btn btn-primary" id="btn-extrair" onclick="extrairFatura()" disabled style="opacity:.5">
         <span id="btn-extrair-txt">✦ Extrair lançamentos</span>
       </button>
@@ -2049,10 +2054,18 @@ async function _extractFromPDF(file){
 function _parseBMGText(text){
   const lancamentos=[];
   const lines=text.split("\n").map(l=>l.trim()).filter(l=>l);
-  // Detectar o ano da fatura pelo vencimento
+  // Detectar o ano e mês da fatura pelo vencimento
   let anoFatura=new Date().getFullYear();
+  let mesFatura=new Date().getMonth()+1;
   const vencMatch=text.match(/Vencimento[:\s]*(\d{2})\/(\d{2})\/(\d{4})/i);
-  if(vencMatch) anoFatura=parseInt(vencMatch[3]);
+  if(vencMatch){
+    anoFatura=parseInt(vencMatch[3]);
+    mesFatura=parseInt(vencMatch[2]);
+  }
+  
+  // Setar o campo "Mês da fatura" automaticamente
+  const mesInput=document.getElementById("import-mes-fatura");
+  if(mesInput) mesInput.value=`${anoFatura}-${String(mesFatura).padStart(2,'0')}`;
   
   // Padrão BMG: DD/MM DESCRIÇÃO VALOR (positivo = compra, negativo = pagamento/crédito)
   const regex=/(\d{2})\/(\d{2})\s+(.+?)\s+([\-]?\d{1,3}(?:[.,]\d{2}))\s*$/;
@@ -2075,16 +2088,16 @@ function _parseBMGText(text){
     // Remover "DL " prefix
     desc=desc.replace(/^DL\s+/i,"");
     
-    // Determinar o ano correto (meses antes do vencimento podem ser do ano anterior)
+    // Data original do lançamento (para exibição)
     let ano=anoFatura;
     const mesNum=parseInt(mes);
     const vencMes=vencMatch?parseInt(vencMatch[2]):new Date().getMonth()+1;
     if(mesNum>vencMes+1) ano=anoFatura-1;
+    const dataOriginal=`${ano}-${mes}-${dia}`;
     
-    const data=`${ano}-${mes}-${dia}`;
     const categoria=_autoCat(desc);
     
-    lancamentos.push({data, descricao:desc, valor, categoria});
+    lancamentos.push({data:dataOriginal, dataOriginal, descricao:desc, valor, categoria});
   }
   return lancamentos;
 }
@@ -2185,13 +2198,14 @@ async function extrairFatura(){
 function _checkPrevistos(){
   const db=getDB();
   const cartaoId=document.getElementById("import-cartao").value;
-  // Pegar meses dos lançamentos extraídos
-  const meses=new Set(extractedItems.map(i=>i.data.slice(0,7)));
-  // Buscar previstos desses meses no mesmo cartão
+  const mesFatura=document.getElementById("import-mes-fatura").value;
+  if(!mesFatura) return;
+  
+  // Buscar previstos do mês da fatura no mesmo cartão
   const previstos=(db.lancCartao||[]).filter(l=>
     (l.prelancado===true||l.prelancado==="true")&&
     l.cartaoId===cartaoId&&
-    l.data&&meses.has(l.data.slice(0,7))
+    l.data&&l.data.startsWith(mesFatura)
   );
   
   if(previstos.length>0){
@@ -2244,23 +2258,22 @@ function updateExtractCounts(){
 async function confirmarImport(){
   const db=getDB();
   const cartaoId=document.getElementById("import-cartao").value;
+  const mesFatura=document.getElementById("import-mes-fatura").value; // "2026-05"
   const selecionados=extractedItems.filter(i=>i._selected);
   if(!selecionados.length){showToast("Nenhum item selecionado");return;}
+  if(!mesFatura){showToast("Selecione o mês da fatura");return;}
   
-  // Pegar meses dos lançamentos extraídos
-  const meses=new Set(selecionados.map(i=>i.data.slice(0,7)));
-  
-  // 1. Buscar TODOS os previstos desses meses no mesmo cartão
+  // 1. Buscar TODOS os previstos do mês da fatura no mesmo cartão
   const previstos=(db.lancCartao||[]).filter(l=>
     (l.prelancado===true||l.prelancado==="true")&&
     l.cartaoId===cartaoId&&
-    l.data&&meses.has(l.data.slice(0,7))
+    l.data&&l.data.startsWith(mesFatura)
   );
   
   // Confirmar remoção se houver previstos
   if(previstos.length>0){
     const nomes=previstos.map(p=>p.descricao.replace(" (previsto)","")).join(", ");
-    if(!confirm(`Serão removidos ${previstos.length} pré-lançamentos:\n${nomes}\n\nE substituídos pelos ${selecionados.length} lançamentos reais da fatura.\n\nConfirma?`)){
+    if(!confirm(`Serão removidos ${previstos.length} pré-lançamentos de ${mesFatura}:\n${nomes}\n\nE substituídos pelos ${selecionados.length} lançamentos reais da fatura.\n\nConfirma?`)){
       return;
     }
   }
@@ -2272,12 +2285,18 @@ async function confirmarImport(){
     await deleteRecord("lancCartao",pl.id);
   }
   
-  // 3. INSERIR os lançamentos reais no Sheets
+  // 3. INSERIR os lançamentos reais com data = mês da fatura + dia original
   setLoading(true,`Inserindo ${selecionados.length} lançamentos reais...`);
-  const promises=selecionados.map(item=>
-    saveRecord("lancCartao",{
+  const [fatAno,fatMes]=mesFatura.split("-");
+  
+  const promises=selecionados.map(item=>{
+    // Usar dia original do lançamento, mas mês/ano da fatura
+    const diaOriginal=item.dataOriginal?item.dataOriginal.slice(8,10):"01";
+    const dataFinal=`${fatAno}-${fatMes}-${diaOriginal}`;
+    
+    return saveRecord("lancCartao",{
       id:uid(),
-      data:item.data,
+      data:dataFinal,
       cartaoId,
       descricao:item.descricao,
       valor:item.valor,
@@ -2285,12 +2304,12 @@ async function confirmarImport(){
       parcela:1,
       categoria:item.categoria,
       prelancado:"false"
-    })
-  );
+    });
+  });
   await Promise.all(promises);
   
   setLoading(false);
-  showToast(`✓ ${previstos.length} previstos removidos · ${selecionados.length} reais importados!`);
+  showToast(`✓ ${previstos.length} previstos removidos · ${selecionados.length} reais importados para ${mesFatura}!`);
   
   // Reset UI
   extractedItems=[];faturaFile=null;faturaFileType=null;
