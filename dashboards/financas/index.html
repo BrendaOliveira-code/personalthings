@@ -76,8 +76,10 @@
   input:focus,select:focus,textarea:focus{border-color:var(--green)}
   select option{background:var(--surface2)}
   textarea{resize:vertical;min-height:70px}
-  .month-nav{display:flex;align-items:center;gap:8px}
-  .month-display{font-size:14px;font-weight:500;min-width:130px;text-align:center}
+  .month-nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .month-display{font-size:14px;font-weight:500;min-width:110px;text-align:center}
+  .year-select{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:5px 8px;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;outline:none}
+  .year-select:focus{border-color:var(--green)}
   .chart-container{position:relative;display:flex;height:200px}
   .chart-y-axis{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;padding-right:8px;padding-bottom:22px;min-width:48px}
   .chart-y-label{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1}
@@ -176,6 +178,7 @@
       <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1)">‹</button>
       <div class="month-display" id="month-display">—</div>
       <button class="btn btn-ghost btn-sm" onclick="changeMonth(1)">›</button>
+      <select class="year-select" onchange="changeYear(this.value)"></select>
     </div>
   </div>
   <div id="dash-alert" style="display:none"></div>
@@ -225,6 +228,7 @@
         <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1);renderTransacoes()">‹</button>
         <div class="month-display" id="extrato-month">—</div>
         <button class="btn btn-ghost btn-sm" onclick="changeMonth(1);renderTransacoes()">›</button>
+        <select class="year-select" onchange="changeYear(this.value);renderTransacoes()"></select>
       </div>
       <button class="btn btn-primary" onclick="openModal('modal-transacao')">+ Nova transação</button>
     </div>
@@ -258,6 +262,7 @@
         <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1);renderFixas()">‹</button>
         <div class="month-display" id="fixas-month">—</div>
         <button class="btn btn-ghost btn-sm" onclick="changeMonth(1);renderFixas()">›</button>
+        <select class="year-select" onchange="changeYear(this.value);renderFixas()"></select>
       </div>
       <button class="btn btn-primary" onclick="openModal('modal-fixa')">+ Nova conta fixa</button>
     </div>
@@ -798,9 +803,8 @@ function saveConfigURL(){
 async function initApp(){
   const db=await loadDB();
   if(!db) return;
+  updateYearSelectors();
   renderDashboard();
-  // POP-UP DE PRÉ-LANÇAMENTOS REMOVIDO
-  // Use o botão "+ Gerar para um mês" na página Importar
 }
 
 let currentPage="dashboard";
@@ -826,11 +830,70 @@ function renderPage(p){
   if(p==="terceiros")renderTerceiros();
   if(p==="assinaturas")renderAssinaturas();
 }
+// ---- NAVEGAÇÃO DE MÊS COM LIMITES ----
+const MIN_YEAR=2025, MIN_MONTH=9; // outubro/2025 (0-indexed)
+let selectedYearFilter="all"; // "all" ou ano específico
+
+function getMaxMonth(){
+  const now=new Date();
+  let m=now.getMonth()+6, y=now.getFullYear();
+  while(m>11){m-=12;y++;}
+  return{y,m};
+}
+function _getMinForYear(){
+  if(selectedYearFilter==="all") return{y:MIN_YEAR,m:MIN_MONTH};
+  const yr=parseInt(selectedYearFilter);
+  if(yr===MIN_YEAR) return{y:MIN_YEAR,m:MIN_MONTH};
+  return{y:yr,m:0};
+}
+function _getMaxForYear(){
+  const mx=getMaxMonth();
+  if(selectedYearFilter==="all") return mx;
+  const yr=parseInt(selectedYearFilter);
+  if(yr===mx.y) return mx;
+  if(yr>mx.y) return mx;
+  return{y:yr,m:11};
+}
 function changeMonth(d){
   currentMonth+=d;
   if(currentMonth>11){currentMonth=0;currentYear++;}
   if(currentMonth<0){currentMonth=11;currentYear--;}
+  // Clamp min
+  const mn=_getMinForYear();
+  if(currentYear<mn.y||(currentYear===mn.y&&currentMonth<mn.m)){
+    currentYear=mn.y;currentMonth=mn.m;
+  }
+  // Clamp max
+  const mx=_getMaxForYear();
+  if(currentYear>mx.y||(currentYear===mx.y&&currentMonth>mx.m)){
+    currentYear=mx.y;currentMonth=mx.m;
+  }
   renderPage(currentPage);
+}
+function changeYear(v){
+  selectedYearFilter=v;
+  if(v!=="all"){
+    const yr=parseInt(v);
+    currentYear=yr;
+    // Clamp month
+    const mn=_getMinForYear();
+    const mx=_getMaxForYear();
+    if(currentMonth<mn.m&&currentYear===mn.y) currentMonth=mn.m;
+    if(currentMonth>mx.m&&currentYear===mx.y) currentMonth=mx.m;
+  }
+  renderPage(currentPage);
+}
+function getAvailableYears(){
+  const mx=getMaxMonth();
+  const years=[];
+  for(let y=MIN_YEAR;y<=mx.y;y++) years.push(y);
+  return years;
+}
+function updateYearSelectors(){
+  const years=getAvailableYears();
+  document.querySelectorAll(".year-select").forEach(sel=>{
+    sel.innerHTML=`<option value="all" ${selectedYearFilter==="all"?"selected":""}>Todos</option>`+years.map(y=>`<option value="${y}" ${String(y)===String(selectedYearFilter)?"selected":""}>${y}</option>`).join("");
+  });
 }
 function getMonthStr(){return new Date(currentYear,currentMonth,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});}
 function R(v){return"R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
