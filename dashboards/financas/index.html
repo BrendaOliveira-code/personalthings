@@ -95,7 +95,6 @@
   .chart-legend{display:flex;gap:16px;margin-bottom:12px}
   .chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
   .chart-legend-dot{width:8px;height:8px;border-radius:2px}
-  /* Contas a pagar checklist */
   .conta-check{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);transition:background .15s;cursor:pointer}
   .conta-check:hover{background:rgba(255,255,255,.03)}
   .conta-check.pago{opacity:.55}
@@ -184,7 +183,6 @@
   <div id="dash-alert" style="display:none"></div>
   <div class="stats-grid" id="stats-grid"></div>
 
-  <!-- ROW: Contas do mês + Categorias -->
   <div class="grid2">
     <div class="card">
       <div class="card-header">
@@ -199,7 +197,6 @@
     </div>
   </div>
 
-  <!-- ROW: Gráfico evolução -->
   <div class="card mt2">
     <div class="card-header"><div class="card-title">Evolução 6 meses</div></div>
     <div class="chart-legend">
@@ -209,14 +206,13 @@
     <div class="chart-container" id="bar-chart"></div>
   </div>
 
-  <!-- ROW: Últimas transações -->
   <div class="card mt2">
     <div class="card-header"><div class="card-title">Últimas transações e lançamentos</div><button class="btn btn-ghost btn-sm" onclick="navigate('transacoes')">Ver todas ›</button></div>
     <div class="table-wrap"><table id="dash-table"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Origem</th><th style="text-align:right">Valor</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 
-<!-- TRANSAÇÕES (EXTRATO) -->
+<!-- TRANSAÇÕES -->
 <div class="page" id="page-transacoes">
   <div class="page-header">
     <div>
@@ -339,7 +335,6 @@
     <div><div class="page-title">Importar & Pré-lançamentos</div><div class="page-sub">Importe faturas via IA ou gere pré-lançamentos mensais estimados</div></div>
   </div>
 
-  <!-- PRÉ-LANÇAMENTOS SECTION -->
   <div class="card" style="max-width:860px;margin-bottom:20px">
     <div class="card-header">
       <div class="card-title">📅 Pré-lançamentos mensais</div>
@@ -360,7 +355,6 @@
     </div>
   </div>
 
-  <!-- DIVIDER -->
   <div style="display:flex;align-items:center;gap:12px;max-width:860px;margin-bottom:20px">
     <div style="flex:1;height:1px;background:var(--border)"></div>
     <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">ou importe a fatura real</span>
@@ -368,7 +362,6 @@
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px">
-    <!-- Upload card -->
     <div class="card" style="display:flex;flex-direction:column;gap:14px">
       <div class="card-title">1. Selecionar arquivo</div>
 
@@ -406,7 +399,6 @@
       </div>
     </div>
 
-    <!-- Result card -->
     <div class="card" style="display:flex;flex-direction:column;gap:12px">
       <div class="card-title">2. Revisar e importar</div>
       <div id="extract-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);padding:24px 0;text-align:center">
@@ -444,30 +436,42 @@
   </style>
 </div>
 
-<!-- PAGE: TERCEIROS -->
+<!-- TERCEIROS -->
 <div class="page" id="page-terceiros">
   <div class="page-header">
     <div>
       <div class="page-title">Cobranças de Terceiros</div>
-      <div class="page-sub">Valores que você paga mas não são seus — controle quem deve o quê</div>
+      <div class="page-sub" id="terc-sub">Valores que você paga mas não são seus — controle quem deve o quê</div>
     </div>
-    <button class="btn btn-primary" onclick="openModal('modal-terceiro')">+ Nova cobrança</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="month-nav">
+        <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1);renderTerceiros()">‹</button>
+        <div class="month-display" id="terc-month">—</div>
+        <button class="btn btn-ghost btn-sm" onclick="changeMonth(1);renderTerceiros()">›</button>
+        <select class="year-select" onchange="changeYear(this.value);renderTerceiros()"></select>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-terceiro')">+ Nova cobrança</button>
+    </div>
   </div>
 
   <div class="stats-grid" id="terc-stats"></div>
-
-  <!-- Checklist mensal por pessoa -->
   <div id="terc-pessoas"></div>
 </div>
 
-<!-- PAGE: ASSINATURAS -->
+<!-- ASSINATURAS -->
 <div class="page" id="page-assinaturas">
   <div class="page-header">
     <div>
       <div class="page-title">Assinaturas Fixas</div>
-      <div class="page-sub">Cobranças mensais recorrentes no BMG</div>
+      <div class="page-sub" id="assin-sub">Cobranças mensais recorrentes no BMG</div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="month-nav">
+        <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1);renderAssinaturas()">‹</button>
+        <div class="month-display" id="assin-month">—</div>
+        <button class="btn btn-ghost btn-sm" onclick="changeMonth(1);renderAssinaturas()">›</button>
+        <select class="year-select" onchange="changeYear(this.value);renderAssinaturas()"></select>
+      </div>
       <button class="btn btn-primary" onclick="openModal('modal-assinatura')">+ Nova assinatura</button>
     </div>
   </div>
@@ -554,7 +558,6 @@
   </div>
 </div>
 
-<!-- MODAL CONFIG SHEETS URL -->
 <div class="modal-overlay" id="modal-config">
   <div class="modal" style="max-width:500px">
     <div class="modal-title">🔗 Conectar ao Google Sheets</div>
@@ -573,7 +576,6 @@
   </div>
 </div>
 
-<!-- MODAL GERAR PRÉ-LANÇAMENTOS MÊS ESPECÍFICO -->
 <div class="modal-overlay" id="modal-gerar-mes">
   <div class="modal" style="max-width:420px">
     <div class="modal-title">📅 Gerar pré-lançamentos <button class="modal-close" onclick="closeModal('modal-gerar-mes')">×</button></div>
@@ -597,7 +599,6 @@
   </div>
 </div>
 
-<!-- MODAL TERCEIRO -->
 <div class="modal-overlay" id="modal-terceiro">
   <div class="modal">
     <div class="modal-title">Nova Cobrança de Terceiro <button class="modal-close" onclick="closeModal('modal-terceiro')">×</button></div>
@@ -629,7 +630,6 @@
   </div>
 </div>
 
-<!-- MODAL REGISTRAR PAGAMENTO TERCEIRO -->
 <div class="modal-overlay" id="modal-terc-pag">
   <div class="modal">
     <div class="modal-title">Registrar Pagamento Recebido <button class="modal-close" onclick="closeModal('modal-terc-pag')">×</button></div>
@@ -643,7 +643,6 @@
   </div>
 </div>
 
-<!-- MODAL ASSINATURA -->
 <div class="modal-overlay" id="modal-assinatura">
   <div class="modal">
     <div class="modal-title">Nova Assinatura <button class="modal-close" onclick="closeModal('modal-assinatura')">×</button></div>
@@ -684,8 +683,9 @@ if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudf
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const INITIAL_DB = {"transacoes": [{"id": "id0100", "data": "2025-11-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 8900.29, "categoria": "receita", "obs": ""}, {"id": "id0101", "data": "2025-12-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 5000, "categoria": "receita", "obs": ""}, {"id": "id0102", "data": "2026-01-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0103", "data": "2026-02-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0104", "data": "2026-03-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}, {"id": "id0105", "data": "2026-04-01", "tipo": "receita", "descricao": "Salário Brenda", "valor": 7800, "categoria": "receita", "obs": ""}], "fixas": [{"id": "id0010", "nome": "Aluguel", "valor": 1896.17, "dia": 5, "categoria": "moradia", "status": "ativa"}, {"id": "id0011", "nome": "Limpeza", "valor": 550, "dia": 10, "categoria": "moradia", "status": "ativa"}, {"id": "id0012", "nome": "Sem Parar", "valor": 591.63, "dia": 10, "categoria": "transporte", "status": "ativa"}, {"id": "id0013", "nome": "Empréstimo Consignado", "valor": 1992.97, "dia": 5, "categoria": "outros", "status": "ativa"}, {"id": "id0014", "nome": "Creche + Banho (Mike)", "valor": 330, "dia": 5, "categoria": "outros", "status": "ativa"}, {"id": "id0015", "nome": "Esteticista Elaine", "valor": 195, "dia": 15, "categoria": "outros", "status": "ativa"}, {"id": "id0016", "nome": "Itaú - Renegociação (dívida)", "valor": 1936.67, "dia": 5, "categoria": "outros", "status": "ativa"}], "cartoes": [{"id": "id0001", "nome": "Corinthians BMG", "limite": 1750, "fechamento": 26, "vencimento": 5}, {"id": "id0002", "nome": "C&A", "limite": 2000, "fechamento": 10, "vencimento": 20}, {"id": "id0003", "nome": "Amazon", "limite": 3000, "fechamento": 10, "vencimento": 20}], "lancCartao": [{"id": "id0200", "data": "2025-10-14", "cartaoId": "id0001", "descricao": "COBASI", "valor": 185.96, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0201", "data": "2025-11-30", "cartaoId": "id0001", "descricao": "Deezer", "valor": 39.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0202", "data": "2025-12-10", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 46.62, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0203", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "IFD Felipe Rocha Peixo", "valor": 108.97, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0204", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Ikesaki Tucuruvi", "valor": 171.78, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0205", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Lojas Americanas", "valor": 25.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0206", "data": "2025-12-11", "cartaoId": "id0001", "descricao": "Uber", "valor": 81.97, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0207", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "LZL Restaurantes", "valor": 166.11, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0208", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Uber", "valor": 32.93, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0209", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Netflix", "valor": 85.7, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0210", "data": "2025-12-12", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 86.31, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0211", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Auto Posto Vitrine", "valor": 39.99, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0212", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0213", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Patrão Adega", "valor": 114.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0214", "data": "2025-12-14", "cartaoId": "id0001", "descricao": "Petz", "valor": 109.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0215", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Ecolavare", "valor": 100.0, "parcelas": 1, "parcela": 1, "categoria": "moradia"}, {"id": "id0216", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "JC Kids", "valor": 119.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0217", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Trimais II", "valor": 297.3, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0218", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "R Altavista Comercio", "valor": 119.96, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0219", "data": "2025-12-23", "cartaoId": "id0001", "descricao": "Petz Shopping Trimais", "valor": 32.0, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0220", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Adega do Gogo", "valor": 37.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0221", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Adega do Gogo", "valor": 158.0, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0222", "data": "2025-12-24", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0223", "data": "2025-12-27", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 76.03, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0224", "data": "2025-12-28", "cartaoId": "id0001", "descricao": "99Food", "valor": 62.88, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0225", "data": "2025-12-29", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 209.28, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0226", "data": "2025-12-31", "cartaoId": "id0001", "descricao": "Super Muffato", "valor": 143.58, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0227", "data": "2026-01-02", "cartaoId": "id0001", "descricao": "O Burguer Tucuruvi", "valor": 131.6, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0228", "data": "2026-01-03", "cartaoId": "id0001", "descricao": "99Food Pizzas", "valor": 89.9, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0229", "data": "2026-01-03", "cartaoId": "id0001", "descricao": "Petz", "valor": 99.98, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0230", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0231", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 69.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0232", "data": "2026-01-05", "cartaoId": "id0001", "descricao": "Cobasi (parc 1/2)", "valor": 104.81, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0233", "data": "2026-01-06", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0234", "data": "2026-01-08", "cartaoId": "id0001", "descricao": "Wellhub WEL", "valor": 59.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0235", "data": "2026-01-20", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0236", "data": "2026-01-24", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0237", "data": "2026-01-26", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0238", "data": "2026-01-30", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 86.31, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0239", "data": "2026-01-30", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 69.93, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0240", "data": "2026-01-31", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 88.7, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0241", "data": "2026-02-01", "cartaoId": "id0001", "descricao": "Trimais II", "valor": 146.19, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0242", "data": "2026-02-01", "cartaoId": "id0001", "descricao": "Divino Fogão", "valor": 76.6, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0243", "data": "2026-02-02", "cartaoId": "id0001", "descricao": "TotalPass", "valor": 119.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0244", "data": "2026-02-05", "cartaoId": "id0001", "descricao": "Sem Parar (cartão c/ juros)", "valor": 381.24, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0245", "data": "2026-02-05", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 36.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0246", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 77.23, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0247", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Oba Hortifruiti", "valor": 125.51, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0248", "data": "2026-02-06", "cartaoId": "id0001", "descricao": "Wellhub GymPass", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0249", "data": "2026-02-07", "cartaoId": "id0001", "descricao": "iFood Club", "valor": 12.9, "parcelas": 1, "parcela": 1, "categoria": "alimentacao"}, {"id": "id0250", "data": "2026-02-07", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 62.05, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0251", "data": "2026-02-08", "cartaoId": "id0001", "descricao": "Wellhub WEL", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0252", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 4.03, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0253", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 23.95, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0254", "data": "2026-02-09", "cartaoId": "id0001", "descricao": "Uber", "valor": 21.98, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0255", "data": "2026-02-11", "cartaoId": "id0001", "descricao": "Uber", "valor": 18.98, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0256", "data": "2026-02-13", "cartaoId": "id0001", "descricao": "Uber", "valor": 15.99, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0257", "data": "2026-02-14", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0258", "data": "2026-02-20", "cartaoId": "id0001", "descricao": "Uber", "valor": 13.97, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0259", "data": "2026-02-21", "cartaoId": "id0001", "descricao": "Cobasi Santana", "valor": 57.55, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0260", "data": "2026-02-26", "cartaoId": "id0001", "descricao": "Wellhub", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0261", "data": "2026-02-27", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0262", "data": "2026-02-28", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 94.21, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0263", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi", "valor": 50.22, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0264", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi (parc 1/2)", "valor": 104.81, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0265", "data": "2026-03-02", "cartaoId": "id0001", "descricao": "TotalPass", "valor": 119.9, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0266", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Wellhub (Brenda)", "valor": 36.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0267", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Centro Médico (parc 1/3)", "valor": 356.68, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0268", "data": "2026-03-06", "cartaoId": "id0001", "descricao": "Wellhub (Carlos)", "valor": 91.7, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0269", "data": "2026-03-16", "cartaoId": "id0001", "descricao": "Spotify", "valor": 31.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0270", "data": "2026-03-16", "cartaoId": "id0001", "descricao": "Wellhub", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0271", "data": "2026-04-04", "cartaoId": "id0001", "descricao": "Uber Rides", "valor": 14.58, "parcelas": 1, "parcela": 1, "categoria": "transporte"}, {"id": "id0272", "data": "2026-04-04", "cartaoId": "id0001", "descricao": "Apple", "valor": 109.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0273", "data": "2026-03-30", "cartaoId": "id0001", "descricao": "Wellhub Ryan Fernando", "valor": 69.99, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0274", "data": "2026-03-26", "cartaoId": "id0001", "descricao": "Cinemark Brasil", "valor": 40.9, "parcelas": 1, "parcela": 1, "categoria": "lazer"}, {"id": "id0275", "data": "2026-03-26", "cartaoId": "id0001", "descricao": "Apple", "valor": 66.9, "parcelas": 1, "parcela": 1, "categoria": "assinaturas"}, {"id": "id0276", "data": "2026-03-05", "cartaoId": "id0001", "descricao": "Centro Médico (parc 2/3)", "valor": 356.66, "parcelas": 1, "parcela": 1, "categoria": "saude"}, {"id": "id0277", "data": "2026-03-01", "cartaoId": "id0001", "descricao": "Cobasi (parc 2/2)", "valor": 104.8, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0278", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 18, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0279", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 53.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0280", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 194.78, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0281", "data": "2025-11-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 121.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0282", "data": "2026-01-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 204.98, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0283", "data": "2026-02-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 204.98, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0284", "data": "2026-01-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0285", "data": "2026-02-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0286", "data": "2026-03-01", "cartaoId": "id0002", "descricao": "Compras C&A", "valor": 135.99, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0287", "data": "2026-04-01", "cartaoId": "id0002", "descricao": "Compras C&A (Brenda)", "valor": 90.66, "parcelas": 1, "parcela": 1, "categoria": "vestuario"}, {"id": "id0288", "data": "2026-02-01", "cartaoId": "id0003", "descricao": "Jim.com Beatriz Gonc (parc 1)", "valor": 150, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0289", "data": "2026-03-01", "cartaoId": "id0003", "descricao": "Jim.com Beatriz Gonc (parc 2)", "valor": 150, "parcelas": 1, "parcela": 1, "categoria": "outros"}, {"id": "id0290", "data": "2026-04-01", "cartaoId": "id0003", "descricao": "Centro Médico (Amazon)", "valor": 450, "parcelas": 1, "parcela": 1, "categoria": "saude"}], "dividas": [{"id": "id0020", "nome": "Nubank", "credor": "Nubank", "saldo": 11793.52, "parcela": 0, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 11793.52, "obs": "Saldo inicial"}]}, {"id": "id0021", "nome": "Caixa Econômica", "credor": "Caixa", "saldo": 11936.67, "parcela": 1936.67, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 11936.67, "obs": "Atualizada 17/01 - valor original 6540,60 com desconto"}]}, {"id": "id0022", "nome": "Renner", "credor": "Renner", "saldo": 17808.77, "parcela": 226.65, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-17", "saldo": 17808.77, "obs": "Atualizada 17/01"}]}, {"id": "id0023", "nome": "Espaço Laser", "credor": "Espaço Laser", "saldo": 1, "parcela": 0, "juros": "", "vencimento": "", "historico": [{"data": "2026-01-01", "saldo": 1, "obs": "A quitar"}]}]};
-
+// ====================================================================
+// DADOS INICIAIS, CATEGORIAS E ESTADO BASE
+// ====================================================================
 const CATS=[
   {id:"moradia",label:"Moradia",icon:"🏠",color:"blue"},
   {id:"transporte",label:"Transporte",icon:"🚗",color:"amber"},
@@ -741,13 +741,14 @@ async function loadDB(force=false){
     const data=await resp.json();
     if(data.error) throw new Error(data.error);
     _db=data;
-    ["transacoes","fixas","cartoes","lancCartao","dividas","terceiros","assinaturas","cobasiPedidos","fixasMensal"].forEach(k=>{if(!_db[k])_db[k]=[];});
+    // ATENÇÃO: incluí 'reservas' e 'assinaturasMensal' (novo)
+    ["transacoes","fixas","cartoes","lancCartao","dividas","terceiros","assinaturas","cobasiPedidos","fixasMensal","reservas","assinaturasMensal"].forEach(k=>{if(!_db[k])_db[k]=[];});
     _loadCallbacks.forEach(cb=>cb(_db));
     _loadCallbacks=[];
     return _db;
   } catch(err){
     showToast("Erro ao carregar: "+err.message);
-    return _db||{transacoes:[],fixas:[],cartoes:[],lancCartao:[],dividas:[],terceiros:[],assinaturas:[],cobasiPedidos:[]};
+    return _db||{transacoes:[],fixas:[],cartoes:[],lancCartao:[],dividas:[],terceiros:[],assinaturas:[],cobasiPedidos:[],reservas:[],fixasMensal:[],assinaturasMensal:[]};
   } finally{
     _loading=false;
     setLoading(false);
@@ -764,6 +765,7 @@ async function saveRecord(table, record){
     const data=await resp.json();
     if(data.error) throw new Error(data.error);
     if(_db){
+      if(!_db[table]) _db[table]=[];
       const arr=_db[table];
       const idx=arr.findIndex(r=>r.id===record.id);
       if(idx>=0) arr[idx]=record; else arr.push(record);
@@ -784,7 +786,7 @@ async function deleteRecord(table, id){
     });
     const data=await resp.json();
     if(data.error) throw new Error(data.error);
-    if(_db) _db[table]=_db[table].filter(r=>r.id!==id);
+    if(_db && _db[table]) _db[table]=_db[table].filter(r=>r.id!==id);
     return true;
   } catch(err){
     showToast("Erro ao deletar: "+err.message);
@@ -792,7 +794,7 @@ async function deleteRecord(table, id){
   }
 }
 
-function getDB(){ return _db || {transacoes:[],fixas:[],cartoes:[],lancCartao:[],dividas:[],terceiros:[],assinaturas:[],cobasiPedidos:[]}; }
+function getDB(){ return _db || {transacoes:[],fixas:[],cartoes:[],lancCartao:[],dividas:[],terceiros:[],assinaturas:[],cobasiPedidos:[],reservas:[],fixasMensal:[],assinaturasMensal:[]}; }
 
 function showConfigModal(){
   document.getElementById("modal-config").classList.add("open");
@@ -809,9 +811,6 @@ function saveConfigURL(){
   _db=null;
 }
 
-// =============================================
-// INICIALIZAÇÃO - SEM POP-UP AUTOMÁTICO
-// =============================================
 async function initApp(){
   const db=await loadDB();
   if(!db) return;
@@ -842,9 +841,9 @@ function renderPage(p){
   if(p==="terceiros")renderTerceiros();
   if(p==="assinaturas")renderAssinaturas();
 }
-// ---- NAVEGAÇÃO DE MÊS COM LIMITES ----
-const MIN_YEAR=2026, MIN_MONTH=3; // abril/2026 (0-indexed)
-let selectedYearFilter="all"; // "all" ou ano específico
+
+const MIN_YEAR=2026, MIN_MONTH=3; // abril/2026 (0=jan, 3=abril)
+let selectedYearFilter="all";
 
 function getMaxMonth(){
   const now=new Date();
@@ -870,16 +869,16 @@ function changeMonth(d){
   currentMonth+=d;
   if(currentMonth>11){currentMonth=0;currentYear++;}
   if(currentMonth<0){currentMonth=11;currentYear--;}
-  // Clamp min
   const mn=_getMinForYear();
   if(currentYear<mn.y||(currentYear===mn.y&&currentMonth<mn.m)){
     currentYear=mn.y;currentMonth=mn.m;
   }
-  // Clamp max
   const mx=_getMaxForYear();
   if(currentYear>mx.y||(currentYear===mx.y&&currentMonth>mx.m)){
     currentYear=mx.y;currentMonth=mx.m;
   }
+  // FIX: atualizar seletor de ano quando ano muda implicitamente
+  updateYearSelectors();
   renderPage(currentPage);
 }
 function changeYear(v){
@@ -887,12 +886,12 @@ function changeYear(v){
   if(v!=="all"){
     const yr=parseInt(v);
     currentYear=yr;
-    // Clamp month
     const mn=_getMinForYear();
     const mx=_getMaxForYear();
     if(currentMonth<mn.m&&currentYear===mn.y) currentMonth=mn.m;
     if(currentMonth>mx.m&&currentYear===mx.y) currentMonth=mx.m;
   }
+  updateYearSelectors();
   renderPage(currentPage);
 }
 function getAvailableYears(){
@@ -908,7 +907,11 @@ function updateYearSelectors(){
   });
 }
 function getMonthStr(){return new Date(currentYear,currentMonth,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});}
-function R(v){return"R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function R(v){
+  v=Number(v);
+  const sign=v<0?"-":"";
+  return sign+"R$ "+Math.abs(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
 function parseDate(d){
   if(!d) return "";
   if(typeof d==="string"&&d.match(/^\d{4}-\d{2}-\d{2}/)) return d.slice(0,10);
@@ -925,17 +928,206 @@ function inMonth(dateStr,y,m){
   return parseInt(dy)===y&&parseInt(dm)-1===m;
 }
 function cat(id){return CATS.find(c=>c.id===id)||{label:id||"—",color:"amber",icon:"📦"};}
+function _mesKeyFromYM(y,m){return `${y}-${String(m+1).padStart(2,'0')}`;}
+function _getMesKey(){return _mesKeyFromYM(currentYear,currentMonth);}
 
-// ---- CONTAS PAGAS (Dashboard): usa fixasMensal do Sheets ----
-// ---- CONTAS PAGAS (Dashboard): usa fixasMensal do Sheets ----
+
+// ====================================================================
+// CÁLCULO UNIFICADO DE FATURA DO CARTÃO
+// ====================================================================
+// Regras (alinhadas com o que a Brenda decidiu):
+// 1. Soma TODOS os lançamentos do mês (positivos = compras, negativos = pagamentos/créditos)
+//    → pagamentos negativos abatem a fatura naturalmente pela soma
+// 2. Pré-lançamentos (prelancado=true) só entram se NÃO houver NENHUM lançamento real
+//    do mesmo cartão no mesmo mês. Quando a fatura real chega, os previstos são deletados.
+// 3. Retorna sempre o valor BRUTO (pode ser negativo se pagamentos > compras, raro mas possível)
+// ====================================================================
+
+function _isPrelancado(l){
+  return l.prelancado===true||l.prelancado==="true";
+}
+
+function _calcFaturaCartao(cartaoId, ano, mes){
+  const db=getDB();
+  const lancsCartao=(db.lancCartao||[]).filter(l=>l.cartaoId===cartaoId&&inMonth(l.data,ano,mes));
+  if(!lancsCartao.length) return 0;
+
+  const reais=lancsCartao.filter(l=>!_isPrelancado(l));
+  const previstos=lancsCartao.filter(l=>_isPrelancado(l));
+
+  // Se tem pelo menos 1 real, ignora previstos e soma só reais
+  // Se não tem real, soma os previstos
+  const considerar = reais.length>0 ? reais : previstos;
+  return considerar.reduce((a,l)=>a+parseFloat(l.valor||0), 0);
+}
+
+// Soma de TODOS os cartões num mês
+function _calcTotalCartoesMes(ano, mes){
+  const db=getDB();
+  return (db.cartoes||[]).reduce((acc,c)=>acc+_calcFaturaCartao(c.id, ano, mes), 0);
+}
+
+// Lista os lançamentos efetivos a considerar do cartão no mês
+// (reais se houver, senão previstos)
+function _getLancsEfetivosCartao(cartaoId, ano, mes){
+  const db=getDB();
+  const lancsCartao=(db.lancCartao||[]).filter(l=>l.cartaoId===cartaoId&&inMonth(l.data,ano,mes));
+  const reais=lancsCartao.filter(l=>!_isPrelancado(l));
+  if(reais.length>0) return reais;
+  return lancsCartao.filter(l=>_isPrelancado(l));
+}
+
+// Lista efetiva agregando TODOS os cartões no mês
+function _getTodosLancsEfetivosMes(ano, mes){
+  const db=getDB();
+  let result=[];
+  (db.cartoes||[]).forEach(c=>{
+    result=result.concat(_getLancsEfetivosCartao(c.id, ano, mes));
+  });
+  return result;
+}
+
+// ====================================================================
+// FIXAS MENSAL (valor/pago por mês)
+// ====================================================================
+function _getFixaMensal(fixaId, mesKey){
+  const db=getDB();
+  const key=mesKey||_getMesKey();
+  return (db.fixasMensal||[]).find(fm=>fm.fixaId===fixaId&&fm.mes===key)||null;
+}
+function _getFixaValorMes(f, mesKey){
+  const fm=_getFixaMensal(f.id, mesKey);
+  return fm?parseFloat(fm.valor||0):parseFloat(f.valor||0);
+}
+function _isFixaPaga(fixaId, mesKey){
+  const fm=_getFixaMensal(fixaId, mesKey);
+  return !!(fm&&(fm.pago===true||fm.pago==="true"));
+}
+
+async function toggleFixaPaga(fixaId){
+  const db=getDB();
+  const mesKey=_getMesKey();
+  const f=db.fixas.find(x=>x.id===fixaId);if(!f)return;
+  let fm=(db.fixasMensal||[]).find(x=>x.fixaId===fixaId&&x.mes===mesKey);
+  if(fm){
+    fm={...fm, pago:fm.pago===true||fm.pago==="true"?"false":"true"};
+  } else {
+    fm={id:uid(), fixaId, mes:mesKey, valor:parseFloat(f.valor||0), pago:"true"};
+  }
+  setLoading(true,"Salvando...");
+  await saveRecord("fixasMensal",fm);
+  setLoading(false);
+  renderFixas();
+  renderDashboard();
+}
+
+async function salvarValorFixaMes(fixaId){
+  const input=document.getElementById("fvm-"+fixaId);
+  if(!input)return;
+  const novoValor=parseFloat(input.value)||0;
+  const db=getDB();
+  const mesKey=_getMesKey();
+  let fm=(db.fixasMensal||[]).find(x=>x.fixaId===fixaId&&x.mes===mesKey);
+  if(fm){
+    fm={...fm, valor:novoValor};
+  } else {
+    fm={id:uid(), fixaId, mes:mesKey, valor:novoValor, pago:"false"};
+  }
+  setLoading(true,"Salvando...");
+  await saveRecord("fixasMensal",fm);
+  setLoading(false);
+  showToast("✓ Valor atualizado para "+_getMesKey());
+  renderFixas();
+  renderDashboard();
+}
+
+// ====================================================================
+// ASSINATURAS MENSAL (valor por mês — NOVO, ponto 5)
+// ====================================================================
+function _getAssinMensal(assinId, mesKey){
+  const db=getDB();
+  const key=mesKey||_getMesKey();
+  return (db.assinaturasMensal||[]).find(am=>am.assinaturaId===assinId&&am.mes===key)||null;
+}
+function _getAssinValorMes(a, mesKey){
+  const am=_getAssinMensal(a.id, mesKey);
+  return am?parseFloat(am.valor||0):parseFloat(a.valor||0);
+}
+
+async function salvarValorAssinMes(assinId){
+  const input=document.getElementById("avm-"+assinId);
+  if(!input)return;
+  const novoValor=parseFloat(input.value)||0;
+  const db=getDB();
+  const mesKey=_getMesKey();
+  let am=(db.assinaturasMensal||[]).find(x=>x.assinaturaId===assinId&&x.mes===mesKey);
+  if(am){
+    am={...am, valor:novoValor};
+  } else {
+    am={id:uid(), assinaturaId:assinId, mes:mesKey, valor:novoValor};
+  }
+  setLoading(true,"Salvando...");
+  await saveRecord("assinaturasMensal",am);
+  setLoading(false);
+  showToast("✓ Valor atualizado para "+mesKey);
+  renderAssinaturas();
+}
+
+// "Aplicar este valor a partir deste mês" — copia o valor pra próximos N meses
+async function aplicarAssinDaqui(assinId){
+  const input=document.getElementById("avm-"+assinId);
+  if(!input)return;
+  const novoValor=parseFloat(input.value)||0;
+  const db=getDB();
+  const a=(db.assinaturas||[]).find(x=>x.id===assinId);
+  if(!a) return;
+  const meses=12; // aplica nos próximos 12 meses (incluindo o atual)
+  if(!confirm(`Aplicar ${R(novoValor)} para ${a.nome} a partir de ${getMonthStr()} pelos próximos ${meses} meses? Vai sobrescrever overrides existentes nesses meses.`)) return;
+
+  setLoading(true,"Aplicando...");
+  let y=currentYear, m=currentMonth;
+  for(let i=0;i<meses;i++){
+    const mesKey=_mesKeyFromYM(y,m);
+    setLoading(true,`Salvando ${mesKey}...`);
+    let am=(db.assinaturasMensal||[]).find(x=>x.assinaturaId===assinId&&x.mes===mesKey);
+    if(am){
+      am={...am, valor:novoValor};
+    } else {
+      am={id:uid(), assinaturaId:assinId, mes:mesKey, valor:novoValor};
+    }
+    await saveRecord("assinaturasMensal",am);
+    m++;
+    if(m>11){m=0;y++;}
+  }
+  setLoading(false);
+  showToast(`✓ Aplicado em ${meses} meses!`);
+  renderAssinaturas();
+}
+
+async function removerOverrideAssin(assinId){
+  const am=_getAssinMensal(assinId);
+  if(!am){showToast("Sem override para este mês");return;}
+  if(!confirm("Remover override do mês? Vai voltar para o valor base.")) return;
+  setLoading(true,"Removendo...");
+  await deleteRecord("assinaturasMensal", am.id);
+  setLoading(false);
+  showToast("✓ Override removido");
+  renderAssinaturas();
+}
+
+
+// ====================================================================
+// CONTAS PAGAS no Dashboard (lê fixasMensal — agora desacopla valor de pago)
+// ====================================================================
 function _isContaPagaDash(contaId){
   const db=getDB();
   const mesKey=_getMesKey();
   if(contaId.startsWith("fixa_")){
     return _isFixaPaga(contaId.replace("fixa_",""));
   }
+  // Cartão
   const fm=(db.fixasMensal||[]).find(x=>x.fixaId===contaId&&x.mes===mesKey);
-  return fm&&(fm.pago===true||fm.pago==="true");
+  return !!(fm&&(fm.pago===true||fm.pago==="true"));
 }
 
 async function toggleContaPaga(contaId){
@@ -945,14 +1137,14 @@ async function toggleContaPaga(contaId){
     await toggleFixaPaga(contaId.replace("fixa_",""));
     return;
   }
-  // Cartão
+  // Cartão — usar valor SEMPRE fresh do cálculo unificado
+  const cartaoId=contaId.replace("cartao_","");
+  const valorFresh=_calcFaturaCartao(cartaoId, currentYear, currentMonth);
   let fm=(db.fixasMensal||[]).find(x=>x.fixaId===contaId&&x.mes===mesKey);
   if(fm){
-    fm={...fm, pago:fm.pago===true||fm.pago==="true"?"false":"true"};
+    fm={...fm, valor:valorFresh, pago:fm.pago===true||fm.pago==="true"?"false":"true"};
   } else {
-    const cartaoId=contaId.replace("cartao_","");
-    const usado=db.lancCartao.filter(l=>l.cartaoId===cartaoId&&inMonth(l.data,currentYear,currentMonth)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
-    fm={id:uid(), fixaId:contaId, mes:mesKey, valor:usado, pago:"true"};
+    fm={id:uid(), fixaId:contaId, mes:mesKey, valor:valorFresh, pago:"true"};
   }
   setLoading(true,"Salvando...");
   await saveRecord("fixasMensal",fm);
@@ -960,13 +1152,15 @@ async function toggleContaPaga(contaId){
   renderDashboard();
 }
 
-// ---- FORMATAR VALOR CURTO (sem "R$" para eixo Y) ----
 function Rshort(v){
   v=Number(v);
-  if(v>=1000) return(v/1000).toFixed(1).replace(".",",")+"k";
+  if(Math.abs(v)>=1000) return(v/1000).toFixed(1).replace(".",",")+"k";
   return v.toFixed(0);
 }
 
+// ====================================================================
+// DASHBOARD
+// ====================================================================
 function renderDashboard(){
   document.getElementById("month-display").textContent=getMonthStr();
   document.getElementById("dash-sub").textContent="Referência: "+getMonthStr();
@@ -974,8 +1168,11 @@ function renderDashboard(){
   const trans=db.transacoes.filter(t=>inMonth(t.data,currentYear,currentMonth));
   const fixasAtivas=db.fixas.filter(f=>f.status==="ativa");
   const totalFixas=fixasAtivas.reduce((a,f)=>a+_getFixaValorMes(f),0);
-  const lancMes=db.lancCartao.filter(l=>inMonth(l.data,currentYear,currentMonth));
-  const totalCartao=lancMes.reduce((a,l)=>a+parseFloat(l.valor||0),0);
+
+  // FIX BUG #1: usar a função unificada
+  const totalCartao=_calcTotalCartoesMes(currentYear, currentMonth);
+  const lancEfetivos=_getTodosLancsEfetivosMes(currentYear, currentMonth);
+
   const receitas=trans.filter(t=>t.tipo==="receita").reduce((a,t)=>a+parseFloat(t.valor||0),0);
   const despesas=trans.filter(t=>t.tipo==="despesa").reduce((a,t)=>a+parseFloat(t.valor||0),0);
   const totalDesp=despesas+totalFixas+totalCartao;
@@ -988,7 +1185,6 @@ function renderDashboard(){
     alertEl.innerHTML="⚠️ Fatura BMG abril/2026: R$ 793,00 · Vencimento 05/04/2026. Próximas faturas: R$ 818,12 já comprometidos.";
   } else alertEl.style.display="none";
 
-  // ---- STATS CARDS (2 rows of 3) ----
   document.getElementById("stats-grid").innerHTML=`
     <div class="stat-card"><div class="stat-label">Receitas</div><div class="stat-value green">${R(receitas)}</div></div>
     <div class="stat-card"><div class="stat-label">Despesas manuais</div><div class="stat-value red">${R(despesas)}</div></div>
@@ -998,15 +1194,15 @@ function renderDashboard(){
     <div class="stat-card"><div class="stat-label">Saldo estimado</div><div class="stat-value ${saldo>=0?"green":"red"}">${R(saldo)}</div></div>
   `;
 
-  // ---- CONTAS DO MÊS (checklist via Sheets) ----
+  // Contas do mês (checklist)
   const contasMes=[];
   fixasAtivas.forEach(f=>{
     contasMes.push({id:"fixa_"+f.id, nome:f.nome, valor:_getFixaValorMes(f), dia:f.dia||"—", tipo:"fixa", catId:f.categoria});
   });
-  // Agrupar cartões por cartão para mostrar a fatura
+  // FIX BUG #1: cards de cartão usam função unificada
   db.cartoes.forEach(c=>{
-    const usado=db.lancCartao.filter(l=>l.cartaoId===c.id&&inMonth(l.data,currentYear,currentMonth)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
-    if(usado>0){
+    const usado=_calcFaturaCartao(c.id, currentYear, currentMonth);
+    if(usado!==0){
       contasMes.push({id:"cartao_"+c.id, nome:"💳 Fatura "+c.nome, valor:usado, dia:c.vencimento||"—", tipo:"cartao", catId:"outros"});
     }
   });
@@ -1036,11 +1232,15 @@ function renderDashboard(){
     }).join("");
   }
 
-  // ---- CATEGORIAS ----
+  // Categorias — agora usa lançamentos efetivos (sem dupla contagem prev+real)
   const cats={};
   trans.filter(t=>t.tipo==="despesa").forEach(t=>{cats[t.categoria]=(cats[t.categoria]||0)+parseFloat(t.valor||0);});
-  lancMes.forEach(l=>{cats[l.categoria]=(cats[l.categoria]||0)+parseFloat(l.valor||0);});
-  fixasAtivas.forEach(f=>{cats[f.categoria]=(cats[f.categoria]||0)+parseFloat(f.valor||0);});
+  // Cartões: somar só lançamentos efetivos, e ignorar negativos (pagamentos não são gasto de categoria)
+  lancEfetivos.forEach(l=>{
+    const v=parseFloat(l.valor||0);
+    if(v>0) cats[l.categoria]=(cats[l.categoria]||0)+v;
+  });
+  fixasAtivas.forEach(f=>{cats[f.categoria]=(cats[f.categoria]||0)+_getFixaValorMes(f);});
   const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
   const total=sorted.reduce((a,e)=>a+e[1],0)||1;
   const catEl=document.getElementById("cat-list");
@@ -1056,22 +1256,21 @@ function renderDashboard(){
     </div>`;
   }).join(""):"<div class='empty-state'><p>Sem gastos este mês</p></div>";
 
-  // ---- GRÁFICO COM EIXO Y E TOOLTIPS ----
+  // Gráfico 6 meses — também usa função unificada
   const bars=[];
   for(let i=5;i>=0;i--){
     let m=currentMonth-i,y=currentYear;
     if(m<0){m+=12;y--;}
     const tM=db.transacoes.filter(t=>inMonth(t.data,y,m));
-    const lM=db.lancCartao.filter(l=>inMonth(l.data,y,m));
-    const fV=db.fixas.filter(f=>f.status==="ativa").reduce((a,f)=>a+parseFloat(f.valor||0),0);
-    const desp=tM.filter(t=>t.tipo==="despesa").reduce((a,t)=>a+parseFloat(t.valor||0),0)+lM.reduce((a,l)=>a+parseFloat(l.valor||0),0)+fV;
+    const fV=db.fixas.filter(f=>f.status==="ativa").reduce((a,f)=>a+_getFixaValorMes(f, _mesKeyFromYM(y,m)),0);
+    const cV=_calcTotalCartoesMes(y, m);
+    const desp=tM.filter(t=>t.tipo==="despesa").reduce((a,t)=>a+parseFloat(t.valor||0),0)+cV+fV;
     const rec=tM.filter(t=>t.tipo==="receita").reduce((a,t)=>a+parseFloat(t.valor||0),0);
     bars.push({label:new Date(y,m,1).toLocaleDateString("pt-BR",{month:"short"}).replace(".",""),desp,rec});
   }
-  const mx=Math.max(...bars.map(b=>Math.max(b.desp,b.rec)),1);
-  // Calculate nice Y-axis ticks (5 ticks)
-  const chartH=160; // px for bars area
-  const step=Math.ceil(mx/4/500)*500||1000; // round to nearest 500
+  const mx=Math.max(...bars.map(b=>Math.max(Math.abs(b.desp),Math.abs(b.rec))),1);
+  const chartH=160;
+  const step=Math.ceil(mx/4/500)*500||1000;
   const maxY=Math.ceil(mx/step)*step;
   const ticks=[];
   for(let i=4;i>=0;i--) ticks.push(Math.round(maxY*(i/4)));
@@ -1083,14 +1282,13 @@ function renderDashboard(){
     </div>
     <div class="chart-area">
       <div class="chart-bars-zone" style="height:${chartH}px;position:relative">
-        <!-- grid lines -->
         ${ticks.map((t,i)=>{
           const pct=(1-i/4)*100;
           return i>0&&i<4?`<div style="position:absolute;left:0;right:0;bottom:${pct}%;height:1px;background:var(--border);pointer-events:none;z-index:0"></div>`:"";
         }).join("")}
         ${bars.map(b=>{
-          const hRec=maxY?Math.round(b.rec/maxY*chartH):0;
-          const hDesp=maxY?Math.round(b.desp/maxY*chartH):0;
+          const hRec=maxY?Math.round(Math.max(0,b.rec)/maxY*chartH):0;
+          const hDesp=maxY?Math.round(Math.max(0,b.desp)/maxY*chartH):0;
           return`<div class="chart-bar-col" style="z-index:1">
             <div class="chart-bar" style="background:var(--green);height:${hRec}px;opacity:.8">
               <div class="chart-bar-tooltip">${R(b.rec)}</div>
@@ -1107,24 +1305,30 @@ function renderDashboard(){
     </div>
   `;
 
-  // ---- ÚLTIMAS TRANSAÇÕES ----
+  // Últimas transações — agora usa lançamentos EFETIVOS (não dobra prev+real)
   const allItems=[
     ...trans.map(t=>({...t,_src:"transação"})),
-    ...lancMes.map(l=>{const c2=db.cartoes.find(x=>x.id===l.cartaoId)||{nome:"?"};return{...l,_src:c2.nome,tipo:"despesa"};}),
+    ...lancEfetivos.map(l=>{const c2=db.cartoes.find(x=>x.id===l.cartaoId)||{nome:"?"};return{...l,_src:c2.nome,tipo:l.valor<0?"receita":"despesa"};}),
   ].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,8);
   const tbody=document.querySelector("#dash-table tbody");
   tbody.innerHTML=allItems.length?allItems.map(t=>{
     const c2=cat(t.categoria);
+    const v=parseFloat(t.valor||0);
+    const isReceita=t.tipo==="receita"||v<0;
     return`<tr>
       <td style="color:var(--text2)">${fmtDate(t.data)}</td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.descricao}</td>
       <td><span class="badge badge-${c2.color}">${c2.label}</span></td>
       <td style="font-size:11px;color:var(--text3)">${t._src||"—"}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;color:${t.tipo==="receita"?"var(--green)":"var(--red)"}">${R(t.valor)}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:${isReceita?"var(--green)":"var(--red)"}">${R(v)}</td>
     </tr>`;
   }).join(""):"<tr><td colspan='5' class='empty-state'><p>Sem dados este mês</p></td></tr>";
 }
 
+
+// ====================================================================
+// TRANSAÇÕES (EXTRATO)
+// ====================================================================
 function renderTransacoes(){
   const db=getDB();
   const busca=(document.getElementById("busca-trans").value||"").toLowerCase();
@@ -1132,22 +1336,18 @@ function renderTransacoes(){
   const catf=document.getElementById("filtro-cat").value;
   const origemF=document.getElementById("filtro-origem").value;
 
-  // Update month display
   const monthEl=document.getElementById("extrato-month");
   if(monthEl) monthEl.textContent=getMonthStr();
   const subEl=document.getElementById("extrato-sub");
   if(subEl) subEl.textContent="Todas as movimentações — "+getMonthStr();
 
-  // Populate category filter
   const catSel=document.getElementById("filtro-cat");
   const prev=catSel.value;
   catSel.innerHTML="<option value=''>Categorias</option>"+CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join("");
   catSel.value=prev;
 
-  // ---- BUILD UNIFIED LIST ----
   let all=[];
 
-  // 1) Transações manuais (receitas + despesas)
   db.transacoes.filter(t=>inMonth(t.data,currentYear,currentMonth)).forEach(t=>{
     all.push({
       id:t.id, data:parseDate(t.data), descricao:t.descricao, categoria:t.categoria,
@@ -1157,28 +1357,24 @@ function renderTransacoes(){
     });
   });
 
-  // 2) Contas fixas (ativas — gera 1 entrada por mês)
   db.fixas.filter(f=>f.status==="ativa").forEach(f=>{
     const dia=String(f.dia||5).padStart(2,"0");
     const mesKey=`${currentYear}-${String(currentMonth+1).padStart(2,"0")}`;
     all.push({
       id:"fixa_"+f.id, data:`${mesKey}-${dia}`, descricao:f.nome, categoria:f.categoria,
-      tipo:"despesa", valor:parseFloat(f.valor||0),
+      tipo:"despesa", valor:_getFixaValorMes(f),
       origem:"fixa", origemLabel:"Conta fixa",
       editavel:false, tabela:"fixas"
     });
   });
 
-  // ---- FILTERS ----
   if(busca) all=all.filter(t=>t.descricao.toLowerCase().includes(busca));
   if(tipo) all=all.filter(t=>t.tipo===tipo);
   if(catf) all=all.filter(t=>t.categoria===catf);
   if(origemF) all=all.filter(t=>t.origem===origemF);
 
-  // Sort by date desc
   all.sort((a,b)=>b.data.localeCompare(a.data));
 
-  // ---- STATS ----
   const totalRec=all.filter(t=>t.tipo==="receita").reduce((a,t)=>a+t.valor,0);
   const totalDesp=all.filter(t=>t.tipo==="despesa").reduce((a,t)=>a+t.valor,0);
   const statsEl=document.getElementById("extrato-stats");
@@ -1188,7 +1384,6 @@ function renderTransacoes(){
     <div class="stat-card"><div class="stat-label">Saldo do mês</div><div class="stat-value ${totalRec-totalDesp>=0?"green":"red"}">${R(totalRec-totalDesp)}</div></div>
   `;
 
-  // ---- RENDER TABLE ----
   const tbody=document.querySelector("#trans-table tbody");
   const origemBadgeColor={manual:"blue",fixa:"purple"};
   tbody.innerHTML=all.length?all.map(t=>{
@@ -1280,82 +1475,26 @@ function salvarEditDiv(id){
   saveRecord("dividas",d2).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderDividas();}});
 }
 
-// ---- FIXAS MENSAL: helpers para salvar valor/pago por mês no Sheets ----
-function _getMesKey(){return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;}
 
-function _getFixaMensal(fixaId){
-  const db=getDB();
-  const mesKey=_getMesKey();
-  return (db.fixasMensal||[]).find(fm=>fm.fixaId===fixaId&&fm.mes===mesKey)||null;
-}
-
-function _getFixaValorMes(f){
-  const fm=_getFixaMensal(f.id);
-  return fm?parseFloat(fm.valor):parseFloat(f.valor||0);
-}
-
-function _isFixaPaga(fixaId){
-  const fm=_getFixaMensal(fixaId);
-  return fm&&(fm.pago===true||fm.pago==="true");
-}
-
-async function toggleFixaPaga(fixaId){
-  const db=getDB();
-  const mesKey=_getMesKey();
-  const f=db.fixas.find(x=>x.id===fixaId);if(!f)return;
-  let fm=(db.fixasMensal||[]).find(x=>x.fixaId===fixaId&&x.mes===mesKey);
-  if(fm){
-    fm={...fm, pago:fm.pago===true||fm.pago==="true"?"false":"true"};
-  } else {
-    fm={id:uid(), fixaId, mes:mesKey, valor:parseFloat(f.valor||0), pago:"true"};
-  }
-  setLoading(true,"Salvando...");
-  await saveRecord("fixasMensal",fm);
-  setLoading(false);
-  renderFixas();
-  renderDashboard();
-}
-
-async function salvarValorFixaMes(fixaId){
-  const input=document.getElementById("fvm-"+fixaId);
-  if(!input)return;
-  const novoValor=parseFloat(input.value)||0;
-  const db=getDB();
-  const mesKey=_getMesKey();
-  let fm=(db.fixasMensal||[]).find(x=>x.fixaId===fixaId&&x.mes===mesKey);
-  if(fm){
-    fm={...fm, valor:novoValor};
-  } else {
-    fm={id:uid(), fixaId, mes:mesKey, valor:novoValor, pago:"false"};
-  }
-  setLoading(true,"Salvando...");
-  await saveRecord("fixasMensal",fm);
-  setLoading(false);
-  showToast("✓ Valor atualizado para "+_getMesKey());
-  renderFixas();
-  renderDashboard();
-}
-
+// ====================================================================
+// FIXAS
+// ====================================================================
 function renderFixas(){
   const db=getDB();
   const mesKey=_getMesKey();
 
-  // Month display
   const monthEl=document.getElementById("fixas-month");
   if(monthEl) monthEl.textContent=getMonthStr();
   const subEl=document.getElementById("fixas-sub");
   if(subEl) subEl.textContent="Cobranças — "+getMonthStr();
 
   const ativas=db.fixas.filter(f=>f.status==="ativa");
-  const sal=7800;
 
-  // Calculate totals using month-specific values
   const totalMes=ativas.reduce((a,f)=>a+_getFixaValorMes(f),0);
   const totalPago=ativas.filter(f=>_isFixaPaga(f.id)).reduce((a,f)=>a+_getFixaValorMes(f),0);
   const totalPendente=totalMes-totalPago;
   const qtdPago=ativas.filter(f=>_isFixaPaga(f.id)).length;
 
-  // Stats
   const statsEl=document.getElementById("fixas-stats");
   if(statsEl) statsEl.innerHTML=`
     <div class="stat-card"><div class="stat-label">Total do mês</div><div class="stat-value red">${R(totalMes)}</div></div>
@@ -1363,11 +1502,9 @@ function renderFixas(){
     <div class="stat-card"><div class="stat-label">Pendente</div><div class="stat-value ${totalPendente>0?"amber":"green"}">${R(totalPendente)}</div></div>
   `;
 
-  // Counter
   const counterEl=document.getElementById("fixas-counter");
   if(counterEl) counterEl.innerHTML=`<span style="color:var(--green)">${qtdPago}</span> / ${ativas.length} pagas`;
 
-  // Checklist
   const list=document.getElementById("fixas-list");
   if(!ativas.length){
     list.innerHTML="<div class='empty-state'><div class='icon'>📋</div><p>Nenhuma conta fixa ativa</p></div>";
@@ -1385,7 +1522,7 @@ function renderFixas(){
         <div class="conta-dia">dia ${f.dia||"—"}</div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
           <input type="number" id="fvm-${f.id}" value="${valorMes}" step="0.01" min="0"
-            onclick="event.stopPropagation()" 
+            onclick="event.stopPropagation()"
             style="width:90px;padding:4px 6px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;background:var(--surface2);border:1px solid ${valorDiferente?"var(--amber)":"var(--border)"};border-radius:5px;color:${isPago?"var(--green)":"var(--text)"}">
           <button class="btn btn-ghost btn-sm btn-icon" onclick="event.stopPropagation();salvarValorFixaMes('${f.id}')" title="Salvar valor deste mês" style="font-size:10px;padding:4px 6px">💾</button>
         </div>
@@ -1393,7 +1530,6 @@ function renderFixas(){
     }).join("");
   }
 
-  // Manage table (always shows all fixas for editing)
   const tbody=document.querySelector("#fixas-manage-table tbody");
   if(tbody){
     tbody.innerHTML=db.fixas.length?db.fixas.map(f=>{
@@ -1414,13 +1550,17 @@ function renderFixas(){
   }
 }
 
+// ====================================================================
+// CARTÕES
+// ====================================================================
 function renderCartoes(){
   const db=getDB();
+  // Cards iniciais (mês atual selecionado) — função unificada
   const resumo=document.getElementById("cartoes-resumo");
   resumo.innerHTML=db.cartoes.length?db.cartoes.map(c=>{
-    const usado=db.lancCartao.filter(l=>l.cartaoId===c.id&&inMonth(l.data,currentYear,currentMonth)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
-    const disp=Math.max(0,(c.limite||0)-usado);
-    const pct=c.limite?Math.min(100,Math.round(usado/c.limite*100)):0;
+    const usado=_calcFaturaCartao(c.id, currentYear, currentMonth);
+    const disp=Math.max(0,(c.limite||0)-Math.max(0,usado));
+    const pct=c.limite?Math.min(100,Math.round(Math.abs(usado)/c.limite*100)):0;
     return`<div class="card">
       <div style="font-weight:600;font-size:14px;margin-bottom:12px">💳 ${c.nome}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
@@ -1451,40 +1591,46 @@ function renderLancCartao(){
   const db=getDB();
   const fc=document.getElementById("filtro-cartao").value;
   const fm=document.getElementById("filtro-mes-cartao").value;
-  let lancs=[...db.lancCartao];
-  if(fc)lancs=lancs.filter(l=>l.cartaoId===fc);
-  if(fm)lancs=lancs.filter(l=>l.data&&l.data.startsWith(fm));
-  lancs.sort((a,b)=>b.data.localeCompare(a.data));
-  
-  // Atualizar cards dos cartões com base no filtro de mês
+
+  // ---- Atualizar cards do topo conforme filtros ----
+  // Quando há filtro de mês, usa esse mês; senão usa o mês selecionado no app
+  let yFiltro=currentYear, mFiltro=currentMonth;
+  if(fm){
+    const [yy,mm]=fm.split("-");
+    yFiltro=parseInt(yy); mFiltro=parseInt(mm)-1;
+  }
+
   const resumo=document.getElementById("cartoes-resumo");
   resumo.innerHTML=db.cartoes.length?db.cartoes.map(c=>{
-    let usado;
-    if(fm){
-      // Filtro de mês ativo: usar esse mês
-      usado=db.lancCartao.filter(l=>l.cartaoId===c.id&&l.data&&l.data.startsWith(fm)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
-    } else {
-      // "Todos os meses": usar mês atual
-      usado=db.lancCartao.filter(l=>l.cartaoId===c.id&&inMonth(l.data,currentYear,currentMonth)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
-    }
-    const disp=Math.max(0,(c.limite||0)-usado);
+    const usado=_calcFaturaCartao(c.id, yFiltro, mFiltro);
+    const disp=Math.max(0,(c.limite||0)-Math.max(0,usado));
     const pct=c.limite?Math.min(100,Math.round(Math.abs(usado)/c.limite*100)):0;
+    const labelMes=fm?` (${fm})`:" (mês)";
     return`<div class="card">
       <div style="font-weight:600;font-size:14px;margin-bottom:12px">💳 ${c.nome}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Usado${fm?" ("+fm+")":" (mês)"}</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--amber)">${R(usado)}</div></div>
+        <div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Usado${labelMes}</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--amber)">${R(usado)}</div></div>
         <div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Disponível</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:var(--green)">${R(disp)}</div></div>
       </div>
       ${c.limite?`<div class="progress-bar" style="margin-bottom:7px"><div class="progress-fill" style="width:${pct}%;background:${pct>80?"var(--red)":"var(--amber)"}"></div></div>`:""}
       <div style="font-size:10px;color:var(--text3)">Limite: ${R(c.limite||0)} · Fecha dia ${c.fechamento||"—"} · Vence dia ${c.vencimento||"—"}</div>
     </div>`;
   }).join(""):"<div class='empty-state'><p>Nenhum cartão</p></div>";
-  
+
+  // ---- Tabela de lançamentos ----
+  // IMPORTANTE: esta tabela mostra TODOS os lançamentos (real+previstos), com badge.
+  // O total da fatura vem dos cards acima (que aplicam a regra "previsto só se não houver real").
+  let lancs=[...db.lancCartao];
+  if(fc)lancs=lancs.filter(l=>l.cartaoId===fc);
+  if(fm)lancs=lancs.filter(l=>l.data&&l.data.startsWith(fm));
+  lancs.sort((a,b)=>b.data.localeCompare(a.data));
+
   const tbody=document.querySelector("#cartao-table tbody");
   tbody.innerHTML=lancs.length?lancs.map(l=>{
     const cart=db.cartoes.find(c=>c.id===l.cartaoId)||{nome:"—"};
     const c=cat(l.categoria);
-    const isPre=l.prelancado===true||l.prelancado==="true";
+    const isPre=_isPrelancado(l);
+    const v=parseFloat(l.valor||0);
     const descLimpa=(l.descricao||"").replace(/\s*\(previsto\)\s*/gi,"").trim();
     return`<tr>
       <td style="color:var(--text2)">${fmtDate(l.data)}</td>
@@ -1492,12 +1638,15 @@ function renderLancCartao(){
       <td style="font-size:12px">${cart.nome}</td>
       <td><span class="badge badge-${c.color}">${c.label}</span></td>
       <td><span class="badge ${isPre?"badge-amber":"badge-green"}">${isPre?"previsto":"real"}</span></td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;color:${isPre?"var(--amber)":"var(--text)"}">${R(l.valor)}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:${isPre?"var(--amber)":(v<0?"var(--green)":"var(--text)")}">${R(v)}</td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="delLanc('${l.id}')">✕</button></td>
     </tr>`;
   }).join(""):"<tr><td colspan='7' class='empty-state'><p>Nenhum lançamento</p></td></tr>";
 }
 
+// ====================================================================
+// DÍVIDAS
+// ====================================================================
 function renderDividas(){
   const db=getDB();
   const divComuns=db.dividas.filter(d=>!d.consignado);
@@ -1511,7 +1660,9 @@ function renderDividas(){
   if(!db.dividas.length){list.innerHTML="<div class='empty-state'><div class='icon'>✅</div><p>Sem dívidas! 🎉</p></div>";return;}
 
   const renderCard=(d)=>{
-    const hist=(d.historico||[]);
+    let hist=d.historico||[];
+    if(typeof hist==="string"&&hist) try{hist=JSON.parse(hist);}catch(e){hist=[];}
+    if(!Array.isArray(hist)) hist=[];
     return`<div class="divida-card" style="${d.consignado?"border-color:rgba(91,143,255,.25)":""}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
         <div>
@@ -1550,9 +1701,11 @@ function renderDividas(){
   list.innerHTML=html;
 }
 
-// MODALS
+
+// ====================================================================
+// MODAIS, CRUD, TOAST
+// ====================================================================
 function openModal(id){
-  CATS.forEach(()=>{});
   ["t-cat","f-cat","lc-cat","tc-cat"].forEach(sid=>{const s=document.getElementById(sid);if(s)s.innerHTML=CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join("");});
   const today=new Date().toISOString().slice(0,10);
   ["t-data","lc-data","r-data"].forEach(i2=>{const e=document.getElementById(i2);if(e&&!e.value)e.value=today;});
@@ -1633,7 +1786,9 @@ function openUpdateDiv(id){
 }
 function atualizarDivida(){
   const db=getDB();const id=document.getElementById("ud-id").value;const d=db.dividas.find(x=>x.id===id);if(!d)return;
-  const hist=Array.isArray(d.historico)?d.historico:(typeof d.historico==="string"&&d.historico?JSON.parse(d.historico):[]);
+  let hist=d.historico||[];
+  if(typeof hist==="string"&&hist) try{hist=JSON.parse(hist);}catch(e){hist=[];}
+  if(!Array.isArray(hist)) hist=[];
   const newSaldo=parseFloat(document.getElementById("ud-saldo").value)||d.saldo;
   const newParcela=parseFloat(document.getElementById("ud-parcela").value)||d.parcela;
   hist.push({data:new Date().toISOString().slice(0,10),saldo:newSaldo,obs:document.getElementById("ud-obs").value});
@@ -1662,7 +1817,9 @@ function delTerceiro(id){
 }
 function registrarPagTerc(){
   const db=getDB();const id=document.getElementById("tp-id").value;const t=db.terceiros.find(x=>x.id===id);if(!t)return;
-  const pags=Array.isArray(t.pagamentos)?t.pagamentos:(typeof t.pagamentos==="string"&&t.pagamentos?JSON.parse(t.pagamentos):[]);
+  let pags=t.pagamentos||[];
+  if(typeof pags==="string"&&pags) try{pags=JSON.parse(pags);}catch(e){pags=[];}
+  if(!Array.isArray(pags)) pags=[];
   pags.push({data:document.getElementById("tp-data").value,valor:parseFloat(document.getElementById("tp-valor").value)||0,obs:document.getElementById("tp-obs").value});
   const updated={...t,pagamentos:JSON.stringify(pags)};
   closeModal("modal-terc-pag");
@@ -1689,11 +1846,13 @@ function delAssinatura(id){
   deleteRecord("assinaturas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderAssinaturas();}});
 }
 
-// ---- RENDER TERCEIROS ----
+
+// ====================================================================
+// TERCEIROS — agora com navegação mensal (ponto 6)
+// ====================================================================
 const DONO_LABELS={brenda:"Só eu",casal:"Casal (eu pago)",carlos:"Carlos (me paga)",emerson:"Emerson (me paga)",ryan:"Ryan (me paga)"};
 const DONO_COLORS={brenda:"green",casal:"blue",carlos:"amber",emerson:"purple",ryan:"teal"};
 
-// ---- TERCEIROS: check baseado no histórico real de pagamentos ----
 function _getTercPagamentos(t){
   if(Array.isArray(t.pagamentos)) return t.pagamentos;
   if(typeof t.pagamentos==="string"&&t.pagamentos) try{return JSON.parse(t.pagamentos);}catch(e){return[];}
@@ -1710,17 +1869,15 @@ function _tercTotalPagoNoMes(t, y, m){
   return pags.filter(p=>p.data&&p.data.startsWith(mesKey)).reduce((a,p)=>a+parseFloat(p.valor||0),0);
 }
 
-// Quick-check: registra pagamento rápido com valor padrão da cobrança
+// Quick check: registra pagamento padrão na DATA DO MÊS SELECIONADO (ponto 6)
 async function quickPagTerc(id){
   const db=getDB();
   const t=db.terceiros.find(x=>x.id===id);
   if(!t) return;
-  // Se já pagou este mês, desfazer (remover último pagamento do mês)
-  const pags=_getTercPagamentos(t);
+  let pags=_getTercPagamentos(t);
   const mesKey=`${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
   const idxMes=pags.findIndex(p=>p.data&&p.data.startsWith(mesKey));
   if(idxMes>=0){
-    // Desfazer — remover pagamento do mês
     pags.splice(idxMes,1);
     const updated={...t,pagamentos:JSON.stringify(pags)};
     setLoading(true,"Removendo...");
@@ -1730,9 +1887,12 @@ async function quickPagTerc(id){
     renderTerceiros();
     return;
   }
-  // Registrar pagamento rápido
-  const hoje=new Date().toISOString().slice(0,10);
-  pags.push({data:hoje, valor:parseFloat(t.valor||0), obs:"Pago (rápido)"});
+  // Registra pagamento DENTRO do mês selecionado (não usa hoje quando tô vendo março/2026 estando em maio)
+  // Se for o mês atual, usa hoje; senão, usa o dia 15 do mês selecionado como aproximação
+  const hoje=new Date();
+  const isMesAtual=hoje.getFullYear()===currentYear&&hoje.getMonth()===currentMonth;
+  const dataPag=isMesAtual?hoje.toISOString().slice(0,10):`${mesKey}-15`;
+  pags.push({data:dataPag, valor:parseFloat(t.valor||0), obs:"Pago (rápido)"});
   const updated={...t,pagamentos:JSON.stringify(pags)};
   setLoading(true,"Salvando...");
   await saveRecord("terceiros",updated);
@@ -1744,6 +1904,13 @@ async function quickPagTerc(id){
 function renderTerceiros(){
   const db=getDB();
   if(!_db){document.getElementById("terc-pessoas").innerHTML="<div class='empty-state'><p style='color:var(--text3)'>Carregando...</p></div>";return;}
+
+  // Atualizar header mensal
+  const monthEl=document.getElementById("terc-month");
+  if(monthEl) monthEl.textContent=getMonthStr();
+  const subEl=document.getElementById("terc-sub");
+  if(subEl) subEl.textContent="Recebimentos — "+getMonthStr();
+
   const terc=(db.terceiros||[]).map(t=>({...t,ativo:t.ativo===true||t.ativo==="true"||t.ativo==="TRUE"}));
   if(!terc.length){
     document.getElementById("terc-stats").innerHTML="";
@@ -1755,10 +1922,11 @@ function renderTerceiros(){
   const totalMensal=ativos.reduce((a,t)=>a+parseFloat(t.valor||0),0);
   const totalRecebido=ativos.reduce((a,t)=>a+_tercTotalPagoNoMes(t,currentYear,currentMonth),0);
   const totalPendente=Math.max(0,totalMensal-totalRecebido);
+  const mesTitulo=getMonthStr().split(" ")[0];
 
   document.getElementById("terc-stats").innerHTML=`
     <div class="stat-card"><div class="stat-label">Total mensal a receber</div><div class="stat-value amber">${R(totalMensal)}</div></div>
-    <div class="stat-card"><div class="stat-label">Recebido em ${getMonthStr().split(" ")[0]}</div><div class="stat-value green">${R(totalRecebido)}</div></div>
+    <div class="stat-card"><div class="stat-label">Recebido em ${mesTitulo}</div><div class="stat-value green">${R(totalRecebido)}</div></div>
     <div class="stat-card"><div class="stat-label">Pendente</div><div class="stat-value ${totalPendente>0?"red":"green"}">${R(totalPendente)}</div></div>
   `;
 
@@ -1771,10 +1939,11 @@ function renderTerceiros(){
     const pendenteP=Math.max(0,totalP-recebidoP);
     const qtdPagoP=ativosPessoa.filter(t=>_tercPagoNoMes(t,currentYear,currentMonth)).length;
 
-    // Histórico completo de pagamentos (todas as datas)
-    const pags=itens.flatMap(t=>{
+    // Histórico de pagamentos — filtrado pelo mês selecionado
+    const mesKey=`${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+    const pagsMes=itens.flatMap(t=>{
       const p=_getTercPagamentos(t);
-      return p.map(pg=>({...pg,desc:t.desc}));
+      return p.filter(pg=>pg.data&&pg.data.startsWith(mesKey)).map(pg=>({...pg,desc:t.desc}));
     });
 
     return`<div class="card" style="margin-bottom:14px">
@@ -1783,7 +1952,7 @@ function renderTerceiros(){
           <div style="width:36px;height:36px;border-radius:50%;background:var(--purple-dim);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:var(--purple)">${pessoa.charAt(0)}</div>
           <div>
             <div style="font-weight:600;font-size:15px">${pessoa}</div>
-            <div style="font-size:12px;color:var(--text2)">${qtdPagoP}/${ativosPessoa.length} pago em ${getMonthStr().split(" ")[0]}</div>
+            <div style="font-size:12px;color:var(--text2)">${qtdPagoP}/${ativosPessoa.length} pago em ${mesTitulo}</div>
           </div>
         </div>
         <div style="text-align:right">
@@ -1792,10 +1961,8 @@ function renderTerceiros(){
         </div>
       </div>
 
-      <!-- Checklist de cobranças -->
       ${itens.map(t=>{
         const isPago=_tercPagoNoMes(t,currentYear,currentMonth);
-        const pagoVal=_tercTotalPagoNoMes(t,currentYear,currentMonth);
         return`<div class="conta-check ${isPago?"pago":""}" onclick="quickPagTerc('${t.id}')">
           <button class="check-btn ${isPago?"checked":""}" onclick="event.stopPropagation();quickPagTerc('${t.id}')">${isPago?"✓":""}</button>
           <div class="conta-nome">${t.desc}${t.obs?` <span style="color:var(--text3);font-size:11px">· ${t.obs}</span>`:""}</div>
@@ -1808,9 +1975,9 @@ function renderTerceiros(){
         </div>`;
       }).join("")}
 
-      ${pags.length?`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Histórico de recebimentos</div>
-        ${pags.sort((a,b)=>(b.data||"").localeCompare(a.data||"")).slice(0,6).map(p=>`<div style="font-size:12px;color:var(--text2);margin-bottom:3px">${fmtDate(p.data)} · ${p.desc} · <span style="color:var(--green);font-family:'DM Mono',monospace">${R(p.valor)}</span>${p.obs?` · <span style="color:var(--text3)">${p.obs}</span>`:""}</div>`).join("")}
+      ${pagsMes.length?`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Recebimentos em ${mesTitulo}</div>
+        ${pagsMes.sort((a,b)=>(b.data||"").localeCompare(a.data||"")).map(p=>`<div style="font-size:12px;color:var(--text2);margin-bottom:3px">${fmtDate(p.data)} · ${p.desc} · <span style="color:var(--green);font-family:'DM Mono',monospace">${R(p.valor)}</span>${p.obs?` · <span style="color:var(--text3)">${p.obs}</span>`:""}</div>`).join("")}
       </div>`:""}
     </div>`;
   }).join("");
@@ -1818,64 +1985,102 @@ function renderTerceiros(){
 
 function openPagTerc(id){
   document.getElementById("tp-id").value=id;
-  document.getElementById("tp-data").value=new Date().toISOString().slice(0,10);
+  // Pré-preencher data com o mês selecionado (não com hoje)
+  const hoje=new Date();
+  const isMesAtual=hoje.getFullYear()===currentYear&&hoje.getMonth()===currentMonth;
+  document.getElementById("tp-data").value=isMesAtual?hoje.toISOString().slice(0,10):`${currentYear}-${String(currentMonth+1).padStart(2,'0')}-15`;
   document.getElementById("tp-valor").value="";document.getElementById("tp-obs").value="";
   openModal("modal-terc-pag");
 }
 
-// ---- RENDER ASSINATURAS ----
+// ====================================================================
+// ASSINATURAS — com navegação mensal e override por mês (ponto 5)
+// ====================================================================
 function renderAssinaturas(){
   if(!_db){document.getElementById("assin-list").innerHTML="<div class='empty-state'><p style='color:var(--text3)'>Carregando dados...</p></div>";return;}
   const db=getDB();
   const ass=db.assinaturas||[];
+
+  // Atualizar header mensal
+  const monthEl=document.getElementById("assin-month");
+  if(monthEl) monthEl.textContent=getMonthStr();
+  const subEl=document.getElementById("assin-sub");
+  if(subEl) subEl.textContent="Cobranças no BMG — "+getMonthStr();
+
   if(!ass.length){
     document.getElementById("assin-stats").innerHTML="";
     document.getElementById("assin-list").innerHTML="<div class='empty-state'><div class='icon'>📱</div><p>Nenhuma assinatura cadastrada</p></div>";
     return;
   }
-  const minhas=ass.filter(a=>a.status==="ativa"&&(a.dono==="brenda"||a.dono==="casal")).reduce((s,a)=>s+parseFloat(a.valor||0),0);
-  const tercAss=ass.filter(a=>a.status==="ativa"&&!["brenda","casal"].includes(a.dono)).reduce((s,a)=>s+parseFloat(a.valor||0),0);
+
+  // Stats usam os valores DO MÊS SELECIONADO (com overrides)
+  const ativas=ass.filter(a=>a.status==="ativa");
+  const minhas=ativas.filter(a=>a.dono==="brenda"||a.dono==="casal").reduce((s,a)=>s+_getAssinValorMes(a),0);
+  const tercAss=ativas.filter(a=>!["brenda","casal"].includes(a.dono)).reduce((s,a)=>s+_getAssinValorMes(a),0);
+
   document.getElementById("assin-stats").innerHTML=`
     <div class="stat-card"><div class="stat-label">Minhas assinaturas</div><div class="stat-value blue">${R(minhas)}</div></div>
     <div class="stat-card"><div class="stat-label">Pagas por terceiros</div><div class="stat-value amber">${R(tercAss)}</div></div>
     <div class="stat-card"><div class="stat-label">Total no cartão</div><div class="stat-value red">${R(minhas+tercAss)}</div></div>
   `;
+
   document.getElementById("assin-list").innerHTML=`<div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>Serviço</th><th>Responsável</th><th>Dia</th><th>Status</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+    <thead><tr><th>Serviço</th><th>Responsável</th><th>Dia</th><th>Status</th><th style="text-align:right">Valor (${getMonthStr().split(" ")[0]})</th><th></th></tr></thead>
     <tbody>${ass.map(a=>{
       const donoColor=DONO_COLORS[a.dono]||"amber";
       const donoLabel=DONO_LABELS[a.dono]||a.dono;
+      const valorMes=_getAssinValorMes(a);
+      const am=_getAssinMensal(a.id);
+      const valorDiferente=am&&parseFloat(am.valor)!==parseFloat(a.valor);
+      const isTerceiro=!["brenda","casal"].includes(a.dono);
       return`<tr>
-        <td><div style="font-weight:500">${a.nome}</div>${a.obs?`<div style="font-size:11px;color:var(--text3)">${a.obs}</div>`:""}</td>
+        <td><div style="font-weight:500">${a.nome}</div>${a.obs?`<div style="font-size:11px;color:var(--text3)">${a.obs}</div>`:""}${valorDiferente?`<div style="font-size:10px;color:var(--amber);margin-top:2px">⚠ Override neste mês (base: ${R(a.valor)})</div>`:""}</td>
         <td><span class="badge badge-${donoColor}">${donoLabel}</span></td>
         <td style="color:var(--text2)">Dia ${a.dia||"—"}</td>
         <td><span class="badge ${a.status==="ativa"?"badge-green":"badge-amber"}">${a.status}</span></td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:500;color:${["brenda","casal"].includes(a.dono)?"var(--text)":"var(--amber)"}">${R(a.valor)}</td>
+        <td style="text-align:right">
+          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
+            <input type="number" id="avm-${a.id}" value="${valorMes}" step="0.01" min="0"
+              style="width:90px;padding:4px 6px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;background:var(--surface2);border:1px solid ${valorDiferente?"var(--amber)":"var(--border)"};border-radius:5px;color:${isTerceiro?"var(--amber)":"var(--text)"}">
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="salvarValorAssinMes('${a.id}')" title="Salvar só este mês" style="font-size:10px;padding:4px 6px">💾</button>
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="aplicarAssinDaqui('${a.id}')" title="Aplicar deste mês em diante (12 meses)" style="font-size:10px;padding:4px 6px">⏩</button>
+            ${valorDiferente?`<button class="btn btn-ghost btn-sm btn-icon" onclick="removerOverrideAssin('${a.id}')" title="Remover override (volta ao base)" style="font-size:10px;padding:4px 6px;color:var(--text3)">↺</button>`:""}
+          </div>
+        </td>
         <td><div style="display:flex;gap:5px">
           <button class="btn btn-ghost btn-sm" onclick="toggleAssinatura('${a.id}')">${a.status==="ativa"?"Pausar":"Ativar"}</button>
           <button class="btn btn-danger btn-sm btn-icon" onclick="delAssinatura('${a.id}')">✕</button>
         </div></td>
       </tr>`;
     }).join("")}</tbody>
-  </table></div></div>`;
+  </table></div>
+  <div style="font-size:11px;color:var(--text3);margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:6px;line-height:1.5">
+    💡 <strong style="color:var(--text2)">💾 Salvar</strong> altera só o mês selecionado · <strong style="color:var(--text2)">⏩ Aplicar daqui</strong> aplica nos próximos 12 meses · <strong style="color:var(--text2)">↺ Remover</strong> volta ao valor base
+  </div>
+  </div>`;
 }
 
 
-// ---- RENDER RESERVA ----
+// ====================================================================
+// RESERVA / POUPANÇA
+// ====================================================================
 function renderReserva(){
   const db=getDB();
-  const reservas=db.reservas||[];
-  const total=reservas.reduce((a,r)=>a+parseFloat(r.valor||0),0);
+  const res=db.reservas||[];
+  const total=res.reduce((a,r)=>a+parseFloat(r.valor||0),0);
   document.getElementById("total-reserva").textContent=R(total);
-  document.getElementById("qtd-reserva").textContent=reservas.length;
+  document.getElementById("qtd-reserva").textContent=res.length;
   const list=document.getElementById("reserva-list");
-  if(!reservas.length){list.innerHTML="<div class='empty-state'><div class='icon'>💰</div><p>Nenhuma reserva cadastrada</p></div>";return;}
+  if(!res.length){
+    list.innerHTML="<div class='empty-state'><div class='icon'>💰</div><p>Nenhuma reserva cadastrada</p></div>";
+    return;
+  }
   list.innerHTML=`<div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>Data</th><th>Objetivo</th><th style="text-align:right">Valor</th><th></th></tr></thead>
-    <tbody>${reservas.map(r=>`<tr>
-      <td style="color:var(--text2)">${fmtDate(r.data)}</td>
+    <thead><tr><th>Objetivo</th><th>Data</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+    <tbody>${res.sort((a,b)=>(b.data||"").localeCompare(a.data||"")).map(r=>`<tr>
       <td style="font-weight:500">${r.nome}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--teal);font-weight:500">${R(r.valor)}</td>
+      <td style="color:var(--text2)">${fmtDate(r.data)}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:500;color:var(--teal)">${R(r.valor)}</td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="delReserva('${r.id}')">✕</button></td>
     </tr>`).join("")}</tbody>
   </table></div></div>`;
@@ -1889,463 +2094,461 @@ function salvarReserva(){
   setLoading(true,"Salvando...");
   saveRecord("reservas",r).then(ok=>{setLoading(false);if(ok){showToast("✓ Reserva salva!");renderReserva();}});
 }
+
 function delReserva(id){
-  if(!confirm("Remover?"))return;
+  if(!confirm("Remover esta reserva?"))return;
   setLoading(true,"Removendo...");
   deleteRecord("reservas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderReserva();}});
 }
 
-// =============================================
-// GERAR PRÉ-LANÇAMENTOS MÊS ESPECÍFICO (CORRIGIDO)
-// =============================================
-function _getPreLancItems(){
+// ====================================================================
+// PRÉ-LANÇAMENTOS (gerar previstos do mês)
+// ====================================================================
+function _getPreLancItems(mesKey){
   const db=getDB();
-  const assinaturas=(db.assinaturas||[]).filter(a=>a.status==="ativa");
-  const nomesA=new Set(assinaturas.map(a=>a.nome.toLowerCase().trim()));
-  const tercBMG=(db.terceiros||[]).filter(t=>{
-    if(!t.ativo||t.freq!=="mensal"||t.origem!=="bmg") return false;
-    const nome=(t.desc||"").toLowerCase().trim();
-    return![...nomesA].some(n=>n.includes(nome)||nome.includes(n));
+  const items=[];
+  // Pega o cartão BMG (assume primeiro cartão se não achar)
+  const cartaoBMG=(db.cartoes||[]).find(c=>(c.nome||"").toLowerCase().includes("bmg"))||db.cartoes[0];
+  const cartaoId=cartaoBMG?cartaoBMG.id:null;
+
+  // Assinaturas ativas (com override mensal aplicado)
+  (db.assinaturas||[]).filter(a=>a.status==="ativa").forEach(a=>{
+    const valor=_getAssinValorMes(a, mesKey);
+    items.push({tipo:"assinatura", nome:a.nome, valor, dia:a.dia||1, cartaoId, categoria:"assinaturas", srcId:a.id});
   });
-  return [...assinaturas,...tercBMG];
+
+  return {items, cartaoId, cartaoNome:cartaoBMG?cartaoBMG.nome:"—"};
 }
 
 function abrirModalGerarMes(){
-  const now=new Date();
-  const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById("gm-mes").value=mesKey;
+  const hoje=new Date();
+  const mesAtual=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById("gm-mes").value=mesAtual;
   atualizarPreviewMes();
   openModal("modal-gerar-mes");
 }
 
-document.addEventListener("change",e=>{
-  if(e.target.id==="gm-mes") atualizarPreviewMes();
+document.addEventListener("DOMContentLoaded",()=>{
+  const inp=document.getElementById("gm-mes");
+  if(inp) inp.addEventListener("change",atualizarPreviewMes);
 });
 
 function atualizarPreviewMes(){
   const mesKey=document.getElementById("gm-mes").value;
-  if(!mesKey) return;
+  if(!mesKey){
+    document.getElementById("gm-preview").style.display="none";
+    document.getElementById("gm-aviso").style.display="none";
+    return;
+  }
   const db=getDB();
-  const todos=_getPreLancItems();
-
-  // Check if already has launches this month
-  const jaTemLanc=(db.lancCartao||[]).filter(l=>l.data&&l.data.startsWith(mesKey));
-  const jaTemPre=jaTemLanc.filter(l=>l.prelancado===true||l.prelancado==="true");
-  const jaTemReal=jaTemLanc.filter(l=>!l.prelancado||l.prelancado==="false");
+  const{items, cartaoId, cartaoNome}=_getPreLancItems(mesKey);
 
   const aviso=document.getElementById("gm-aviso");
   const btn=document.getElementById("btn-gm-confirmar");
 
-  if(jaTemReal.length>0){
+  if(!cartaoId){
     aviso.style.display="block";
-    aviso.textContent=`⚠️ Já existem ${jaTemReal.length} lançamentos reais em ${mesKey}. Os pré-lançamentos serão adicionados mesmo assim.`;
-    btn.disabled=false;btn.style.opacity="1";
-  } else if(jaTemPre.length>0){
+    aviso.innerHTML="⚠️ Nenhum cartão cadastrado. Cadastre um cartão antes de gerar pré-lançamentos.";
+    btn.disabled=true;btn.style.opacity=".5";
+    document.getElementById("gm-preview").style.display="none";
+    return;
+  }
+
+  // Verifica se já existem previstos no mês
+  const[ano,mes]=mesKey.split("-");
+  const y=parseInt(ano), m=parseInt(mes)-1;
+  const jaExistem=(db.lancCartao||[]).filter(l=>l.cartaoId===cartaoId&&inMonth(l.data,y,m)&&_isPrelancado(l));
+
+  if(jaExistem.length){
     aviso.style.display="block";
-    aviso.textContent=`ℹ️ Já existem ${jaTemPre.length} pré-lançamentos em ${mesKey}. Clique em Gerar para adicionar os que estiverem faltando.`;
-    btn.disabled=false;btn.style.opacity="1";
+    aviso.innerHTML=`⚠️ Já existem ${jaExistem.length} pré-lançamentos para ${mesKey}. Gerar de novo vai duplicar — exclua os antigos primeiro se quiser regenerar.`;
+    btn.disabled=true;btn.style.opacity=".5";
   } else {
     aviso.style.display="none";
     btn.disabled=false;btn.style.opacity="1";
   }
 
-  // FIX: calcular totalVal corretamente
-  const totalVal=todos.reduce((a,x)=>a+parseFloat(x.valor||0),0);
-
+  if(!items.length){
+    document.getElementById("gm-preview").style.display="none";
+    return;
+  }
   document.getElementById("gm-preview").style.display="block";
-  document.getElementById("gm-lista").innerHTML=todos.map(x=>`
-    <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="color:var(--text2)">${x.nome||x.desc}</span>
-      <span style="font-family:'DM Mono',monospace;color:var(--amber)">${R(x.valor)}</span>
-    </div>`).join("");
-  document.getElementById("gm-total").textContent=R(totalVal);
+  const total=items.reduce((a,i)=>a+i.valor,0);
+  document.getElementById("gm-lista").innerHTML=`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Cartão: <strong style="color:var(--text)">${cartaoNome}</strong></div>`+items.map(i=>`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px">
+    <span>${i.nome} <span style="color:var(--text3);font-size:11px">(dia ${i.dia})</span></span>
+    <span style="font-family:'DM Mono',monospace;color:var(--amber)">${R(i.valor)}</span>
+  </div>`).join("");
+  document.getElementById("gm-total").textContent=R(total);
 }
 
 async function gerarPresMes(){
   const mesKey=document.getElementById("gm-mes").value;
-  if(!mesKey){showToast("Selecione um mês");return;}
-  const db=getDB();
-  const todos=_getPreLancItems();
-  if(!todos.length){showToast("Nenhuma assinatura ativa encontrada");return;}
+  if(!mesKey)return;
+  const{items, cartaoId}=_getPreLancItems(mesKey);
+  if(!cartaoId||!items.length)return;
 
-  // Check which ones already exist as pre-launches this month
-  const jaExistem=new Set(
-    (db.lancCartao||[])
-      .filter(l=>l.data&&l.data.startsWith(mesKey)&&(l.prelancado===true||l.prelancado==="true"))
-      .map(l=>l.descricao.replace(" (previsto)","").toLowerCase().trim())
-  );
-
-  const novos=todos.filter(x=>{
-    const nome=(x.nome||x.desc).toLowerCase().trim();
-    return![...jaExistem].some(j=>j.includes(nome)||nome.includes(j));
-  });
-
-  if(!novos.length){
-    closeModal("modal-gerar-mes");
-    showToast("Todos os pré-lançamentos já existem para este mês");
-    return;
-  }
-
-  const dataBase=`${mesKey}-05`;
   closeModal("modal-gerar-mes");
-  setLoading(true,`Gerando pré-lançamentos para ${mesKey}...`);
+  setLoading(true,"Gerando pré-lançamentos...");
 
-  for(let i=0;i<novos.length;i++){
-    const x=novos[i];
-    setLoading(true,`Gerando ${i+1} de ${novos.length}...`);
-    await saveRecord("lancCartao",{
-      id:uid(),data:dataBase,cartaoId:"id0001",
-      descricao:(x.nome||x.desc)+" (previsto)",
-      valor:parseFloat(x.valor||0),parcelas:1,parcela:1,
-      categoria:x.categoria||x.cat||"assinaturas",
-      prelancado:"true"
-    });
-  }
-
-  localStorage.setItem("prelancado_"+mesKey,"1");
-  setLoading(false);
-  showToast(`✓ ${novos.length} pré-lançamentos gerados para ${mesKey}!`);
-  _db=null;
-  const db2=await loadDB();
-  if(db2) renderDashboard();
-}
-
-// ---- IMPORTAR FATURA (sem IA — parser local) ----
-let faturaFile=null;
-let faturaFileType=null;
-let extractedItems=[];
-
-function populateImportCartao(){
-  const db=getDB();
-  const sel=document.getElementById("import-cartao");
-  if(sel)sel.innerHTML=db.cartoes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
-}
-function handleDrop(e){
-  e.preventDefault();document.getElementById("drop-zone").style.borderColor="";
-  const file=e.dataTransfer.files[0];if(file)processFile(file);
-}
-function handleFaturaFile(e){const file=e.target.files[0];if(file)processFile(file);}
-function processFile(file){
-  const allowed=["application/pdf","text/csv","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.ms-excel"];
-  const ext=file.name.split(".").pop().toLowerCase();
-  if(!allowed.includes(file.type)&&!["pdf","csv","xlsx","xls"].includes(ext)){
-    showToast("Use PDF, CSV ou Excel");return;
-  }
-  faturaFile=file;
-  faturaFileType=ext;
-  document.getElementById("upload-name").style.display="block";
-  document.getElementById("upload-name").textContent="📎 "+file.name;
-  document.getElementById("upload-idle").style.display="none";
-  document.getElementById("upload-preview").style.display="block";
-  document.getElementById("pdf-icon").style.display="block";
-  document.getElementById("img-preview").style.display="none";
-  const btn=document.getElementById("btn-extrair");btn.disabled=false;btn.style.opacity="1";
-}
-
-// ---- CATEGORIZAR AUTOMATICAMENTE ----
-function _autoCat(desc){
-  const d=(desc||"").toLowerCase();
-  if(/cobasi|petz/.test(d)) return "pets";
-  if(/uber|99|taxi|sem parar|auto posto|combusti/.test(d)) return "transporte";
-  if(/spotify|netflix|deezer|apple|disney|hbo|prime|cinema/.test(d)) return "assinaturas";
-  if(/wellhub|gympass|totalpass|academia|centro.?m[eé]dico|farmacia|drogaria/.test(d)) return "saude";
-  if(/ifood|99food|rappi|restaurante|burguer|pizz|muffato|hortifrut|mercado|supermercado|padaria|fogao|daki/.test(d)) return "alimentacao";
-  if(/aluguel|condomini|ecolavare|limpeza/.test(d)) return "moradia";
-  if(/adega|bar|lazer|cinemark|teatro|show/.test(d)) return "lazer";
-  if(/c&a|renner|riachuelo|marisa|zara|roupa/.test(d)) return "vestuario";
-  return "outros";
-}
-
-// ---- EXTRAIR DE PDF (parser local) ----
-async function _extractFromPDF(file){
-  const arrayBuffer=await file.arrayBuffer();
-  const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
-  let fullText="";
-  for(let i=1;i<=pdf.numPages;i++){
-    const page=await pdf.getPage(i);
-    const content=await page.getTextContent();
-    const lines=[];
-    let lastY=null;
-    content.items.forEach(item=>{
-      if(lastY!==null&&Math.abs(item.transform[5]-lastY)>5){
-        lines.push("\n");
-      }
-      lines.push(item.str);
-      lastY=item.transform[5];
-    });
-    fullText+=lines.join(" ")+"\n";
-  }
-  return _parseBMGText(fullText);
-}
-
-// ---- PARSER PADRÃO BMG ----
-function _parseBMGText(text){
-  const lancamentos=[];
-  const lines=text.split("\n").map(l=>l.trim()).filter(l=>l);
-  // Detectar o ano e mês da fatura pelo vencimento
-  let anoFatura=new Date().getFullYear();
-  let mesFatura=new Date().getMonth()+1;
-  const vencMatch=text.match(/Vencimento[:\s]*(\d{2})\/(\d{2})\/(\d{4})/i);
-  if(vencMatch){
-    anoFatura=parseInt(vencMatch[3]);
-    mesFatura=parseInt(vencMatch[2]);
-  }
-  
-  // Setar o campo "Mês da fatura" automaticamente
-  const mesInput=document.getElementById("import-mes-fatura");
-  if(mesInput) mesInput.value=`${anoFatura}-${String(mesFatura).padStart(2,'0')}`;
-  
-  // Padrão BMG: DD/MM DESCRIÇÃO VALOR (positivo = compra, negativo = pagamento/crédito)
-  const regex=/(\d{2})\/(\d{2})\s+(.+?)\s+([\-]?\d{1,3}(?:[.,]\d{2}))\s*$/;
-  
-  for(const line of lines){
-    const m=line.match(regex);
-    if(!m) continue;
-    const dia=m[1], mes=m[2];
-    let desc=m[3].trim();
-    let valorStr=m[4].replace(",",".");
-    let valor=parseFloat(valorStr);
-    
-    // Limpar descrição (remover sufixos como SA, EC, etc)
-    desc=desc.replace(/\s+(SA|EC|U|D)\s*$/i,"").replace(/\s+/g," ").trim();
-    // Remover "DL " prefix
-    desc=desc.replace(/^DL\s+/i,"");
-    
-    // Data original do lançamento (para exibição)
-    let ano=anoFatura;
-    const mesNum=parseInt(mes);
-    const vencMes=vencMatch?parseInt(vencMatch[2]):new Date().getMonth()+1;
-    if(mesNum>vencMes+1) ano=anoFatura-1;
-    const dataOriginal=`${ano}-${mes}-${dia}`;
-    
-    const categoria=_autoCat(desc);
-    
-    lancamentos.push({data:dataOriginal, dataOriginal, descricao:desc, valor, categoria});
-  }
-  return lancamentos;
-}
-
-// ---- EXTRAIR DE CSV ----
-async function _extractFromCSV(file){
-  return new Promise((resolve)=>{
-    Papa.parse(file,{
-      header:true,
-      skipEmptyLines:true,
-      complete:function(results){
-        const lancs=[];
-        results.data.forEach(row=>{
-          // Tenta detectar colunas comuns
-          const data=row.data||row.Data||row.DATE||row["Data Lançamento"]||"";
-          const desc=row.descricao||row.Descricao||row.Descrição||row.DESCRICAO||row.description||"";
-          let valor=row.valor||row.Valor||row.VALOR||row.value||row.amount||"0";
-          valor=parseFloat(String(valor).replace(",",".").replace(/[^\d.\-]/g,""))||0;
-          if(!desc||valor<=0) return;
-          // Parse date
-          let dataFmt=parseDate(data);
-          if(!dataFmt){
-            const dm=String(data).match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            if(dm) dataFmt=`${dm[3]}-${dm[2]}-${dm[1]}`;
-            else dataFmt=new Date().toISOString().slice(0,10);
-          }
-          lancs.push({data:dataFmt,descricao:desc,valor,categoria:_autoCat(desc)});
-        });
-        resolve(lancs);
-      }
-    });
-  });
-}
-
-// ---- EXTRAIR DE EXCEL ----
-async function _extractFromExcel(file){
-  const arrayBuffer=await file.arrayBuffer();
-  const wb=XLSX.read(arrayBuffer,{type:"array",cellDates:true});
-  const sheet=wb.Sheets[wb.SheetNames[0]];
-  const rows=XLSX.utils.sheet_to_json(sheet,{defval:""});
-  const lancs=[];
-  rows.forEach(row=>{
-    const data=row.data||row.Data||row.DATE||row["Data Lançamento"]||"";
-    const desc=row.descricao||row.Descricao||row.Descrição||row.DESCRICAO||row.description||"";
-    let valor=row.valor||row.Valor||row.VALOR||row.value||row.amount||"0";
-    valor=parseFloat(String(valor).replace(",",".").replace(/[^\d.\-]/g,""))||0;
-    if(!desc||valor<=0) return;
-    let dataFmt=parseDate(data);
-    if(!dataFmt) dataFmt=new Date().toISOString().slice(0,10);
-    lancs.push({data:dataFmt,descricao:desc,valor,categoria:_autoCat(desc)});
-  });
-  return lancs;
-}
-
-// ---- FUNÇÃO PRINCIPAL DE EXTRAÇÃO ----
-async function extrairFatura(){
-  if(!faturaFile){showToast("Selecione um arquivo primeiro");return;}
-  const btn=document.getElementById("btn-extrair");btn.disabled=true;btn.style.opacity=".5";
-  document.getElementById("ia-status").style.display="block";
-  document.getElementById("ia-msg").textContent="Extraindo lançamentos...";
-  document.getElementById("extract-empty").style.display="none";
-  document.getElementById("extract-result").style.display="none";
-  
-  try{
-    let lancs=[];
-    if(faturaFileType==="pdf"){
-      lancs=await _extractFromPDF(faturaFile);
-    } else if(faturaFileType==="csv"){
-      lancs=await _extractFromCSV(faturaFile);
-    } else if(faturaFileType==="xlsx"||faturaFileType==="xls"){
-      lancs=await _extractFromExcel(faturaFile);
-    } else {
-      throw new Error("Formato não suportado: "+faturaFileType);
-    }
-    
-    if(!lancs.length){
-      showToast("Nenhum lançamento encontrado no arquivo");
-      document.getElementById("extract-empty").style.display="flex";
-      return;
-    }
-    
-    extractedItems=lancs.map((l,i)=>({...l,_id:"ex_"+i,_selected:true}));
-    renderExtracted();
-    
-    // Verificar previstos que serão substituídos
-    _checkPrevistos();
-    
-  }catch(err){
-    showToast("Erro: "+err.message);
-    document.getElementById("extract-empty").style.display="flex";
-  }finally{
-    document.getElementById("ia-status").style.display="none";
-    btn.disabled=false;btn.style.opacity="1";
-  }
-}
-
-// ---- VERIFICAR PREVISTOS QUE SERÃO REMOVIDOS ----
-function _checkPrevistos(){
-  const db=getDB();
-  const cartaoId=document.getElementById("import-cartao").value;
-  const mesFatura=document.getElementById("import-mes-fatura").value;
-  if(!mesFatura) return;
-  
-  // Buscar previstos do mês da fatura no mesmo cartão
-  const previstos=(db.lancCartao||[]).filter(l=>
-    (l.prelancado===true||l.prelancado==="true")&&
-    l.cartaoId===cartaoId&&
-    l.data&&l.data.startsWith(mesFatura)
-  );
-  
-  if(previstos.length>0){
-    // Mostrar aviso dos previstos que serão removidos
-    const avisoEl=document.getElementById("extract-previstos-aviso");
-    if(avisoEl){
-      avisoEl.style.display="block";
-      avisoEl.innerHTML=`
-        <div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--amber)">⚠️ ${previstos.length} pré-lançamento${previstos.length>1?"s":""} será${previstos.length>1?"ão":""} removido${previstos.length>1?"s":""}:</div>
-        ${previstos.map(p=>`<div style="font-size:11px;color:var(--text2);padding:2px 0">${p.descricao.replace(" (previsto)","")} — ${R(p.valor)}</div>`).join("")}
-      `;
-    }
-  }
-}
-const CAT_LABELS={moradia:"Moradia",transporte:"Transporte",alimentacao:"Alimentação",saude:"Saúde",lazer:"Lazer",assinaturas:"Assinaturas",educacao:"Educação",vestuario:"Vestuário",pets:"Pets",estetica:"Estética",outros:"Outros"};
-function renderExtracted(){
-  if(!extractedItems.length){showToast("Nenhum lançamento encontrado.");return;}
-  document.getElementById("extract-result").style.display="flex";
-  document.getElementById("extract-result").style.flexDirection="column";
-  updateExtractCounts();
-  document.getElementById("extract-list").innerHTML=extractedItems.map((item,i)=>`
-    <div class="extract-item ${item._selected?"selected":""}" onclick="toggleExtracted(${i})" id="ei_${i}">
-      <input type="checkbox" ${item._selected?"checked":""} onclick="event.stopPropagation();toggleExtracted(${i})">
-      <div style="flex:1;min-width:0">
-        <div class="ei-desc">${item.descricao}</div>
-        <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
-          <span class="ei-date">${item.data}</span>
-          <select onclick="event.stopPropagation()" onchange="extractedItems[${i}].categoria=this.value" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;padding:2px 4px">
-            ${Object.entries(CAT_LABELS).map(([k,v])=>`<option value="${k}" ${item.categoria===k?"selected":""}>${v}</option>`).join("")}
-          </select>
-        </div>
-      </div>
-      <div class="ei-val">R$ ${Number(item.valor).toFixed(2).replace(".",",")}</div>
-    </div>`).join("");
-}
-function toggleExtracted(i){
-  extractedItems[i]._selected=!extractedItems[i]._selected;
-  const el=document.getElementById("ei_"+i);
-  el.classList.toggle("selected",extractedItems[i]._selected);
-  el.querySelector("input").checked=extractedItems[i]._selected;
-  updateExtractCounts();
-}
-function selectAllExtracted(v){extractedItems.forEach(it=>it._selected=v);renderExtracted();}
-function updateExtractCounts(){
-  const sel=extractedItems.filter(i=>i._selected);
-  const total=sel.reduce((a,i)=>a+parseFloat(i.valor||0),0);
-  document.getElementById("extract-count").textContent=`${sel.length} de ${extractedItems.length} selecionados`;
-  document.getElementById("extract-total").textContent=`Total: R$ ${total.toFixed(2).replace(".",",")}`;
-}
-async function confirmarImport(){
-  const db=getDB();
-  const cartaoId=document.getElementById("import-cartao").value;
-  const mesFatura=document.getElementById("import-mes-fatura").value; // "2026-05"
-  const selecionados=extractedItems.filter(i=>i._selected);
-  if(!selecionados.length){showToast("Nenhum item selecionado");return;}
-  if(!mesFatura){showToast("Selecione o mês da fatura");return;}
-  
-  // 1. Buscar TODOS os previstos do mês da fatura no mesmo cartão
-  const previstos=(db.lancCartao||[]).filter(l=>
-    (l.prelancado===true||l.prelancado==="true")&&
-    l.cartaoId===cartaoId&&
-    l.data&&l.data.startsWith(mesFatura)
-  );
-  
-  // Confirmar remoção se houver previstos
-  if(previstos.length>0){
-    const nomes=previstos.map(p=>p.descricao.replace(" (previsto)","")).join(", ");
-    if(!confirm(`Serão removidos ${previstos.length} pré-lançamentos de ${mesFatura}:\n${nomes}\n\nE substituídos pelos ${selecionados.length} lançamentos reais da fatura.\n\nConfirma?`)){
-      return;
-    }
-  }
-  
-  setLoading(true,"Removendo pré-lançamentos...");
-  
-  // 2. DELETAR todos os previstos do Sheets
-  for(const pl of previstos){
-    await deleteRecord("lancCartao",pl.id);
-  }
-  
-  // 3. INSERIR os lançamentos reais sequencialmente (evita timeout do Apps Script)
-  const dataFinal=`${mesFatura}-01`;
-  
-  for(let i=0;i<selecionados.length;i++){
-    const item=selecionados[i];
-    setLoading(true,`Inserindo ${i+1} de ${selecionados.length}...`);
-    await saveRecord("lancCartao",{
+  let i=0;
+  for(const item of items){
+    i++;
+    setLoading(true,`Salvando ${i}/${items.length}: ${item.nome}...`);
+    const dia=String(Math.min(parseInt(item.dia)||1,28)).padStart(2,'0');
+    const lanc={
       id:uid(),
-      data:dataFinal,
+      data:`${mesKey}-${dia}`,
       cartaoId,
-      descricao:item.descricao,
+      descricao:`${item.nome} (previsto)`,
       valor:item.valor,
       parcelas:1,
       parcela:1,
       categoria:item.categoria,
-      prelancado:"false"
-    });
+      prelancado:"true"
+    };
+    await saveRecord("lancCartao",lanc);
   }
-  
+
   setLoading(false);
-  showToast(`✓ ${previstos.length} previstos removidos · ${selecionados.length} reais importados para ${mesFatura}!`);
-  
-  // Reset UI
-  extractedItems=[];faturaFile=null;faturaFileType=null;
-  ["upload-idle","extract-empty"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="block";});
-  ["upload-preview","extract-result","upload-name"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="none";});
-  const avisoEl=document.getElementById("extract-previstos-aviso");
-  if(avisoEl) avisoEl.style.display="none";
-  document.getElementById("fatura-file").value="";
-  document.getElementById("btn-extrair").disabled=true;document.getElementById("btn-extrair").style.opacity=".5";
-  
-  // Recarregar dados do Sheets
-  _db=null;
-  const db2=await loadDB();
-  if(db2){renderLancCartao();renderDashboard();}
+  showToast(`✓ ${items.length} pré-lançamentos gerados!`);
+  renderPage(currentPage);
 }
 
-initApp();
+
+// ====================================================================
+// IMPORTAÇÃO DE FATURA (PDF/CSV/XLSX)
+// ====================================================================
+let faturaFile=null, faturaFileType=null, extractedItems=[];
+
+const CAT_LABELS={
+  moradia:"🏠 Moradia",transporte:"🚗 Transporte",alimentacao:"🍽️ Alimentação",
+  saude:"💊 Saúde",lazer:"🎮 Lazer",assinaturas:"📱 Assinaturas",
+  educacao:"📚 Educação",vestuario:"👔 Vestuário",pets:"🐾 Pets",
+  estetica:"💅 Estética",dividas:"💳 Dívidas",receita:"💰 Receita",outros:"📦 Outros"
+};
+
+function populateImportCartao(){
+  const db=getDB();
+  const sel=document.getElementById("import-cartao");
+  if(!sel)return;
+  sel.innerHTML=(db.cartoes||[]).map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+  // Pré-selecionar BMG
+  const bmg=(db.cartoes||[]).find(c=>(c.nome||"").toLowerCase().includes("bmg"));
+  if(bmg) sel.value=bmg.id;
+
+  // Mês padrão = mês atual
+  const mesInp=document.getElementById("import-mes-fatura");
+  if(mesInp&&!mesInp.value){
+    const hoje=new Date();
+    mesInp.value=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+  }
+}
+
+function handleDrop(e){
+  e.preventDefault();
+  e.currentTarget.style.borderColor="";
+  const files=e.dataTransfer.files;
+  if(files&&files.length){
+    document.getElementById("fatura-file").files=files;
+    handleFaturaFile({target:{files}});
+  }
+}
+
+function handleFaturaFile(ev){
+  const file=ev.target.files[0];
+  if(!file)return;
+  faturaFile=file;
+  const ext=file.name.split(".").pop().toLowerCase();
+  faturaFileType=ext;
+  document.getElementById("upload-idle").style.display="none";
+  document.getElementById("upload-preview").style.display="block";
+  document.getElementById("upload-name").style.display="block";
+  document.getElementById("upload-name").textContent="✓ "+file.name;
+  const img=document.getElementById("img-preview");
+  const pdfIcon=document.getElementById("pdf-icon");
+  img.style.display="none";pdfIcon.style.display="none";
+  if(["pdf"].includes(ext)){pdfIcon.style.display="block";pdfIcon.textContent="📄";}
+  else if(["csv"].includes(ext)){pdfIcon.style.display="block";pdfIcon.textContent="📊";}
+  else if(["xlsx","xls"].includes(ext)){pdfIcon.style.display="block";pdfIcon.textContent="📈";}
+  document.getElementById("btn-extrair").disabled=false;
+  document.getElementById("btn-extrair").style.opacity="1";
+}
+
+function _autoCat(desc){
+  const d=(desc||"").toLowerCase();
+  if(/cobasi|petz|petlove|pet shop|veterin/i.test(d)) return "pets";
+  if(/uber|99 |taxi|combust|posto|gasolin|estacion/i.test(d)) return "transporte";
+  if(/netflix|spotify|prime|disney|hbo|globo|paramount|youtube|apple\.com|google.*play/i.test(d)) return "assinaturas";
+  if(/farmac|drog|hosp|consult|exame|laborator/i.test(d)) return "saude";
+  if(/ifood|rappi|restaur|lanchonete|padar|mercado|supermerc|hortifr|açai|acai|sushi|pizza/i.test(d)) return "alimentacao";
+  if(/cinema|teatro|show|ingres|stream/i.test(d)) return "lazer";
+  if(/escola|curso|udemy|alura|coursera|livro/i.test(d)) return "educacao";
+  if(/renner|c&a|riachuelo|zara|americanas|magazine|amazon|shopee|shein|aliexpress|loja/i.test(d)) return "vestuario";
+  if(/salao|salão|cabel|manicur|estet|spa/i.test(d)) return "estetica";
+  if(/aluguel|condomin|luz|enel|cemig|sabesp|agua|gas|net |vivo|claro|tim/i.test(d)) return "moradia";
+  return "outros";
+}
+
+async function _extractFromPDF(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let allText="";
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const content=await page.getTextContent();
+    const pageText=content.items.map(it=>it.str).join(" ");
+    allText+="\n"+pageText;
+  }
+  return _parseBMGText(allText);
+}
+
+function _parseBMGText(text){
+  const items=[];
+  // Detectar mês da fatura via vencimento — Apto formato "Vencimento: DD/MM/AAAA" ou "Venc DD/MM"
+  let yearGuess=new Date().getFullYear();
+  const vencM=text.match(/vencimento[:\s]*(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i);
+  if(vencM){
+    let y=parseInt(vencM[3]);
+    if(y<100) y+=2000;
+    yearGuess=y;
+    // Auto-set do mês da fatura no input
+    const m=parseInt(vencM[2]);
+    const mesInp=document.getElementById("import-mes-fatura");
+    if(mesInp) mesInp.value=`${y}-${String(m).padStart(2,'0')}`;
+  }
+
+  // Pattern principal: DD/MM DESC ... VALOR (com vírgula decimal)
+  // Lida com valores tipo "85,70" ou "1.234,56" e negativos prefixados com "-"
+  const lines=text.split(/\n|(?<=\d{2}\/\d{2})\s+(?=\d{2}\/\d{2})/);
+  const seen=new Set();
+
+  lines.forEach(line=>{
+    // Pula linhas óbvias de cabeçalho
+    if(/limite|saldo|fatura|vencimento|total|subtotal|próxim|anterior|pagina|brenda|cnpj|cpf/i.test(line)&&!/\d{2}\/\d{2}/.test(line.split(/r\$|valor/i)[0]||""))return;
+
+    // Matches multiplas transações na mesma linha
+    const re=/(\d{2})\/(\d{2})\s+([^\d].{2,80}?)\s+(-?\s*\d{1,3}(?:\.\d{3})*,\d{2})/g;
+    let m;
+    while((m=re.exec(line))!==null){
+      const dia=m[1], mes=m[2];
+      let desc=m[3].trim().replace(/\s+/g," ");
+      let valStr=m[4].replace(/\s/g,"").replace(/\./g,"").replace(",",".");
+      const val=parseFloat(valStr);
+      if(isNaN(val)||val===0) continue;
+      // Filtrar lixo
+      if(desc.length<3||/^[\d\s\-,.]+$/.test(desc)) continue;
+
+      const data=`${yearGuess}-${mes}-${dia}`;
+      const key=`${data}|${desc}|${val}`;
+      if(seen.has(key)) continue;
+      seen.add(key);
+
+      items.push({
+        data, descricao:desc, valor:val, categoria:_autoCat(desc), selected:true
+      });
+    }
+  });
+
+  return items;
+}
+
+function _extractFromCSV(file){
+  return new Promise((resolve,reject)=>{
+    Papa.parse(file,{
+      header:false, skipEmptyLines:true,
+      complete:res=>{
+        const items=[];
+        res.data.forEach(row=>{
+          if(!row||row.length<3) return;
+          // Heurística: tenta achar coluna data + desc + valor
+          let data="",desc="",val=NaN;
+          for(let i=0;i<row.length;i++){
+            const cell=String(row[i]||"").trim();
+            if(!data&&/^\d{2}[\/\-]\d{2}[\/\-]\d{2,4}$/.test(cell)) data=parseDate(cell);
+            else if(!data&&/^\d{4}-\d{2}-\d{2}/.test(cell)) data=cell.slice(0,10);
+            else if(isNaN(val)&&/^-?\s*\d{1,3}(?:[.,]\d{3})*[.,]\d{2}$/.test(cell.replace(/r\$\s*/i,""))){
+              val=parseFloat(cell.replace(/r\$\s*/i,"").replace(/\./g,"").replace(",","."));
+            }
+            else if(!desc&&cell.length>3&&!/^\d/.test(cell)) desc=cell;
+          }
+          if(data&&desc&&!isNaN(val)){
+            items.push({data, descricao:desc, valor:val, categoria:_autoCat(desc), selected:true});
+          }
+        });
+        resolve(items);
+      },
+      error:reject
+    });
+  });
+}
+
+async function _extractFromExcel(file){
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:"array"});
+  const sheet=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false});
+  const items=[];
+  rows.forEach(row=>{
+    if(!row||row.length<3) return;
+    let data="",desc="",val=NaN;
+    for(let i=0;i<row.length;i++){
+      const cell=String(row[i]||"").trim();
+      if(!data&&/^\d{2}[\/\-]\d{2}[\/\-]\d{2,4}$/.test(cell)) data=parseDate(cell);
+      else if(!data&&/^\d{4}-\d{2}-\d{2}/.test(cell)) data=cell.slice(0,10);
+      else if(isNaN(val)&&/^-?\s*\d{1,3}(?:[.,]\d{3})*[.,]\d{2}$/.test(cell.replace(/r\$\s*/i,""))){
+        val=parseFloat(cell.replace(/r\$\s*/i,"").replace(/\./g,"").replace(",","."));
+      }
+      else if(!desc&&cell.length>3&&!/^\d/.test(cell)) desc=cell;
+    }
+    if(data&&desc&&!isNaN(val)){
+      items.push({data, descricao:desc, valor:val, categoria:_autoCat(desc), selected:true});
+    }
+  });
+  return items;
+}
+
+async function extrairFatura(){
+  if(!faturaFile)return;
+  document.getElementById("ia-status").style.display="block";
+  document.getElementById("ia-msg").textContent="Extraindo lançamentos...";
+  document.getElementById("btn-extrair").disabled=true;
+  document.getElementById("btn-extrair").style.opacity=".5";
+
+  try{
+    let items=[];
+    if(faturaFileType==="pdf") items=await _extractFromPDF(faturaFile);
+    else if(faturaFileType==="csv") items=await _extractFromCSV(faturaFile);
+    else if(["xlsx","xls"].includes(faturaFileType)) items=await _extractFromExcel(faturaFile);
+
+    if(!items.length){
+      document.getElementById("ia-msg").innerHTML="<span style='color:var(--red)'>⚠ Nenhum lançamento detectado. O formato pode não estar suportado.</span>";
+      document.getElementById("ia-spinner").style.display="none";
+      document.getElementById("btn-extrair").disabled=false;
+      document.getElementById("btn-extrair").style.opacity="1";
+      return;
+    }
+
+    extractedItems=items;
+    document.getElementById("ia-status").style.display="none";
+    document.getElementById("extract-empty").style.display="none";
+    document.getElementById("extract-result").style.display="block";
+    _checkPrevistos();
+    renderExtracted();
+  } catch(err){
+    document.getElementById("ia-msg").innerHTML=`<span style='color:var(--red)'>⚠ Erro: ${err.message}</span>`;
+    document.getElementById("ia-spinner").style.display="none";
+    document.getElementById("btn-extrair").disabled=false;
+    document.getElementById("btn-extrair").style.opacity="1";
+  }
+}
+
+function _checkPrevistos(){
+  const db=getDB();
+  const cartaoId=document.getElementById("import-cartao").value;
+  const mesFatura=document.getElementById("import-mes-fatura").value;
+  const aviso=document.getElementById("extract-previstos-aviso");
+  if(!cartaoId||!mesFatura){aviso.style.display="none";return;}
+  const[ano,mes]=mesFatura.split("-");
+  const y=parseInt(ano), m=parseInt(mes)-1;
+  const previstos=(db.lancCartao||[]).filter(l=>l.cartaoId===cartaoId&&inMonth(l.data,y,m)&&_isPrelancado(l));
+  if(previstos.length){
+    aviso.style.display="block";
+    aviso.innerHTML=`⚠️ Existem ${previstos.length} pré-lançamentos para ${mesFatura}. Eles serão <strong>removidos</strong> ao confirmar a importação dos dados reais.`;
+  } else {
+    aviso.style.display="none";
+  }
+}
+
+function renderExtracted(){
+  const list=document.getElementById("extract-list");
+  list.innerHTML=extractedItems.map((it,i)=>`<div class="extract-item ${it.selected?"selected":""}" onclick="toggleExtracted(${i})">
+    <input type="checkbox" ${it.selected?"checked":""} onclick="event.stopPropagation();toggleExtracted(${i})">
+    <div class="ei-date">${fmtDate(it.data)}</div>
+    <div class="ei-desc">${it.descricao}</div>
+    <select onclick="event.stopPropagation()" onchange="extractedItems[${i}].categoria=this.value">
+      ${Object.entries(CAT_LABELS).map(([k,v])=>`<option value="${k}" ${k===it.categoria?"selected":""}>${v}</option>`).join("")}
+    </select>
+    <div class="ei-val">${R(it.valor)}</div>
+  </div>`).join("");
+  updateExtractCounts();
+}
+
+function toggleExtracted(i){
+  extractedItems[i].selected=!extractedItems[i].selected;
+  renderExtracted();
+}
+
+function selectAllExtracted(yes){
+  extractedItems.forEach(it=>it.selected=yes);
+  renderExtracted();
+}
+
+function updateExtractCounts(){
+  const sel=extractedItems.filter(it=>it.selected);
+  const total=sel.reduce((a,it)=>a+it.valor,0);
+  document.getElementById("extract-count").textContent=`${sel.length} de ${extractedItems.length} selecionados`;
+  document.getElementById("extract-total").textContent=`Total: ${R(total)}`;
+}
+
+async function confirmarImport(){
+  const cartaoId=document.getElementById("import-cartao").value;
+  const mesFatura=document.getElementById("import-mes-fatura").value;
+  if(!cartaoId){showToast("Escolha o cartão");return;}
+  if(!mesFatura){showToast("Escolha o mês da fatura");return;}
+  const sel=extractedItems.filter(it=>it.selected);
+  if(!sel.length){showToast("Selecione pelo menos um item");return;}
+
+  const db=getDB();
+  const[ano,mes]=mesFatura.split("-");
+  const y=parseInt(ano), m=parseInt(mes)-1;
+
+  // 1. Apagar pré-lançamentos do mesmo cartão+mês
+  const previstos=(db.lancCartao||[]).filter(l=>l.cartaoId===cartaoId&&inMonth(l.data,y,m)&&_isPrelancado(l));
+
+  setLoading(true,"Removendo previstos...");
+  for(let i=0;i<previstos.length;i++){
+    setLoading(true,`Removendo previsto ${i+1}/${previstos.length}...`);
+    await deleteRecord("lancCartao",previstos[i].id);
+  }
+
+  // 2. Inserir lançamentos reais (1 por 1, sem Promise.all pra evitar timeout no Apps Script)
+  for(let i=0;i<sel.length;i++){
+    setLoading(true,`Importando ${i+1}/${sel.length}: ${sel[i].descricao}...`);
+    const lanc={
+      id:uid(),
+      data:`${mesFatura}-01`,
+      cartaoId,
+      descricao:sel[i].descricao,
+      valor:sel[i].valor,
+      parcelas:1,
+      parcela:1,
+      categoria:sel[i].categoria,
+      prelancado:"false"
+    };
+    await saveRecord("lancCartao",lanc);
+  }
+
+  setLoading(false);
+  showToast(`✓ ${sel.length} lançamentos importados!`);
+  // Reset
+  faturaFile=null; faturaFileType=null; extractedItems=[];
+  document.getElementById("fatura-file").value="";
+  document.getElementById("upload-idle").style.display="block";
+  document.getElementById("upload-preview").style.display="none";
+  document.getElementById("upload-name").style.display="none";
+  document.getElementById("extract-empty").style.display="flex";
+  document.getElementById("extract-result").style.display="none";
+  document.getElementById("btn-extrair").disabled=true;
+  document.getElementById("btn-extrair").style.opacity=".5";
+  navigate("cartoes");
+}
+
+// ====================================================================
+// INIT
+// ====================================================================
+window.addEventListener("DOMContentLoaded",()=>{
+  initApp();
+});
 </script>
 </body>
 </html>
