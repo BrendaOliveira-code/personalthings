@@ -991,10 +991,16 @@ function _getTodosLancsEfetivosMes(ano, mes){
 // ====================================================================
 // FIXAS MENSAL (valor/pago por mês)
 // ====================================================================
+// Normalizador de "mes": aceita "2026-04" ou "2026-04-01" (caso o Sheets converta pra data)
+function _normMes(v){
+  if(!v) return "";
+  const s=String(v).trim();
+  return s.slice(0,7); // pega "YYYY-MM"
+}
 function _getFixaMensal(fixaId, mesKey){
   const db=getDB();
-  const key=mesKey||_getMesKey();
-  return (db.fixasMensal||[]).find(fm=>fm.fixaId===fixaId&&fm.mes===key)||null;
+  const key=_normMes(mesKey||_getMesKey());
+  return (db.fixasMensal||[]).find(fm=>String(fm.fixaId)===String(fixaId)&&_normMes(fm.mes)===key)||null;
 }
 function _getFixaValorMes(f, mesKey){
   const fm=_getFixaMensal(f.id, mesKey);
@@ -1002,14 +1008,16 @@ function _getFixaValorMes(f, mesKey){
 }
 function _isFixaPaga(fixaId, mesKey){
   const fm=_getFixaMensal(fixaId, mesKey);
-  return !!(fm&&(fm.pago===true||fm.pago==="true"));
+  if(!fm) return false;
+  const p=fm.pago;
+  return p===true||p==="true"||p==="TRUE"||p==="True"||p==="1"||p===1;
 }
 
 async function toggleFixaPaga(fixaId){
   const db=getDB();
   const mesKey=_getMesKey();
   const f=db.fixas.find(x=>x.id===fixaId);if(!f)return;
-  let fm=(db.fixasMensal||[]).find(x=>x.fixaId===fixaId&&x.mes===mesKey);
+  let fm=(db.fixasMensal||[]).find(x=>String(x.fixaId)===String(fixaId)&&_normMes(x.mes)===_normMes(mesKey));
   if(fm){
     fm={...fm, pago:fm.pago===true||fm.pago==="true"?"false":"true"};
   } else {
@@ -1028,7 +1036,7 @@ async function salvarValorFixaMes(fixaId){
   const novoValor=parseFloat(input.value)||0;
   const db=getDB();
   const mesKey=_getMesKey();
-  let fm=(db.fixasMensal||[]).find(x=>x.fixaId===fixaId&&x.mes===mesKey);
+  let fm=(db.fixasMensal||[]).find(x=>String(x.fixaId)===String(fixaId)&&_normMes(x.mes)===_normMes(mesKey));
   if(fm){
     fm={...fm, valor:novoValor};
   } else {
@@ -1047,8 +1055,8 @@ async function salvarValorFixaMes(fixaId){
 // ====================================================================
 function _getAssinMensal(assinId, mesKey){
   const db=getDB();
-  const key=mesKey||_getMesKey();
-  return (db.assinaturasMensal||[]).find(am=>am.assinaturaId===assinId&&am.mes===key)||null;
+  const key=_normMes(mesKey||_getMesKey());
+  return (db.assinaturasMensal||[]).find(am=>String(am.assinaturaId)===String(assinId)&&_normMes(am.mes)===key)||null;
 }
 function _getAssinValorMes(a, mesKey){
   const am=_getAssinMensal(a.id, mesKey);
@@ -1061,7 +1069,7 @@ async function salvarValorAssinMes(assinId){
   const novoValor=parseFloat(input.value)||0;
   const db=getDB();
   const mesKey=_getMesKey();
-  let am=(db.assinaturasMensal||[]).find(x=>x.assinaturaId===assinId&&x.mes===mesKey);
+  let am=(db.assinaturasMensal||[]).find(x=>String(x.assinaturaId)===String(assinId)&&_normMes(x.mes)===_normMes(mesKey));
   if(am){
     am={...am, valor:novoValor};
   } else {
@@ -1090,7 +1098,7 @@ async function aplicarAssinDaqui(assinId){
   for(let i=0;i<meses;i++){
     const mesKey=_mesKeyFromYM(y,m);
     setLoading(true,`Salvando ${mesKey}...`);
-    let am=(db.assinaturasMensal||[]).find(x=>x.assinaturaId===assinId&&x.mes===mesKey);
+    let am=(db.assinaturasMensal||[]).find(x=>String(x.assinaturaId)===String(assinId)&&_normMes(x.mes)===_normMes(mesKey));
     if(am){
       am={...am, valor:novoValor};
     } else {
@@ -1127,7 +1135,7 @@ function _isContaPagaDash(contaId){
     return _isFixaPaga(contaId.replace("fixa_",""));
   }
   // Cartão
-  const fm=(db.fixasMensal||[]).find(x=>x.fixaId===contaId&&x.mes===mesKey);
+  const fm=(db.fixasMensal||[]).find(x=>String(x.fixaId)===String(contaId)&&_normMes(x.mes)===_normMes(mesKey));
   return !!(fm&&(fm.pago===true||fm.pago==="true"));
 }
 
@@ -1141,7 +1149,7 @@ async function toggleContaPaga(contaId){
   // Cartão — usar valor SEMPRE fresh do cálculo unificado
   const cartaoId=contaId.replace("cartao_","");
   const valorFresh=_calcFaturaCartao(cartaoId, currentYear, currentMonth);
-  let fm=(db.fixasMensal||[]).find(x=>x.fixaId===contaId&&x.mes===mesKey);
+  let fm=(db.fixasMensal||[]).find(x=>String(x.fixaId)===String(contaId)&&_normMes(x.mes)===_normMes(mesKey));
   if(fm){
     fm={...fm, valor:valorFresh, pago:fm.pago===true||fm.pago==="true"?"false":"true"};
   } else {
