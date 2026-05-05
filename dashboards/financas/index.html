@@ -626,6 +626,7 @@
       </div>
     </div>
     <div class="form-group"><label>Observação</label><textarea id="tc-obs" rows="2" placeholder="Detalhes adicionais..."></textarea></div>
+    <div class="form-group"><label>Termina em (opcional) <span style="color:var(--text3);font-size:11px">— deixe vazio se for indefinido</span></label><input type="month" id="tc-fim"></div>
     <button class="btn btn-primary" style="width:100%" onclick="salvarTerceiro()">Salvar</button>
   </div>
 </div>
@@ -1256,14 +1257,21 @@ function renderDashboard(){
     </div>`;
   }).join(""):"<div class='empty-state'><p>Sem gastos este mês</p></div>";
 
-  // Gráfico 6 meses — também usa função unificada
+  // Gráfico 6 meses — só mostra fixas em meses que têm dado real (evita projetar
+  // fixas atuais em meses passados que ainda não tinham nada cadastrado)
   const bars=[];
+  const hojeY=new Date().getFullYear(), hojeM=new Date().getMonth();
   for(let i=5;i>=0;i--){
     let m=currentMonth-i,y=currentYear;
     if(m<0){m+=12;y--;}
     const tM=db.transacoes.filter(t=>inMonth(t.data,y,m));
-    const fV=db.fixas.filter(f=>f.status==="ativa").reduce((a,f)=>a+_getFixaValorMes(f, _mesKeyFromYM(y,m)),0);
     const cV=_calcTotalCartoesMes(y, m);
+    const temMovimento=tM.length>0||cV!==0;
+    const isMesAtualOuFuturo=(y>hojeY)||(y===hojeY&&m>=hojeM);
+    // Só conta fixas se o mês tem movimento OU é o mês atual/futuro
+    const fV=(temMovimento||isMesAtualOuFuturo)
+      ?db.fixas.filter(f=>f.status==="ativa").reduce((a,f)=>a+_getFixaValorMes(f, _mesKeyFromYM(y,m)),0)
+      :0;
     const desp=tM.filter(t=>t.tipo==="despesa").reduce((a,t)=>a+parseFloat(t.valor||0),0)+cV+fV;
     const rec=tM.filter(t=>t.tipo==="receita").reduce((a,t)=>a+parseFloat(t.valor||0),0);
     bars.push({label:new Date(y,m,1).toLocaleDateString("pt-BR",{month:"short"}).replace(".",""),desp,rec});
@@ -1803,10 +1811,12 @@ function delDiv(id){
   deleteRecord("dividas",id).then(ok=>{setLoading(false);if(ok){showToast("Removida");renderDividas();}});
 }
 function salvarTerceiro(){
-  const t={id:uid(),pessoa:document.getElementById("tc-pessoa").value,desc:document.getElementById("tc-desc").value,valor:parseFloat(document.getElementById("tc-valor").value)||0,freq:document.getElementById("tc-freq").value,cat:document.getElementById("tc-cat").value,origem:document.getElementById("tc-origem").value,obs:document.getElementById("tc-obs").value,pagamentos:JSON.stringify([]),ativo:"true"};
+  const t={id:uid(),pessoa:document.getElementById("tc-pessoa").value,desc:document.getElementById("tc-desc").value,valor:parseFloat(document.getElementById("tc-valor").value)||0,freq:document.getElementById("tc-freq").value,cat:document.getElementById("tc-cat").value,origem:document.getElementById("tc-origem").value,obs:document.getElementById("tc-obs").value,dataFim:document.getElementById("tc-fim").value||"",pagamentos:JSON.stringify([]),ativo:"true"};
   if(!t.pessoa||!t.desc){showToast("Preencha pessoa e descrição");return;}
   closeModal("modal-terceiro");
-  ["tc-pessoa","tc-desc","tc-valor","tc-obs"].forEach(i=>document.getElementById(i).value="");
+  ["tc-pessoa","tc-desc","tc-valor","tc-obs","tc-fim"].forEach(i=>document.getElementById(i).value="");
+  document.querySelector("#modal-terceiro .modal-title").childNodes[0].textContent="Nova Cobrança de Terceiro ";
+  document.querySelector("#modal-terceiro .btn-primary").onclick=salvarTerceiro;
   setLoading(true,"Salvando...");
   saveRecord("terceiros",t).then(ok=>{setLoading(false);if(ok){showToast("✓ Cobrança salva!");renderTerceiros();}});
 }
@@ -1869,6 +1879,16 @@ function _tercTotalPagoNoMes(t, y, m){
   return pags.filter(p=>p.data&&p.data.startsWith(mesKey)).reduce((a,p)=>a+parseFloat(p.valor||0),0);
 }
 
+// Filtro: cobrança ainda está ativa neste mês? (considera dataFim)
+function _tercAtivoNoMes(t, y, m){
+  if(!t.dataFim||t.dataFim==="") return true;
+  // dataFim formato "YYYY-MM" — ainda aparece no mês final, some no seguinte
+  const [fimY, fimM] = t.dataFim.split("-").map(Number);
+  if(y < fimY) return true;
+  if(y === fimY && (m+1) <= fimM) return true;
+  return false;
+}
+
 // Quick check: registra pagamento padrão na DATA DO MÊS SELECIONADO (ponto 6)
 async function quickPagTerc(id){
   const db=getDB();
@@ -1911,8 +1931,11 @@ function renderTerceiros(){
   const subEl=document.getElementById("terc-sub");
   if(subEl) subEl.textContent="Recebimentos — "+getMonthStr();
 
-  const terc=(db.terceiros||[]).map(t=>({...t,ativo:t.ativo===true||t.ativo==="true"||t.ativo==="TRUE"}));
-  if(!terc.length){
+  const tercAll=(db.terceiros||[]).map(t=>({...t,ativo:t.ativo===true||t.ativo==="true"||t.ativo==="TRUE"}));
+  // Filtra quem está ativo no mês selecionado (considerando dataFim)
+  const terc=tercAll.filter(t=>_tercAtivoNoMes(t,currentYear,currentMonth));
+
+  if(!tercAll.length){
     document.getElementById("terc-stats").innerHTML="";
     document.getElementById("terc-pessoas").innerHTML="<div class='empty-state'><div class='icon'>🤝</div><p>Nenhuma cobrança de terceiro</p></div>";
     return;
@@ -1929,6 +1952,11 @@ function renderTerceiros(){
     <div class="stat-card"><div class="stat-label">Recebido em ${mesTitulo}</div><div class="stat-value green">${R(totalRecebido)}</div></div>
     <div class="stat-card"><div class="stat-label">Pendente</div><div class="stat-value ${totalPendente>0?"red":"green"}">${R(totalPendente)}</div></div>
   `;
+
+  if(!terc.length){
+    document.getElementById("terc-pessoas").innerHTML=`<div class='empty-state'><div class='icon'>📭</div><p>Nenhuma cobrança ativa em ${mesTitulo}</p><p style='font-size:12px;margin-top:6px'>Todas terminaram antes deste mês</p></div>`;
+    return;
+  }
 
   const pessoas=[...new Set(terc.map(t=>t.pessoa))];
   document.getElementById("terc-pessoas").innerHTML=pessoas.map(pessoa=>{
@@ -1963,12 +1991,23 @@ function renderTerceiros(){
 
       ${itens.map(t=>{
         const isPago=_tercPagoNoMes(t,currentYear,currentMonth);
+        // Badge de "termina em" se tem dataFim
+        let badgeFim="";
+        if(t.dataFim){
+          const [fy,fm]=t.dataFim.split("-").map(Number);
+          const lblFim=new Date(fy,fm-1,1).toLocaleDateString("pt-BR",{month:"short",year:"2-digit"}).replace(".","").replace(" de ","/");
+          // Última cobrança? (mês atual = mês fim)
+          const isUltimo=(currentYear===fy&&(currentMonth+1)===fm);
+          badgeFim=`<span class="badge ${isUltimo?'badge-amber':'badge-purple'}" style="flex-shrink:0;font-size:10px" title="${isUltimo?'Última cobrança neste mês':'Termina em '+lblFim}">${isUltimo?'🏁 último':'até '+lblFim}</span>`;
+        }
         return`<div class="conta-check ${isPago?"pago":""}" onclick="quickPagTerc('${t.id}')">
           <button class="check-btn ${isPago?"checked":""}" onclick="event.stopPropagation();quickPagTerc('${t.id}')">${isPago?"✓":""}</button>
           <div class="conta-nome">${t.desc}${t.obs?` <span style="color:var(--text3);font-size:11px">· ${t.obs}</span>`:""}</div>
+          ${badgeFim}
           <span class="badge badge-blue" style="flex-shrink:0">${t.freq}</span>
           <div class="conta-val" style="color:${isPago?"var(--green)":"var(--amber)"}">${R(t.valor)}</div>
           <div style="display:flex;gap:4px;flex-shrink:0">
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="event.stopPropagation();openEditTerceiro('${t.id}')" title="Editar">✏️</button>
             <button class="btn btn-ghost btn-sm btn-icon" onclick="event.stopPropagation();openPagTerc('${t.id}')" title="Registrar valor diferente">💰</button>
             <button class="btn btn-danger btn-sm btn-icon" onclick="event.stopPropagation();delTerceiro('${t.id}')">✕</button>
           </div>
@@ -1981,6 +2020,44 @@ function renderTerceiros(){
       </div>`:""}
     </div>`;
   }).join("");
+}
+
+function openEditTerceiro(id){
+  const db=getDB();const t=(db.terceiros||[]).find(x=>x.id===id);if(!t)return;
+  openModal("modal-terceiro");
+  document.getElementById("tc-pessoa").value=t.pessoa||"";
+  document.getElementById("tc-desc").value=t.desc||"";
+  document.getElementById("tc-valor").value=t.valor||"";
+  document.getElementById("tc-freq").value=t.freq||"mensal";
+  document.getElementById("tc-cat").value=t.cat||"outros";
+  document.getElementById("tc-origem").value=t.origem||"bmg";
+  document.getElementById("tc-obs").value=t.obs||"";
+  document.getElementById("tc-fim").value=t.dataFim||"";
+  document.querySelector("#modal-terceiro .modal-title").childNodes[0].textContent="Editar Cobrança ";
+  document.querySelector("#modal-terceiro .btn-primary").onclick=()=>salvarEditTerceiro(id);
+}
+
+function salvarEditTerceiro(id){
+  const db=getDB();const idx=(db.terceiros||[]).findIndex(x=>x.id===id);if(idx<0)return;
+  const orig=db.terceiros[idx];
+  const t={
+    ...orig,
+    pessoa:document.getElementById("tc-pessoa").value,
+    desc:document.getElementById("tc-desc").value,
+    valor:parseFloat(document.getElementById("tc-valor").value)||0,
+    freq:document.getElementById("tc-freq").value,
+    cat:document.getElementById("tc-cat").value,
+    origem:document.getElementById("tc-origem").value,
+    obs:document.getElementById("tc-obs").value,
+    dataFim:document.getElementById("tc-fim").value||""
+  };
+  // pagamentos pode estar como array; o saveRecord faz JSON.stringify quando objeto
+  closeModal("modal-terceiro");
+  ["tc-pessoa","tc-desc","tc-valor","tc-obs","tc-fim"].forEach(i=>document.getElementById(i).value="");
+  document.querySelector("#modal-terceiro .modal-title").childNodes[0].textContent="Nova Cobrança de Terceiro ";
+  document.querySelector("#modal-terceiro .btn-primary").onclick=salvarTerceiro;
+  setLoading(true,"Salvando...");
+  saveRecord("terceiros",t).then(ok=>{setLoading(false);if(ok){showToast("✓ Atualizada!");renderTerceiros();}});
 }
 
 function openPagTerc(id){
