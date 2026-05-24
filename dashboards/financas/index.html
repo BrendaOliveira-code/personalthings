@@ -1663,8 +1663,9 @@ function renderLancCartao(){
 // ====================================================================
 function renderDividas(){
   const db=getDB();
-  const divComuns=db.dividas.filter(d=>!d.consignado);
-  const divConsig=db.dividas.filter(d=>d.consignado);
+  const isConsig=d=>d.consignado===true||d.consignado==="true";
+  const divComuns=db.dividas.filter(d=>!isConsig(d));
+  const divConsig=db.dividas.filter(d=>isConsig(d));
   const total=db.dividas.reduce((a,d)=>a+parseFloat(d.saldo||0),0);
   const parcelas=db.dividas.reduce((a,d)=>a+parseFloat(d.parcela||0),0);
   document.getElementById("total-div-val").textContent=R(total);
@@ -1677,12 +1678,12 @@ function renderDividas(){
     let hist=d.historico||[];
     if(typeof hist==="string"&&hist) try{hist=JSON.parse(hist);}catch(e){hist=[];}
     if(!Array.isArray(hist)) hist=[];
-    return`<div class="divida-card" style="${d.consignado?"border-color:rgba(91,143,255,.25)":""}">
+    return`<div class="divida-card" style="${isConsig(d)?"border-color:rgba(91,143,255,.25)":""}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
         <div>
           <div style="display:flex;align-items:center;gap:8px">
             <div style="font-weight:600;font-size:15px">${d.nome}</div>
-            ${d.consignado?`<span class="badge badge-blue" style="font-size:10px">consignado</span>`:""}
+            ${isConsig(d)?`<span class="badge badge-blue" style="font-size:10px">consignado</span>`:""}
           </div>
           <div style="font-size:12px;color:var(--text2);margin-top:2px">${d.credor||"—"}</div>
         </div>
@@ -1692,10 +1693,10 @@ function renderDividas(){
           <button class="btn btn-danger btn-sm btn-icon" onclick="delDiv('${d.id}')">✕</button>
         </div>
       </div>
-      ${d.consignado?`<div style="background:rgba(91,143,255,.07);border:1px solid rgba(91,143,255,.15);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--blue)">💡 Já descontado do salário bruto — seu salário líquido de R$7.800 já considera essa parcela.</div>`:""}
+      ${isConsig(d)?`<div style="background:rgba(91,143,255,.07);border:1px solid rgba(91,143,255,.15);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--blue)">💡 Já descontado do salário bruto — seu salário líquido de R$7.800 já considera essa parcela.</div>`:""}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;margin-bottom:${hist.length?"12px":"0"}">
         <div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Saldo devedor</div><div style="font-family:'DM Mono',monospace;font-weight:600;font-size:17px;color:var(--red)">${R(d.saldo)}</div></div>
-        ${d.parcela?`<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Parcela mensal</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:${d.consignado?"var(--blue)":"var(--amber)"};">${R(d.parcela)}</div></div>`:""}
+        ${d.parcela?`<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Parcela mensal</div><div style="font-family:'DM Mono',monospace;font-weight:500;color:${isConsig(d)?"var(--blue)":"var(--amber)"};">${R(d.parcela)}</div></div>`:""}
         ${d.juros?`<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Juros a.m.</div><div style="font-weight:500">${d.juros}%</div></div>`:""}
       </div>
       ${hist.length?`<div style="border-top:1px solid var(--border);padding-top:10px">
