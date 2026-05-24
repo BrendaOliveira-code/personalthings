@@ -373,10 +373,10 @@
         <div id="upload-idle">
           <div style="font-size:28px;margin-bottom:8px">🧾</div>
           <p style="font-weight:500;margin-bottom:3px">Clique ou arraste aqui</p>
-          <p style="font-size:12px;color:var(--text3)">PDF da fatura, CSV ou Excel</p>
+          <p style="font-size:12px;color:var(--text3)">CSV da fatura do cartão</p>
         </div>
         <div id="upload-name" style="display:none;font-size:12px;color:var(--green);margin-top:6px"></div>
-        <input type="file" id="fatura-file" accept=".pdf,.csv,.xlsx,.xls" style="display:none" onchange="handleFaturaFile(event)">
+        <input type="file" id="fatura-file" accept=".csv" style="display:none" onchange="handleFaturaFile(event)">
       </div>
 
       <div class="form-group" style="margin:0">
@@ -677,12 +677,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ====================================================================
 // DADOS INICIAIS, CATEGORIAS E ESTADO BASE
@@ -1188,11 +1185,7 @@ function renderDashboard(){
   const saldo=receitas-totalDesp;
 
   const alertEl=document.getElementById("dash-alert");
-  if(currentMonth===3&&currentYear===2026){
-    alertEl.style.display="flex";
-    alertEl.className="alert-banner";
-    alertEl.innerHTML="⚠️ Fatura BMG abril/2026: R$ 793,00 · Vencimento 05/04/2026. Próximas faturas: R$ 818,12 já comprometidos.";
-  } else alertEl.style.display="none";
+  alertEl.style.display="none";
 
   document.getElementById("stats-grid").innerHTML=`
     <div class="stat-card"><div class="stat-label">Receitas</div><div class="stat-value green">${R(receitas)}</div></div>
@@ -1265,25 +1258,30 @@ function renderDashboard(){
     </div>`;
   }).join(""):"<div class='empty-state'><p>Sem gastos este mês</p></div>";
 
-  // Gráfico 6 meses — só mostra fixas em meses que têm dado real (evita projetar
-  // fixas atuais em meses passados que ainda não tinham nada cadastrado)
-  const bars=[];
+  // Gráfico: mostra apenas meses que têm dados reais (transações ou lançamentos de cartão)
+  // Independente do filtro de mês selecionado — sempre reflete todos os dados existentes
+  const _mesesComDados=new Set();
+  (db.transacoes||[]).forEach(t=>{const s=parseDate(t.data);if(s)_mesesComDados.add(s.slice(0,7));});
+  (db.lancCartao||[]).forEach(l=>{const s=parseDate(l.data);if(s)_mesesComDados.add(s.slice(0,7));});
+  // Inclui o mês atual mesmo sem dados
   const hojeY=new Date().getFullYear(), hojeM=new Date().getMonth();
-  for(let i=5;i>=0;i--){
-    let m=currentMonth-i,y=currentYear;
-    if(m<0){m+=12;y--;}
+  _mesesComDados.add(`${hojeY}-${String(hojeM+1).padStart(2,'0')}`);
+  // Ordena e pega os últimos 6 com dados
+  const _mesesOrdenados=[..._mesesComDados].sort().slice(-6);
+  const bars=[];
+  _mesesOrdenados.forEach(ym=>{
+    const [y,m]=[parseInt(ym.split("-")[0]),parseInt(ym.split("-")[1])-1];
     const tM=db.transacoes.filter(t=>inMonth(t.data,y,m));
-    const cV=_calcTotalCartoesMes(y, m);
+    const cV=_calcTotalCartoesMes(y,m);
     const temMovimento=tM.length>0||cV!==0;
     const isMesAtualOuFuturo=(y>hojeY)||(y===hojeY&&m>=hojeM);
-    // Só conta fixas se o mês tem movimento OU é o mês atual/futuro
     const fV=(temMovimento||isMesAtualOuFuturo)
-      ?db.fixas.filter(f=>f.status==="ativa").reduce((a,f)=>a+_getFixaValorMes(f, _mesKeyFromYM(y,m)),0)
+      ?db.fixas.filter(f=>f.status==="ativa").reduce((a,f)=>a+_getFixaValorMes(f,_mesKeyFromYM(y,m)),0)
       :0;
     const desp=tM.filter(t=>t.tipo==="despesa").reduce((a,t)=>a+parseFloat(t.valor||0),0)+cV+fV;
     const rec=tM.filter(t=>t.tipo==="receita").reduce((a,t)=>a+parseFloat(t.valor||0),0);
     bars.push({label:new Date(y,m,1).toLocaleDateString("pt-BR",{month:"short"}).replace(".",""),desp,rec});
-  }
+  });
   const mx=Math.max(...bars.map(b=>Math.max(Math.abs(b.desp),Math.abs(b.rec))),1);
   const chartH=160;
   const step=Math.ceil(mx/4/500)*500||1000;
@@ -2301,7 +2299,7 @@ async function gerarPresMes(){
 
 
 // ====================================================================
-// IMPORTAÇÃO DE FATURA (PDF/CSV/XLSX)
+// IMPORTAÇÃO DE FATURA (CSV)
 // ====================================================================
 let faturaFile=null, faturaFileType=null, extractedItems=[];
 
@@ -2352,9 +2350,7 @@ function handleFaturaFile(ev){
   const img=document.getElementById("img-preview");
   const pdfIcon=document.getElementById("pdf-icon");
   img.style.display="none";pdfIcon.style.display="none";
-  if(["pdf"].includes(ext)){pdfIcon.style.display="block";pdfIcon.textContent="📄";}
-  else if(["csv"].includes(ext)){pdfIcon.style.display="block";pdfIcon.textContent="📊";}
-  else if(["xlsx","xls"].includes(ext)){pdfIcon.style.display="block";pdfIcon.textContent="📈";}
+  pdfIcon.style.display="block";pdfIcon.textContent="📊";
   document.getElementById("btn-extrair").disabled=false;
   document.getElementById("btn-extrair").style.opacity="1";
 }
@@ -2374,67 +2370,74 @@ function _autoCat(desc){
   return "outros";
 }
 
-async function _extractFromPDF(file){
-  const buf=await file.arrayBuffer();
-  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-  let allText="";
-  for(let p=1;p<=pdf.numPages;p++){
-    const page=await pdf.getPage(p);
-    const content=await page.getTextContent();
-    const pageText=content.items.map(it=>it.str).join(" ");
-    allText+="\n"+pageText;
+function _parseCSVDate(cell){
+  // YYYY-MM-DD ou YYYY/MM/DD
+  let m=cell.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  // DD/MM/YYYY ou DD-MM-YYYY
+  m=cell.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(m){
+    let y=parseInt(m[3]); if(y<100) y+=2000;
+    return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   }
-  return _parseBMGText(allText);
+  // DD Mmm ou DD/MM (sem ano) — ex: "24 Mai", "06 Mar", "14 Mai"
+  const MESES={jan:"01",fev:"02",feb:"02",mar:"03",abr:"04",apr:"04",mai:"05",may:"05",jun:"06",jul:"07",ago:"08",aug:"08",set:"09",sep:"09",out:"10",oct:"10",nov:"11",dez:"12",dec:"12"};
+  m=cell.match(/^(\d{1,2})\s+([A-Za-zç]{3})/);
+  if(m){
+    const mesKey=m[2].toLowerCase().substring(0,3);
+    const mesNum=MESES[mesKey];
+    if(mesNum){
+      const hoje=new Date();
+      // Inferir ano: se o mês é futuro em relação ao atual, assume ano anterior
+      let ano=hoje.getFullYear();
+      const mesInt=parseInt(mesNum);
+      if(mesInt>hoje.getMonth()+1) ano--;
+      return `${ano}-${mesNum}-${m[1].padStart(2,'0')}`;
+    }
+  }
+  // DD/MM sem ano
+  m=cell.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if(m){
+    const hoje=new Date();
+    let ano=hoje.getFullYear();
+    const mesInt=parseInt(m[2]);
+    if(mesInt>hoje.getMonth()+1) ano--;
+    return `${ano}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  }
+  return null;
 }
 
-function _parseBMGText(text){
-  const items=[];
-  // Detectar mês da fatura via vencimento — Apto formato "Vencimento: DD/MM/AAAA" ou "Venc DD/MM"
-  let yearGuess=new Date().getFullYear();
-  const vencM=text.match(/vencimento[:\s]*(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i);
-  if(vencM){
-    let y=parseInt(vencM[3]);
-    if(y<100) y+=2000;
-    yearGuess=y;
-    // Auto-set do mês da fatura no input
-    const m=parseInt(vencM[2]);
-    const mesInp=document.getElementById("import-mes-fatura");
-    if(mesInp) mesInp.value=`${y}-${String(m).padStart(2,'0')}`;
-  }
-
-  // Pattern principal: DD/MM DESC ... VALOR (com vírgula decimal)
-  // Lida com valores tipo "85,70" ou "1.234,56" e negativos prefixados com "-"
-  const lines=text.split(/\n|(?<=\d{2}\/\d{2})\s+(?=\d{2}\/\d{2})/);
-  const seen=new Set();
-
-  lines.forEach(line=>{
-    // Pula linhas óbvias de cabeçalho
-    if(/limite|saldo|fatura|vencimento|total|subtotal|próxim|anterior|pagina|brenda|cnpj|cpf/i.test(line)&&!/\d{2}\/\d{2}/.test(line.split(/r\$|valor/i)[0]||""))return;
-
-    // Matches multiplas transações na mesma linha
-    const re=/(\d{2})\/(\d{2})\s+([^\d].{2,80}?)\s+(-?\s*\d{1,3}(?:\.\d{3})*,\d{2})/g;
-    let m;
-    while((m=re.exec(line))!==null){
-      const dia=m[1], mes=m[2];
-      let desc=m[3].trim().replace(/\s+/g," ");
-      let valStr=m[4].replace(/\s/g,"").replace(/\./g,"").replace(",",".");
-      const val=parseFloat(valStr);
-      if(isNaN(val)||val===0) continue;
-      // Filtrar lixo
-      if(desc.length<3||/^[\d\s\-,.]+$/.test(desc)) continue;
-
-      const data=`${yearGuess}-${mes}-${dia}`;
-      const key=`${data}|${desc}|${val}`;
-      if(seen.has(key)) continue;
-      seen.add(key);
-
-      items.push({
-        data, descricao:desc, valor:val, categoria:_autoCat(desc), selected:true
-      });
+function _parseCSVVal(cell){
+  // Remove R$, aspas, espaços
+  let s=cell.replace(/["""R\$\s]/gi,"").trim();
+  if(!s||s==="-") return NaN;
+  // Detecta separador decimal:
+  // Formato BR: 1.234,56 → ponto é milhar, vírgula é decimal
+  // Formato US: 1,234.56 → vírgula é milhar, ponto é decimal
+  // Só vírgula: 1234,56 → vírgula é decimal
+  // Só ponto: 1234.56 → ponto é decimal
+  const hasDot=s.includes(".");
+  const hasComma=s.includes(",");
+  let num;
+  if(hasDot&&hasComma){
+    const lastDot=s.lastIndexOf(".");
+    const lastComma=s.lastIndexOf(",");
+    if(lastComma>lastDot){// BR: 1.234,56
+      s=s.replace(/\./g,"").replace(",",".");
+    } else {// US: 1,234.56
+      s=s.replace(/,/g,"");
     }
-  });
-
-  return items;
+  } else if(hasComma){
+    // Só vírgula — verifica se é milhar (ex: 1,234) ou decimal (ex: 1,56)
+    const parts=s.split(",");
+    if(parts.length===2&&parts[1].length===3&&parts[0].length<=3) s=s.replace(",","");// milhar
+    else s=s.replace(",",".");// decimal
+  }
+  // Apenas ponto: mantém como está
+  const negative=s.startsWith("-")||cell.trim().startsWith("-");
+  num=parseFloat(s.replace("-",""));
+  if(isNaN(num)||num===0) return NaN;
+  return negative?-num:num;
 }
 
 function _extractFromCSV(file){
@@ -2442,21 +2445,69 @@ function _extractFromCSV(file){
     Papa.parse(file,{
       header:false, skipEmptyLines:true,
       complete:res=>{
+        const rows=res.data;
+        if(!rows||!rows.length){resolve([]);return;}
+
+        // Detectar índices de colunas a partir do cabeçalho (se existir)
+        let dateCol=-1,descCol=-1,valCol=-1,debitCol=-1,creditCol=-1;
+        const headerRow=rows[0].map(c=>String(c||"").toLowerCase().trim());
+        const DATE_KEYS=["data","date","dt","lançamento","lançto","competência","compet","vencimento"];
+        const DESC_KEYS=["descrição","descricao","historico","histórico","estabelecimento","lançamento","memo","description","beneficiário","beneficiario","título","titulo"];
+        const VAL_KEYS=["valor","value","quantia","amount","total"];
+        const DEB_KEYS=["débito","debito","saída","saida","debit"];
+        const CRED_KEYS=["crédito","credito","entrada","credit"];
+
+        headerRow.forEach((h,i)=>{
+          if(dateCol<0&&DATE_KEYS.some(k=>h.includes(k))) dateCol=i;
+          if(descCol<0&&DESC_KEYS.some(k=>h.includes(k))) descCol=i;
+          if(valCol<0&&VAL_KEYS.some(k=>h===k)) valCol=i;
+          if(debitCol<0&&DEB_KEYS.some(k=>h.includes(k))) debitCol=i;
+          if(creditCol<0&&CRED_KEYS.some(k=>h.includes(k))) creditCol=i;
+        });
+
+        const hasHeader=dateCol>=0||descCol>=0;
+        const dataRows=hasHeader?rows.slice(1):rows;
+
         const items=[];
-        res.data.forEach(row=>{
-          if(!row||row.length<3) return;
-          // Heurística: tenta achar coluna data + desc + valor
+        dataRows.forEach(row=>{
+          if(!row||row.length<2) return;
           let data="",desc="",val=NaN;
-          for(let i=0;i<row.length;i++){
-            const cell=String(row[i]||"").trim();
-            if(!data&&/^\d{2}[\/\-]\d{2}[\/\-]\d{2,4}$/.test(cell)) data=parseDate(cell);
-            else if(!data&&/^\d{4}-\d{2}-\d{2}/.test(cell)) data=cell.slice(0,10);
-            else if(isNaN(val)&&/^-?\s*\d{1,3}(?:[.,]\d{3})*[.,]\d{2}$/.test(cell.replace(/r\$\s*/i,""))){
-              val=parseFloat(cell.replace(/r\$\s*/i,"").replace(/\./g,"").replace(",","."));
+
+          if(hasHeader&&dateCol>=0){
+            // Usa índices detectados
+            data=_parseCSVDate(String(row[dateCol]||"").trim())||"";
+            if(descCol>=0) desc=String(row[descCol]||"").trim();
+            // Valor: preferir coluna débito se existir, senão valor geral
+            if(debitCol>=0){
+              const dv=_parseCSVVal(String(row[debitCol]||"").trim());
+              if(!isNaN(dv)&&dv!==0) val=Math.abs(dv);
             }
-            else if(!desc&&cell.length>3&&!/^\d/.test(cell)) desc=cell;
+            if(isNaN(val)&&creditCol>=0){
+              const cv=_parseCSVVal(String(row[creditCol]||"").trim());
+              if(!isNaN(cv)&&cv!==0) val=Math.abs(cv);
+            }
+            if(isNaN(val)&&valCol>=0){
+              val=Math.abs(_parseCSVVal(String(row[valCol]||"").trim()));
+            }
+          } else {
+            // Sem cabeçalho: varre todas as células
+            for(let i=0;i<row.length;i++){
+              const cell=String(row[i]||"").trim();
+              if(!data){const d=_parseCSVDate(cell);if(d){data=d;continue;}}
+              if(isNaN(val)){const v=_parseCSVVal(cell);if(!isNaN(v)&&v!==0){val=Math.abs(v);continue;}}
+              if(!desc&&cell.length>2&&!_parseCSVDate(cell)&&isNaN(_parseCSVVal(cell))) desc=cell;
+            }
           }
-          if(data&&desc&&!isNaN(val)){
+
+          // Fallback: se ainda não tem desc, pega qualquer célula com texto razoável
+          if(!desc){
+            for(let i=0;i<row.length;i++){
+              const cell=String(row[i]||"").trim();
+              if(cell.length>3&&!_parseCSVDate(cell)&&isNaN(_parseCSVVal(cell))){desc=cell;break;}
+            }
+          }
+
+          if(data&&desc&&!isNaN(val)&&val>0){
             items.push({data, descricao:desc, valor:val, categoria:_autoCat(desc), selected:true});
           }
         });
@@ -2465,31 +2516,6 @@ function _extractFromCSV(file){
       error:reject
     });
   });
-}
-
-async function _extractFromExcel(file){
-  const buf=await file.arrayBuffer();
-  const wb=XLSX.read(buf,{type:"array"});
-  const sheet=wb.Sheets[wb.SheetNames[0]];
-  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false});
-  const items=[];
-  rows.forEach(row=>{
-    if(!row||row.length<3) return;
-    let data="",desc="",val=NaN;
-    for(let i=0;i<row.length;i++){
-      const cell=String(row[i]||"").trim();
-      if(!data&&/^\d{2}[\/\-]\d{2}[\/\-]\d{2,4}$/.test(cell)) data=parseDate(cell);
-      else if(!data&&/^\d{4}-\d{2}-\d{2}/.test(cell)) data=cell.slice(0,10);
-      else if(isNaN(val)&&/^-?\s*\d{1,3}(?:[.,]\d{3})*[.,]\d{2}$/.test(cell.replace(/r\$\s*/i,""))){
-        val=parseFloat(cell.replace(/r\$\s*/i,"").replace(/\./g,"").replace(",","."));
-      }
-      else if(!desc&&cell.length>3&&!/^\d/.test(cell)) desc=cell;
-    }
-    if(data&&desc&&!isNaN(val)){
-      items.push({data, descricao:desc, valor:val, categoria:_autoCat(desc), selected:true});
-    }
-  });
-  return items;
 }
 
 async function extrairFatura(){
@@ -2501,9 +2527,7 @@ async function extrairFatura(){
 
   try{
     let items=[];
-    if(faturaFileType==="pdf") items=await _extractFromPDF(faturaFile);
-    else if(faturaFileType==="csv") items=await _extractFromCSV(faturaFile);
-    else if(["xlsx","xls"].includes(faturaFileType)) items=await _extractFromExcel(faturaFile);
+    items=await _extractFromCSV(faturaFile);
 
     if(!items.length){
       document.getElementById("ia-msg").innerHTML="<span style='color:var(--red)'>⚠ Nenhum lançamento detectado. O formato pode não estar suportado.</span>";
